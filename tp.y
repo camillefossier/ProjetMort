@@ -15,13 +15,13 @@
 
 
 %type <pT> 	TypeC ExtendsOpt AffOpt MethodeC
-			TypeCOpt Expr ExprLOpt LExpr
-			ExprOperateur Instr InstrLOpt 
+			TypeCOpt Expr LExprOpt LExpr
+			ExprOperateur Instr LInstrOpt 
 			LInstr Bloc 
 			Envoi Selection
 %type <pC> 	Class classTete classLOpt
-%type <pM> 	DeclMethodeLOpt DeclMethode
-%type <pV> 	DeclChampLOpt LDeclChamp DeclChamp Param paramLOpt
+%type <pM> 	DeclMethode
+%type <pV> 	LDeclChamp DeclChamp Param LParamOpt
 			LParam ValVar
 %type <I> 	OverrideOpt
 
@@ -45,14 +45,13 @@ classLOpt: Class classLOpt {/* $1->nextClass = $2; $$ = $1 ;*/}
 ;
 
 Class: Objet {} 
-| classTete '(' paramLOpt ')' ExtendsOpt BlocOpt IS BlocObj 
+| classTete '(' LParamOpt ')' ExtendsOpt BlocOpt IS BlocObj 
 								 {/* initClasse($1, $3, $5, $6, $9, $10); $$ = $1; */}
 ;
 
 Objet: OBJECT Classname IS BlocObj {}
 ;
-
-paramLOpt: LParam {/*	$$ = $1; */}
+ LParamOpt: LParam {/*	$$ = $1; */}
 |				  {/* $$ = NIL(VarDecl); */}
 ;
 
@@ -66,10 +65,6 @@ Param: VAR Id ':' TypeC ValVar {/* $$ = makeParam($1,$3,NIL(Tree),0); */}
 
 ValVar: AFF Expr {}
 | {}
-;
-
-DeclChampLOpt: DeclChamp DeclChampLOpt {/* $1->nextParam = $2; $$ = $1;  */}
-| 			 {/* $$ = NIL(VarDecl); */}
 ;
 
 LDeclChamp: DeclChamp LDeclChamp {/* $1->nextParam = $3; $$ = $1;*/}
@@ -89,12 +84,14 @@ AffOpt: AFF Expr {/* $$ = makeTree(AEO, 2, NIL(Tree), $2); */}
 |				 {/* $$ = NIL(Tree); */}
 ;
 
-DeclMethodeLOpt: DeclMethode ';' DeclMethodeLOpt {/* $1->nextMethode = $2; $$ = $1; */}
-|  				{/* $$ = NIL(Methode); */}
+/* method inutile
+DeclMethodeLOpt: DeclMethode ';' DeclMethodeLOpt { $1->nextMethode = $2; $$ = $1; }
+|  				{ $$ = NIL(Methode); }
 ;
+*/
 
-DeclMethode : OverrideOpt DEF Id '(' paramLOpt ')' ':' TypeC AFF Expr {/* $$ = makeMethode($1, $3, $5, $8, $10, 1); */}
-| OverrideOpt DEF Id '(' paramLOpt ')' TypeCOpt IS Bloc {}
+DeclMethode : OverrideOpt DEF Id '(' LParamOpt ')' ':' TypeC AFF Expr {/* $$ = makeMethode($1, $3, $5, $8, $10, 1); */}
+| OverrideOpt DEF Id '(' LParamOpt ')' TypeCOpt IS Bloc {}
 /*TODO Bloc { $$ = makeMethode($1, $3, $5, $7, $9, 1); }*/
 
 ;
@@ -107,7 +104,7 @@ OverrideOpt: OVERRIDE {/* $$ = TRUE; */}
 |     				  {/* $$ = FALSE; */}
 ;
 
-ExtendsOpt: EXTENDS Classname '(' ExprLOpt ')'  {/* TreeP nC = makeLeafStr(APPC, $2); $$ = makeTree(EXTO, 2, nC, $4); */}
+ExtendsOpt: EXTENDS Classname '(' LExprOpt ')'  {/* TreeP nC = makeLeafStr(APPC, $2); $$ = makeTree(EXTO, 2, nC, $4); */}
 |					{/* $$ = NIL(Tree); */}
 ;
 
@@ -116,13 +113,13 @@ Expr: /*Id*/ /*{$$ = makeLeafStr(ECHAIN, $1); }*/
 | '(' Expr ')'  {/* $$ = makeTree(EPEXP, 2, NIL(Tree), $2); */}
 | '(' TypeC Expr ')' 	{/* $$ = makeTree(ECAST, 2, NIL(Tree), $1); */}	//Correspond à un Cast
 | Selection    {/* $$ = makeTree(ESEL, 2, NIL(Tree), $1); */}
-| NEWC Classname '(' ExprLOpt ')' {/* $$ = makeTree(EINSTA, 2, NIL(Tree), $1); */}   //Correspond à une Instanciation
+| NEWC Classname '(' LExprOpt ')' {/* $$ = makeTree(EINSTA, 2, NIL(Tree), $1); */}   //Correspond à une Instanciation
 | Envoi  {/* $$ = makeTree(EENV, 2, NIL(Tree), $1); */}
 | ExprOperateur {/* $$ = makeTree(EOPER, 2, NIL(Tree), $1); */}
 | TypeC {}
 ;
 
-ExprLOpt: LExpr {/* $$ = makeTree(EEXPO, 2, NIL(Tree), $1); */}
+LExprOpt: LExpr {/* $$ = makeTree(EEXPO, 2, NIL(Tree), $1); */}
 | 				{/* $$ = NIL(Tree); */}
 ;
 
@@ -147,7 +144,7 @@ Instr : Expr ';' {/* $$ = makeTree(EEXP, 2, NIL(Tree), $1); */}
 | IF Expr THEN Instr ELSE Instr {/* $$ = makeTree(ITE, 3, $2, $4, $6); */}
 ;
 
-InstrLOpt: LInstr {/*$$=makeTree(ILINSTO, 2, $1, $2);*/}
+LInstrOpt: LInstr {/*$$=makeTree(ILINSTO, 2, $1, $2);*/}
 |  			 {/* $$ = NIL(Tree); */}
 ;
 
@@ -177,14 +174,14 @@ DeclChampMethod: DeclChamp {}
 | DeclMethode {}
 ;
 
-Contenu : InstrLOpt  {/* $$ = makeTree(LINSTO, 2, NIL(Tree), $1); */}
+Contenu : LInstrOpt  {/* $$ = makeTree(LINSTO, 2, NIL(Tree), $1); */}
 | LDeclChamp IS LInstr {/* $$ = makeTree(EIS, 2, $1, $3); */}
 ;
 
 Envoi: Expr '.' MethodeC {/* $$ = makeTree(EEXPA, 2, $1, $3); */}
 ;
 
-MethodeC: Id '(' ExprLOpt ')' {}
+MethodeC: Id '(' LExprOpt ')' {}
 ;
 
 Selection: Expr '.' Id {/* $$ = makeTree(EEXPI, 2, $1, makeLeafStr(IDVAR, $3)); */}
