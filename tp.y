@@ -1,5 +1,5 @@
 /* attention: NEW est defini dans tp.h Utilisez un autre nom de token */
-%token IS CLASS VAR EXTENDS DEF OVERRIDE RETURN AS IF THEN ELSE AFF NEWC VOIDC INTC STRINGC THIS SUPER RESULT ADD SUB MUL DIV CONCAT
+%token IS CLASS VAR EXTENDS DEF OVERRIDE RETURN AS IF THEN ELSE AFF NEWC VOIDC INTC STRINGC ADD SUB MUL DIV CONCAT
 %token OBJECT
 %token<S> Id Classname 
 %token<I> Cste
@@ -108,16 +108,17 @@ ExtendsOpt: EXTENDS Classname '(' LExprOpt ')'  {/* TreeP nC = makeLeafStr(APPC,
 |					{/* $$ = NIL(Tree); */}
 ;
 
-Expr: /*Id*/ /*{$$ = makeLeafStr(ECHAIN, $1); }*/
- Cste {/* $$ = makeLeafInt(ECONST, $1); */}
-| '(' Expr ')'  {/* $$ = makeTree(EPEXP, 2, NIL(Tree), $2); */}
-| '(' TypeC Expr ')' 	{/* $$ = makeTree(ECAST, 2, NIL(Tree), $1); */}	//Correspond à un Cast
-| Selection    {/* $$ = makeTree(ESEL, 2, NIL(Tree), $1); */}
+Expr: 		Cste 		{/* $$ = makeLeafInt(ECONST, $1); */}
+| '(' Expr ')'  		{/* $$ = makeTree(EPEXP, 2, NIL(Tree), $2); */}
+| '(' TypeC Id ')' 		{/* $$ = makeTree(ECAST, 2, NIL(Tree), $1); */}	//Correspond à un Cast
+| Selection    				{/* $$ = makeTree(ESEL, 2, NIL(Tree), $1); */}
 | NEWC Classname '(' LExprOpt ')' {/* $$ = makeTree(EINSTA, 2, NIL(Tree), $1); */}   //Correspond à une Instanciation
-| Envoi  {/* $$ = makeTree(EENV, 2, NIL(Tree), $1); */}
-| ExprOperateur {/* $$ = makeTree(EOPER, 2, NIL(Tree), $1); */}
-| TypeC {}
+| Envoi  				{/* $$ = makeTree(EENV, 2, NIL(Tree), $1); */}
+| ExprOperateur 		{/* $$ = makeTree(EOPER, 2, NIL(Tree), $1); */}
+| TypeC					{}
 ;
+
+
 
 LExprOpt: LExpr {/* $$ = makeTree(EEXPO, 2, NIL(Tree), $1); */}
 | 				{/* $$ = NIL(Tree); */}
@@ -186,9 +187,6 @@ MethodeC: Id '(' LExprOpt ')' {}
 
 Selection: Expr '.' Id {/* $$ = makeTree(EEXPI, 2, $1, makeLeafStr(IDVAR, $3)); */}
 | Id 				   {/* $$ = makeLeafStr(IDVAR, $1); */}
-| THIS 				   {/* $$ = makeLeafInt(ETHIS, 0); */}
-| SUPER				   {/* $$ = makeLeafInt(ESUP, 0); */}
-| RESULT 			   {/* $$ = makeLeafInt(ERES, 0); */} //RESULT peut être traité dans Id en le mettant dans le même environnement (qui sera rentré à la main à la compilation)
 ;
 
 

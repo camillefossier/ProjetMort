@@ -30,14 +30,10 @@ int keywordOrId() {
   if (! strcmp(yytext, "var")) return VAR;
   if (! strcmp(yytext, "extends")) return EXTENDS;
   if (! strcmp(yytext, "def")) return DEF;
-  if (! strcmp(yytext, "super")) return SUPER;
   if (! strcmp(yytext, "override")) return OVERRIDE;
   if (! strcmp(yytext, "if")) return IF;
   if (! strcmp(yytext, "then")) return THEN;
   if (! strcmp(yytext, "else")) return ELSE;
-  if (! strcmp(yytext, "this")) return THIS;
-  if (! strcmp(yytext, "super")) return SUPER;
-  if (! strcmp(yytext, "result")) return RESULT;
   if (! strcmp(yytext, "new")) return NEWC;
   if (! strcmp(yytext, "return")) return RETURN;
   if (! strcmp(yytext, "object")) return OBJECT;
