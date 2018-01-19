@@ -215,7 +215,7 @@ class A2() extends A() is {
   /* ajoute une valmeur par defaut à x qui n'en avait pas. Le parametre
    * y conserve sa valeur par defaut definie dans la methode de la superclasse
    */
-  override def h(x : Integer := 3, y: Integer) : Integer := super.h(x, y)
+  override def h(x : Integer, y: Integer := 3) : Integer := super.h(x, y)
 }
 
 { /* Bloc qui correspond au programme principal */
