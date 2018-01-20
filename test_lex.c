@@ -13,7 +13,7 @@
 #include "tp_y.h"
 
 
-#define TABSIZE	1000
+#define TABSIZE 1000
 extern char *strdup(const char *);
 
 /* Fonction appelee par le programme principal pour obtenir l'unite lexicale
@@ -100,13 +100,13 @@ int main(int argc, char **argv) {
     if (argv[i][0] == '-') {
       switch (argv[i][1]) {
       case 'v': case 'V':
-	      verbose = TRUE; continue;
+        verbose = TRUE; continue;
       case '?': case 'h': case 'H':
-	help();
-	exit(1);
+  help();
+  exit(1);
       default:
-	fprintf(stderr, "Option inconnue: %c\n", argv[i][1]);
-	exit(1);
+  fprintf(stderr, "Option inconnue: %c\n", argv[i][1]);
+  exit(1);
       }
     } else break;
   }
@@ -132,106 +132,141 @@ int main(int argc, char **argv) {
 
     case 0: /* EOF */
       printf("Fin de l'analyse lexicale\n");
-      printf("Liste des identificateurs avec leur premiere occurrence:\n");
+      if (verbose) printf("Liste des identificateurs avec leur premiere occurrence:\n");
       for (i = 0; i < nbIdent; i++) {
-        printf("ligne %d : %s\n", idents[i].line, idents[i].id);
+        if (verbose) printf("ligne %d : %s\n", idents[i].line, idents[i].id);
       }
       printf("Nombre d'identificateurs: %4d\n", nbIdent);
       return 0;
 
-    case ID:
+    case Cste:
+      /* ici on suppose qu'on a recupere la valeur de la constante, pas sa
+       * representation sous forme de chaine de caracteres.
+       */
+      if (verbose) printf("Constante:\t\t%d\n", yylval.I);
+      break;
+
+    case OBJECT:
+      if (verbose) printf("object \n"); 
+      break;
+
+
+    case VAR:
+      if (verbose) printf("Var \n"); 
+      break;
+
+
+    case CLASS:
+      if (verbose) printf("class \n"); 
+      break;
+
+    case IS:
+      if (verbose) printf("Is \n"); 
+      break;
+
+    case DEF:
+      if (verbose) printf("Def \n"); 
+      break;
+
+    case EXTENDS :
+      if (verbose) printf("Extends \n");
+      break;
+    case OVERRIDE:
+      if (verbose) printf("Override \n");
+      break;
+
+    case NEWC:
+      if (verbose) printf("Newc \n");
+      break;
+
+    case RETURN:
+      if (verbose) printf("Return \n");
+      break;
+
+      /*Classes predefinies*/
+    case INTC:
+      if (verbose) printf("Intc \n");
+      break;
+    case STRINGC:
+      if (verbose) printf("Stringc \n");
+      break;
+
+
+    case Id:
       makeIdent(yylineno, yylval.S);
       if (verbose) printf("Identificateur:\t\t%s\n", yylval.S);
       break;
 
-    case CLASSNAME:
+    case Classname:
       makeIdent(yylineno, yylval.S);
       if (verbose) printf("Classname:\t\t%s\n", yylval.S);
       break;
 
 
-    case CST:
-      /* ici on suppose qu'on a recupere la valeur de la constante, pas sa
-       * representation sous forme de chaine de caracteres.
-       */
-      printf("Constante:\t\t%d\n", yylval.I);
+    case VOIDC:
+      if (verbose) printf("Voidc \n");
       break;
 
-
-
-    case CLASS:
-      printf("Affectation \n"); 
-      break;
-    case EXTENDS :
-      printf("Affectation \n");
-      break;
-    case OVERRIDE:
-      printf("Affectation \n");
-      break;
-
+  
     case AFF:
-      printf("Affectation \n");
-      break;
-    case AFF:
-      printf("Affectation \n");
-      break;
-    case AFF:
-      printf("Affectation \n");
-      break;
-    case AFF:
-      printf("Affectation \n");
-      break;
+      if (verbose) printf("Affectation \n"); break;
 
-
-
-
-
-
-    case AFF:
-      printf("Affectation \n"); break;
-    case BEG: 
-      printf("BEGIN \n"); break;
-    case END:
-      printf("END \n"); break;
     case IF:
-      printf("IF \n"); break;
+      if (verbose) printf("IF \n"); break;
     case THEN:
-      printf("THEN \n"); break;
+      if (verbose) printf("THEN \n"); break;
     case ELSE:
-      printf("ELSE \n"); break;
+      if (verbose) printf("ELSE \n"); break;
+
+
+/*symboles*/
+    case '{':
+    case '}':
+    case '[':
+    case ']':
     case '(':
     case ')':
-      /* a completer */
+    case ':':
+    case '.':
+    case ',':
+    case '\\':
+    case ';':
       if (verbose) printf("Symbole:\t%s\n",  yytext);
       break;
-    case '+':
-      printf("addition\n"); break;
-    case '-':
-      printf("soustraction\n"); break;
-    case '*':
-     printf("multiplication\n"); break;
-    case '/':
-      printf("division\n"); break;
-    case RELOP:
+
+
+    case ADD:
+      if (verbose) printf("addition\n"); break;
+    case SUB:
+      if (verbose) printf("soustraction\n"); break;
+    case MUL:
+     if (verbose) printf("multiplication\n"); break;
+    case DIV:
+     if (verbose) printf("division\n"); break;
+    case CONCAT:
+     if (verbose) printf("concatenation\n"); break;
+
+
+    case RelOp:
       /* inutilement complique ici, mais sert a illustrer la difference
        * entre le token et l'infirmation supplementaire qu'on peut associer
        * via la valeur.
        */
       if (verbose) { 
-      	printf("Operateur de comparaison:\t%s ", yytext);
-      	switch(yylval.C) {
-        	case EQ: printf("egalite\n"); break;
-        	case NE: printf("non egalite\n"); break;
+        printf("Operateur de comparaison:\t%s ", yytext);
+        switch(yylval.C) {
+          case EQ: printf("egalite\n"); break;
+          case NE: printf("non egalite\n"); break;
           case INF: printf("inferieur a\n"); break;
           case SUP: printf("superieur a\n"); break;
-        	default: printf("operateur inconnu de code: %d\n", yylval.C);
-      	}
+          default: printf("operateur inconnu de code: %d\n", yylval.C);
+        }
       }
       break;
-    case SEMIC:
-      printf("$\n"); break;
+
+
     default:
-      printf("Token non reconnu:\t\"%d\"\n", token);
+      printf("############Token non reconnu:\t\"%d\" on ligne %d\n", token, yylineno);
     }
   }
 }

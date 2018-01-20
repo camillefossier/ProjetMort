@@ -19,7 +19,7 @@ NotStarPar      [^*/]
 #include "tp.h"
 #include "tp_y.h"
 
-/*extern char *strdup(char *);*/
+extern char *strdup(const char *);
 extern YYSTYPE yylval;
 extern int yylineno;
 extern int yylex();
@@ -83,7 +83,7 @@ void lexError(char c) {
 "/*"({NotStar}|({Star}+{NotStarPar}))*{Star}*"*/"  { }
 {Lower}{LC}*   { return keywordOrId(); }
 {Upper}{LC}*   { return keywordOrIdC(); }
-{Guill}({BS}|{PasBSG})*{Guill}   {yylval.S = yytext; return STRINGC;}
+{Guill}({BS}|{PasBSG})*{Guill}   {yylval.S = strdup(yytext); return STRINGC;}
 
 . 		         { lexError(yytext[0]); }
 %%
