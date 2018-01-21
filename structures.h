@@ -128,8 +128,8 @@ typedef struct Const
 	}
 } Const;
 
-enum typeInstruction {EXPR, BLOC, RETURN, SELECT, ITE}
-typedef struct Instruction 
+enum typeInstruction {EXPR, BLOC, RETURN, SELECT, ITE};
+typedef struct Instruction
 {
 	typeInstruction type;
 
@@ -185,12 +185,6 @@ typedef struct ClasseTete
 
 } ClasseTete;
 QUOI MAIS CEST JUSTE UN ID ALALALALALALALALALAALLA*/
-
-typedef struct LParam
-{
-	Param * param;
-	LParam* nextParam;
-} LParam;
 
 enum typetypeC {INTC, STRINGC, VOIDC, IDENT};
 typedef struct typeC
