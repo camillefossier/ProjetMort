@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include "structures.h"
 
 #define TRUE 1
 #define FALSE 0
