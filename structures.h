@@ -1,17 +1,17 @@
 typedef struct Methode
 {
-	Classe *typeDeRetour;
+	struct Classe *typeDeRetour;
 	char *nom;
-	Argument *larg;
+	struct Argument *larg;
 	bool override;
-	BLOC* Bloc;
+	struct Bloc* Bloc;
 
 } Methode;
 
 typedef struct LMethode
 {
-	Methode* methode;
-	LMethode* nextMethode;
+	struct Methode* methode;
+	struct LMethode* nextMethode;
 } LMethode;
 
 typedef struct Classe /*represente la meta classe*/
@@ -19,17 +19,16 @@ typedef struct Classe /*represente la meta classe*/
 
 	char *nom;
 	struct Classe *mereOpt;
-	LMethode lmethodes;
-	Methode *constructeur;
-	LAttribut lattributs; /*peut etre null si pas de valeur par defaut*/
-
+	struct LMethode lmethodes;
+	struct Methode *constructeur;
+	struct LAttribut lattributs; /*peut etre null si pas de valeur par defaut*/
 } Classe;
 
 
 typedef struct LClasse
 {
-	Classe* classe;
-	LClasse* next;
+	struct Classe* classe;
+	struct LClasse* next;
 } LClasse;
 
 
@@ -41,30 +40,30 @@ enum typeAttribut
 typedef struct Attribut
 {
 	char *nom;
-	Classe *type;
-	typeAttribut typeA;
+	struct Classe *type;
+	struct typeAttribut typeA;
 
 
 	union valeur 
 	{
 		int i;
 		char[20] str;
-		Objet *obj;
+		struct Objet *obj;
 	}
 
 } Attribut, Param, Champ;
 
 typedef struct LAttribut
 {
-	Attribut* attribut;
-	LAttribut* nextAtribut;
+	struct Attribut* attribut;
+	struct LAttribut* nextAtribut;
 } LAttribut, LParam, LChamp;
 
 
 typedef struct Objet
 {
-	Classe *classe;
-	LAttribut *lattributs; /*attributs avec leur valeur courante*/
+	struct Classe *classe;
+	struct LAttribut *lattributs; /*attributs avec leur valeur courante*/
 
 } Objet;
 
@@ -72,14 +71,14 @@ typedef struct Objet
 typedef struct ObjetIsole
 {
 	char *nom;
-	Methode *lmethodes;
-	LAttribut *lattributs;
+	struct Methode *lmethodes;
+	struct LAttribut *lattributs;
 } ObjetIsole;
 
 
 typedef struct Argument
 {
-	Classe *type;
+	struct Classe *type;
 	char *nom;
 } Argument;
 
@@ -89,17 +88,17 @@ typedef struct Argument
 enum typeExpr {ID, CST, /*EXPR, */CAST, SELECT, INST, ENVOI, EXPROPE};
 typedef struct Expression
 {
-	typeExpr type;
+	struct typeExpr type;
 	union expr
 	{
-		Ident *id;
-		Const cst;
+		struct Ident *id;
+		struct Const cst;
 		struct Expression *expr; /*utilité ?*/
-		Cast *c;
-		Selection *s;
-		Instanciation *inst;
-		Envoi *e;
-		ExprOpe *eo;
+		struct Cast *c;
+		struct Selection *s;
+		struct Instanciation *inst;
+		struct Envoi *e;
+		struct ExprOpe *eo;
 	}
 } Expression;
 
@@ -107,7 +106,7 @@ enum typeIdent {INTEGER, STRING}; /*et les methodes ?*/
 typedef struct Ident
 {
 	char* nom;
-	typeIdent type;
+	struct typeIdent type;
 	union valeur 
 	{
 		char[20] str;
@@ -120,7 +119,7 @@ enum typeConst {INTEGER, STRING, VOIDUH};
 typedef struct Const
 {
 	char* nom;
-	typeConst type;
+	struct typeConst type;
 	union valeur
 	{
 		char* str;
@@ -131,17 +130,17 @@ typedef struct Const
 enum typeInstruction {EXPR, BLOC, RETURN, SELECT, ITE};
 typedef struct Instruction
 {
-	typeInstruction type;
+	struct typeInstruction type;
 
 	union instr
 	{
-		Expression *expr;
-		Bloc *bloc;
-		Selection *select;
+		struct Expression *expr;
+		struct Bloc *bloc;
+		struct Selection *select;
 		struct {
-			Expression *iteIf;
-			Instruction *iteThen;
-			Instruction *iteElse;
+			struct Expression *iteIf;
+			struct Instruction *iteThen;
+			struct Instruction *iteElse;
 		} *ite;
 	}
 
@@ -149,34 +148,34 @@ typedef struct Instruction
 
 typedef struct LInstruction
 {
-	Instruction* instruction;
-	LInstruction* nextInstruction;
+	struct Instruction* instruction;
+	struct LInstruction* nextInstruction;
 } LInstruction;
 
 
 typedef struct Bloc
 {
-	DeclChamp *ldeclchamp;
-	LInstruction lInstr;
+	struct DeclChamp *ldeclchamp;
+	struct LInstruction lInstr;
 }Bloc;
 
 typedef struct Envoi{
-	Expression *dst;/*probleme ambiguité*/
-	Methode *methode;
-	Expression *lExprOpt; 
+	struct Expression *dst;/*probleme ambiguité*/
+	struct Methode *methode;
+	struct Expression *lExprOpt; 
 } Envoi;
 
 enum typeSelection {ID, THIS, SUPER, RESULT};
 typedef struct Selection
 {
-	typeSelection type;
-	Ident *ident;
+	struct typeSelection type;
+	struct Ident *ident;
 } Selection;
 
 typedef struct Programme
 {
-	LClasse lClasse;
-	Bloc *bloc;
+	struct LClasse lClasse;
+	struct Bloc *bloc;
 } Programme;
 
 /*
@@ -189,7 +188,7 @@ QUOI MAIS CEST JUSTE UN ID ALALALALALALALALALAALLA*/
 enum typetypeC {INTC, STRINGC, VOIDC, IDENT};
 typedef struct typeC
 {
-	typetypeC type;
-	Classe *classe;
+	struct typetypeC type;
+	struct Classe *classe;
 } typetypeC;
 
