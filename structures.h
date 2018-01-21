@@ -41,7 +41,7 @@ typedef struct Attribut
 {
 	char *nom;
 	struct Classe *type;
-	struct typeAttribut typeA;
+	enum typeAttribut typeA;
 
 
 	union valeur 
