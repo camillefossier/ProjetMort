@@ -35,7 +35,7 @@ typedef struct LClasse
 
 enum typeAttribut 
 {
-	INTEGER, STRING, OTHER
+	INTATTR, STRATTR, OTHER
 };
 typedef struct Attribut
 {
@@ -44,12 +44,12 @@ typedef struct Attribut
 	enum typeAttribut typeA;
 
 
-	union valeur 
+	union valeurAttribut
 	{
 		int i;
 		char *str;
 		struct Objet *obj;
-	}
+	} valeurAttribut;
 
 } Attribut, Param, Champ;
 
@@ -99,32 +99,32 @@ typedef struct Expression
 		struct Instanciation *inst;
 		struct Envoi *e;
 		struct ExprOpe *eo;
-	}
+	} expr;
 } Expression;
 
-enum typeIdent {INTEGER, STRING}; /*et les methodes ?*/
+enum typeIdent {INTIDENT, STRIDENT}; /*et les methodes ?*/
 typedef struct Ident
 {
 	char* nom;
 	enum typeIdent type;
-	union valeur 
+	union valeurIdent 
 	{
 		char *str;
 		int i;
-	}
+	} valeurIdent;
 
 } Ident;
 
-enum typeConst {INTEGER, STRING, VOIDUH};
+enum typeConst {INTCONST, STRCONST, VOIDUH};
 typedef struct Const
 {
 	char* nom;
 	enum typeConst type;
-	union valeur
+	union valeurConst
 	{
 		char* str;
 		int i;
-	}
+	} valeurConst;
 } Const;
 
 enum typeInstruction {EXPR, BLOC, RETURN, SELECT, ITE};
@@ -142,7 +142,7 @@ typedef struct Instruction
 			struct Instruction *iteThen;
 			struct Instruction *iteElse;
 		} *ite;
-	}
+	} instr;
 
 } Instruction;
 
