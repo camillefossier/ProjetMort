@@ -191,7 +191,7 @@ TreeP makeLeafLVar(short op, VarDeclP lvar) {
   return(tree);
 }
 
-Classe makeClasse(char* nom, struct Classe mereOpt, LMethode lmethodes, Methode constructeur, LAttribut lattributs)
+/*Classe makeClasse(char* nom, struct Classe mereOpt, LMethode lmethodes, Methode constructeur, LAttribut lattributs)
 {
   Classe classe = NEW(1, Classe);
   classe->nom = nom;
@@ -199,8 +199,7 @@ Classe makeClasse(char* nom, struct Classe mereOpt, LMethode lmethodes, Methode 
   classe->mereOpt = mereOpt;
   classe->lmethodes = lmethodes;
   classe->constructeur = constructeur;
-  classe->lattributs = lattributs;  //pointeur attributs
-  //ajout de la classe à la liste de classes ?
+  classe->lattributs = lattributs;  
   return (classe);
 }
 
@@ -217,3 +216,4 @@ Methode makeMethode(Classe typeDeRetour, char nom, Argument larg, bool override,
 
   return (methode);
 }
+*/

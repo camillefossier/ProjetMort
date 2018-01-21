@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include "structures.h"
 
 #define TRUE 1
 #define FALSE 0
@@ -73,6 +72,207 @@ typedef union {
   TreeP pT;
   VarDeclP pV; /* same comment as above */
 } YYSTYPE;
+
+
+
+typedef struct _Methode
+{
+  struct Classe *typeDeRetour;
+  char *nom;
+  struct Argument *larg;
+  bool override;
+  struct Bloc* Bloc;
+
+}Methode, *MethodeP;
+
+typedef struct _LMethode
+{
+  struct Methode* methode;
+  struct LMethode* nextMethode;
+}LMethode, *LMethodeP;
+
+typedef struct _Classe /*represente la meta classe*/
+{
+
+  char *nom;
+  struct Classe *mereOpt;
+  struct LMethode *lmethodes;
+  struct Methode *constructeur;
+  struct LAttribut *lattributs; /*peut etre null si pas de valeur par defaut*/
+} Classe, *ClasseP;
+
+
+typedef struct _LClasse
+{
+  struct Classe* classe;
+  struct LClasse* next;
+} LClasse, *LClasseP;
+
+
+
+enum typeAttribut 
+{
+  INTATTR, STRATTR, OTHER
+};
+typedef struct _Attribut
+{
+  char *nom;
+  struct Classe *type;
+  enum typeAttribut typeA;
+
+
+  union valeurAttribut
+  {
+    int i;
+    char *str;
+    struct Objet *obj;
+  } valeurAttribut;
+
+} Attribut, Param, Champ, *AttributP, *ParamP, *ChampP;
+
+typedef struct LAttribut
+{
+  struct Attribut* attribut;
+  struct LAttribut* nextAtribut;
+} LAttribut, LParam, LChamp;
+
+
+typedef struct _Objet
+{
+  struct Classe *classe;
+  struct LAttribut *lattributs; /*attributs avec leur valeur courante*/
+
+} Objet, *ObjetP;
+
+
+typedef struct _ObjetIsole
+{
+  char *nom;
+  struct Methode *lmethodes;
+  struct LAttribut *lattributs;
+} ObjetIsole, *ObjetIsoleP;
+
+
+typedef struct _Argument
+{
+  struct Classe *type;
+  char *nom;
+} Argument, *ArgumentP;
+
+
+
+/*ATTENTION A PARTIR DICI C LE ZBEUL**********************OK G COMPRIS JE GERE TKT*/
+enum typeExpr {ID, CST, /*EXPR, */CAST, SELECT, INST, ENVOI, EXPROPE};
+typedef struct _Expression
+{
+  enum typeExpr type;
+  union expr
+  {
+    struct Ident *id;
+    struct Const *cst;
+    struct Expression *expr; /*utilité ?*/
+    struct Cast *c;
+    struct Selection *s;
+    struct Instanciation *inst;
+    struct Envoi *e;
+    struct ExprOpe *eo;
+  } expr;
+} Expression, *ExpressionP;
+
+enum typeIdent {INTIDENT, STRIDENT}; /*et les methodes ?*/
+typedef struct _Ident
+{
+  char* nom;
+  enum typeIdent type;
+  union valeurIdent 
+  {
+    char *str;
+    int i;
+  } valeurIdent;
+
+} Ident, *IdentP;
+
+enum typeConst {INTCONST, STRCONST, VOIDCONST};
+typedef struct _Const
+{
+  char* nom;
+  enum typeConst type;
+  union valeurConst
+  {
+    char* str;
+    int i;
+  } valeurConst;
+} Const, *ConstP;
+
+enum typeInstruction {EXPRINSTR, BLOCINSTR, RETURNINSTR, SELECTINSTR, ITEINSTR};
+typedef struct _Instruction
+{
+  enum typeInstruction type;
+
+  union instr
+  {
+    struct Expression *expr;
+    struct Bloc *bloc;
+    struct Selection *select;
+    struct {
+      struct Expression *iteIf;
+      struct Instruction *iteThen;
+      struct Instruction *iteElse;
+    } *ite;
+  } instr;
+
+} Instruction, *InstructionP;
+
+typedef struct _LInstruction
+{
+  struct Instruction* instruction;
+  struct LInstruction* nextInstruction;
+} LInstruction, *LInstructionP;
+
+
+typedef struct _Bloc
+{
+  struct DeclChamp *ldeclchamp;
+  struct LInstruction *lInstr;
+}Bloc, *BlocP;
+
+typedef struct _Envoi{
+  struct Expression *dst;/*probleme ambiguité*/
+  struct Methode *methode;
+  struct Expression *lExprOpt; 
+} Envoi, *EnvoiP;
+
+enum typeSelection {IDSELEC, THISSELEC, SUPERSELEC, RESULTSELEC};
+typedef struct _Selection
+{
+  enum typeSelection type;
+  struct Ident *ident;
+} Selection, *SelectionP;
+
+typedef struct _Programme
+{
+  struct LClasse *lClasse;
+  struct Bloc *bloc;
+} Programme, *ProgrammeP;
+
+/*
+typedef struct ClasseTete
+{
+
+} ClasseTete;
+QUOI MAIS CEST JUSTE UN ID ALALALALALALALALALAALLA*/
+
+enum typetypeC {INTTYPEC, STRTYPEC, VOIDTYPEC, IDTYPEC};
+typedef struct _typeC
+{
+  enum typetypeC type;
+  struct Classe *classe;
+}typeC, *typeCP;
+
+
+
+
+
 
 #define YYSTYPE YYSTYPE
 #define YYERROR_VERBOSE 1
