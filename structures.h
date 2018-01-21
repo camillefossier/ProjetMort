@@ -115,7 +115,7 @@ typedef struct Ident
 
 } Ident;
 
-enum typeConst {INTCONST, STRCONST, VOIDUH};
+enum typeConst {INTCONST, STRCONST, VOIDCONST};
 typedef struct Const
 {
 	char* nom;
@@ -127,7 +127,7 @@ typedef struct Const
 	} valeurConst;
 } Const;
 
-enum typeInstruction {EXPR, BLOC, RETURN, SELECT, ITE};
+enum typeInstruction {EXPRINSTR, BLOCINSTR, RETURNINSTR, SELECTINSTR, ITEINSTR};
 typedef struct Instruction
 {
 	enum typeInstruction type;
@@ -165,7 +165,7 @@ typedef struct Envoi{
 	struct Expression *lExprOpt; 
 } Envoi;
 
-enum typeSelection {ID, THIS, SUPER, RESULT};
+enum typeSelection {IDSELEC, THISSELEC, SUPERSELEC, RESULTSELEC};
 typedef struct Selection
 {
 	enum typeSelection type;
@@ -185,10 +185,10 @@ typedef struct ClasseTete
 } ClasseTete;
 QUOI MAIS CEST JUSTE UN ID ALALALALALALALALALAALLA*/
 
-enum typetypeC {INTC, STRINGC, VOIDC, IDENT};
+enum typetypeC {INTTYPEC, STRTYPEC, VOIDTYPEC, IDTYPEC};
 typedef struct typeC
 {
 	enum typetypeC type;
 	struct Classe *classe;
-} typetypeC;
+}typeC;
 
