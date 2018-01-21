@@ -123,7 +123,7 @@ typedef struct Const
 	typeConst type;
 	union valeur
 	{
-		char[20] str;
+		char* str;
 		int i;
 	}
 } Const;
