@@ -21,7 +21,7 @@ typedef struct Classe /*represente la meta classe*/
 	struct Classe *mereOpt;
 	struct LMethode lmethodes;
 	struct Methode *constructeur;
-	struct LAttribut lattributs; /*peut etre null si pas de valeur par defaut*/
+	struct LAttribut *lattributs; /*peut etre null si pas de valeur par defaut*/
 } Classe;
 
 
@@ -47,7 +47,7 @@ typedef struct Attribut
 	union valeur 
 	{
 		int i;
-		char[20] str;
+		char *str;
 		struct Objet *obj;
 	}
 
@@ -88,11 +88,11 @@ typedef struct Argument
 enum typeExpr {ID, CST, /*EXPR, */CAST, SELECT, INST, ENVOI, EXPROPE};
 typedef struct Expression
 {
-	struct typeExpr type;
+	enum typeExpr type;
 	union expr
 	{
 		struct Ident *id;
-		struct Const cst;
+		struct Const *cst;
 		struct Expression *expr; /*utilité ?*/
 		struct Cast *c;
 		struct Selection *s;
@@ -106,10 +106,10 @@ enum typeIdent {INTEGER, STRING}; /*et les methodes ?*/
 typedef struct Ident
 {
 	char* nom;
-	struct typeIdent* type;
+	enum typeIdent type;
 	union valeur 
 	{
-		char[20] str;
+		char *str;
 		int i;
 	}
 
@@ -119,7 +119,7 @@ enum typeConst {INTEGER, STRING, VOIDUH};
 typedef struct Const
 {
 	char* nom;
-	struct typeConst type;
+	enum typeConst type;
 	union valeur
 	{
 		char* str;
@@ -130,7 +130,7 @@ typedef struct Const
 enum typeInstruction {EXPR, BLOC, RETURN, SELECT, ITE};
 typedef struct Instruction
 {
-	struct typeInstruction type;
+	enum typeInstruction type;
 
 	union instr
 	{
@@ -168,7 +168,7 @@ typedef struct Envoi{
 enum typeSelection {ID, THIS, SUPER, RESULT};
 typedef struct Selection
 {
-	struct typeSelection type;
+	enum typeSelection type;
 	struct Ident *ident;
 } Selection;
 
@@ -188,7 +188,7 @@ QUOI MAIS CEST JUSTE UN ID ALALALALALALALALALAALLA*/
 enum typetypeC {INTC, STRINGC, VOIDC, IDENT};
 typedef struct typeC
 {
-	struct typetypeC type;
+	enum typetypeC type;
 	struct Classe *classe;
 } typetypeC;
 
