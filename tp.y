@@ -44,13 +44,15 @@ extern void yyerror(const char *); /*const necessaire pour eviter les warning de
 Prog : LClassOpt Bloc
 ;
 
-Class: Objet 									{			} 
+Class: Objet 									{printf("On cree un objet. \n"); } 
 
 | CLASS Classname '(' LParamOpt ')' ExtendsOpt BlocOpt IS BlocObj
 												{ $$ = makeClasse($2,$4,$6,$7,$9);}
 ;
 
-LClassOpt: Class LClassOpt 						{ /*$1->nextClasse = $2; */$$ = $1 ;}
+LClassOpt: Class LClassOpt 						{printf("On appelle pas NextClasse. \n"); /*
+													 $1->nextClasse = $2;*/ $$ = $1 ;}
+													 
 | 												{ $$ = NIL(Classe);}
 ;
 

@@ -197,7 +197,7 @@ ClasseP makeClasse(char* nom, LParamP lparam, ClasseP extendsOpt, BlocP blocOpt,
   classe->nom = nom;
 
   char *str = classe->nom;
-  printf("%c %c\n", str[0], str[1]);
+  printf("La classe cree est : %c%c%c%c%c%c%c%c\n", str[0], str[1], str[2], str[3], str[4], str[5], str[6], str[7]);
 
 
   classe->nextClasse = NIL(Classe);
