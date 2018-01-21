@@ -1,3 +1,4 @@
+
 /* attention: NEW est defini dans tp.h Utilisez un autre nom de token */
 %token IS CLASS VAR EXTENDS DEF OVERRIDE RETURN AS IF THEN ELSE AFF NEWC VOIDC INTC STRINGC ADD SUB MUL DIV CONCAT
 %token OBJECT
@@ -14,12 +15,13 @@
 %nonassoc '.'
 
 
-%type <pT> 	TypeC ExtendsOpt AffOpt MethodeC
+%type <pT> 	TypeC AffOpt MethodeC
 			TypeCOpt Expr LExprOpt LExpr
 			ExprOperateur Instr LInstrOpt 
-			LInstr Bloc 
+			LInstr 
 			Envoi Selection
-%type <pC> 	Class classTete classLOpt
+%type <pB> 	Bloc BlocOpt BlocObj
+%type <pC> 	Class classLOpt ExtendsOpt
 %type <pM> 	DeclMethode
 %type <pV> 	LDeclChamp DeclChamp Param LParamOpt
 			LParam ValVar
@@ -28,6 +30,7 @@
 %{
 #include "tp.h"
 #include "tp_y.h"
+#include <stdio.h>
 
 extern int yylex();
 extern void yyerror(const char *); /*const necessaire pour eviter les warning de string literals*/
@@ -37,17 +40,15 @@ extern void yyerror(const char *); /*const necessaire pour eviter les warning de
 Prog : classLOpt Bloc
 ;
 
-classTete: CLASS Classname 						{ /*$$ = makeClass($2);*/ }
-;
-
-classLOpt: Class classLOpt 						{/* $1->nextClass = $2; $$ = $1 ;*/}
-| 												{/*$$ = NIL(Class)*/}
-;
-
 Class: Objet {} 
-| classTete '(' LParamOpt ')' ExtendsOpt BlocOpt IS BlocObj 
-												{/* initClasse($1, $3, $5, $6, $9, $10); $$ = $1; */}
+| CLASS Classname '(' LParamOpt ')' ExtendsOpt BlocOpt IS BlocObj
+												{ $$ = makeClasse($2,$4,$6,$7,$9);}
 ;
+
+classLOpt: Class classLOpt 						{ $1->nextClasse = $2; $$ = $1 ;}
+| 												{ $$ = NIL(Classe);}
+;
+
 
 Objet: OBJECT Classname IS BlocObj 				{	}
 ;

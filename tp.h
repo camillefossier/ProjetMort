@@ -64,15 +64,16 @@ typedef struct _Tree {
   } u;
 } Tree, *TreeP;
 
+typedef struct _Classe /*represente la meta classe*/
+{
 
-typedef union { 
-  char *S;
-  char C;
-  int I;
-  TreeP pT;
-  VarDeclP pV; /* same comment as above */
-} YYSTYPE;
-
+  char *nom;
+  struct _Classe* mereOpt;
+  struct LMethode *lmethodes;
+  struct Methode *constructeur;
+  struct LAttribut *lattributs; /*peut etre null si pas de valeur par defaut*/
+  struct _Classe* nextClasse;
+} Classe, *ClasseP;
 
 
 typedef struct _Methode
@@ -91,22 +92,7 @@ typedef struct _LMethode
   struct LMethode* nextMethode;
 }LMethode, *LMethodeP;
 
-typedef struct _Classe /*represente la meta classe*/
-{
 
-  char *nom;
-  struct Classe *mereOpt;
-  struct LMethode *lmethodes;
-  struct Methode *constructeur;
-  struct LAttribut *lattributs; /*peut etre null si pas de valeur par defaut*/
-} Classe, *ClasseP;
-
-
-typedef struct _LClasse
-{
-  struct Classe* classe;
-  struct LClasse* next;
-} LClasse, *LClasseP;
 
 
 
@@ -269,9 +255,23 @@ typedef struct _typeC
   struct Classe *classe;
 }typeC, *typeCP;
 
+typedef union 
+{ 
+  ClasseP pC;
+  char *S;
+  char C;
+  int I;
+  TreeP pT;
+  LParam pV; /* same comment as above */
+  Bloc pB;
+} YYSTYPE;
 
 
-Classe makeClasse(char* nom, struct Classe mereOpt, LMethode lmethodes, Methode constructeur, LAttribut lattributs);
+
+
+
+
+ClasseP makeClasse(char* nom, LParam lparam, ClasseP extendsOpt, Bloc blocOpt, Bloc blocObj);
 Methode makeMethode(Classe typeDeRetour, char nom, Argument larg, bool override, Bloc bloc);
 
 
