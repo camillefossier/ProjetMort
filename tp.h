@@ -271,7 +271,8 @@ typedef struct _typeC
 
 
 
-
+Classe makeClasse(char* nom, struct Classe mereOpt, LMethode lmethodes, Methode constructeur, LAttribut lattributs);
+Methode makeMethode(Classe typeDeRetour, char nom, Argument larg, bool override, Bloc bloc);
 
 
 #define YYSTYPE YYSTYPE
