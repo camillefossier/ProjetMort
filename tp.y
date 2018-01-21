@@ -20,11 +20,16 @@
 			ExprOperateur Instr LInstrOpt 
 			LInstr 
 			Envoi Selection
+
 %type <pB> 	Bloc BlocOpt BlocObj
+
 %type <pC> 	Class classLOpt ExtendsOpt
+
 %type <pM> 	DeclMethode
+
 %type <pV> 	LDeclChamp DeclChamp Param LParamOpt
 			LParam ValVar
+			
 %type <I> 	OverrideOpt
 
 %{
