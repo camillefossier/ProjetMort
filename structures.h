@@ -1,31 +1,10 @@
-typedef struct Classe //represente la meta classe
-{
-
-	char *nom;
-	struct Classe *mereOpt;
-	LMethode lmethodes;
-	Methode *constructeur;
-	LAttribut lattributs; //peut etre null si pas de valeur par defaut
-
-
-} Classe;
-/********** 
-possibilité : déclarer Classe et Objet de la meme façon
-***** */
-
-typedef struct LClasse
-{
-	Classe* classe;
-	LClasse* next;
-} LClasse;
-
 typedef struct Methode
 {
 	Classe *typeDeRetour;
 	char *nom;
 	Argument *larg;
 	bool override;
-	/* TODO declarations, suite d'expressions et instructions*/
+	BLOC* Bloc;
 
 } Methode;
 
@@ -34,6 +13,26 @@ typedef struct LMethode
 	Methode* methode;
 	LMethode* nextMethode;
 } LMethode;
+
+typedef struct Classe /*represente la meta classe*/
+{
+
+	char *nom;
+	struct Classe *mereOpt;
+	LMethode lmethodes;
+	Methode *constructeur;
+	LAttribut lattributs; /*peut etre null si pas de valeur par defaut*/
+
+} Classe;
+
+
+typedef struct LClasse
+{
+	Classe* classe;
+	LClasse* next;
+} LClasse;
+
+
 
 enum typeAttribut 
 {
@@ -65,7 +64,7 @@ typedef struct LAttribut
 typedef struct Objet
 {
 	Classe *classe;
-	LAttribut *lattributs; //attributs avec leur valeur courante
+	LAttribut *lattributs; /*attributs avec leur valeur courante*/
 
 } Objet;
 
@@ -95,7 +94,7 @@ typedef struct Expression
 	{
 		Ident *id;
 		Const cst;
-		//struct Expression *expr; //utilité ?
+		struct Expression *expr; /*utilité ?*/
 		Cast *c;
 		Selection *s;
 		Instanciation *inst;
@@ -104,7 +103,7 @@ typedef struct Expression
 	}
 } Expression;
 
-enum typeIdent {INTEGER, STRING}; //et les methodes ?
+enum typeIdent {INTEGER, STRING}; /*et les methodes ?*/
 typedef struct Ident
 {
 	char* nom;
@@ -162,7 +161,7 @@ typedef struct Bloc
 }Bloc;
 
 typedef struct Envoi{
-	Expression *dst;//probleme ambiguité
+	Expression *dst;/*probleme ambiguité*/
 	Methode *methode;
 	Expression *lExprOpt; 
 } Envoi;
@@ -199,3 +198,4 @@ typedef struct typeC
 	typetypeC type;
 	Classe *classe;
 } typetypeC;
+
