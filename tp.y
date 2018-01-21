@@ -74,7 +74,8 @@ LDeclChamp: DeclChamp LDeclChamp 				{/* $1->nextParam = $3; $$ = $1;*/}
 DeclChamp: VAR Id ':' TypeC AffOpt ';' 			{/* $$ = makeParam($2, $4, $5, 2); */}
 ;
 
-TypeC: INTC 									{/* $$ = makeLeafStr(APPC, "Integer"); */}    //INTC STRINGC ET VOIDC peuvent êtres traités dans Classname en les mettant dans le même environnement (qui sera rentré à la main à la compilation)
+TypeC: INTC 									{/* $$ = makeLeafStr(APPC, "Integer"); */}    	//INTC STRINGC ET VOIDC peuvent êtres traités dans Classname en les mettant dans le même environnement
+																								//(qui sera rentré à la main à la compilation)
 | STRINGC 										{/* $$ = makeLeafStr(APPC, "String"); */}
 | VOIDC 										{/*TODO; */}
 | Classname 									{/* $$ = makeLeafStr(APPC, $1); */}
@@ -189,7 +190,3 @@ MethodeC: Id '(' LExprOpt ')' 					{	}
 Selection: Expr '.' Id 							{/* $$ = makeTree(EEXPI, 2, $1, makeLeafStr(IDVAR, $3)); */}
 | Id 				   							{/* $$ = makeLeafStr(IDVAR, $1); */}
 ;
-
-
-
-

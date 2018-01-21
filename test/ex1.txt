@@ -6,13 +6,13 @@
  * constructions.
  * Les resultats donnés à l'exécution seront precises ulterieurement aussi.
  */
- object CptPoint is        /* Compteur d'instances de Point */
+object CptPoint is           /* Compteur d'instances de Point */
 { var next : Integer := 1;   /* index de la prochaine instance de Point */
-  def incr() : Integer is {} /* result := next; next := next + 1;*/  
+  def incr() : Integer is { result := next; next := next + 1;}
   def howMany() : Integer := next - 1
 }
 
-class Point(var x: Integer, var y: Integer := 0, var name: String)
+class Point(var x: Integer, var y: Integer := 0, var name: String := "")
       { CptPoint.incr(); } is
 { var hasClone : Integer := 0;   /* attributs supplementaires */
   /* la valeur du champ ci-dessous est indefinie si hasClone vaut 0.
@@ -30,9 +30,10 @@ class Point(var x: Integer, var y: Integer := 0, var name: String)
 
   def cloned() : Integer := hasClone <> 0
 
-  def move(dx: Integer, dy: Integer, verbose: Integer := 0) is {
+  def move(dx: Integer, dy: Integer, verbose: Integer := 0) : Point is {
       x := x + dx; y := y + dy;
       if verbose then { this.print(); } else {}
+      result := this;
   }
 
   def print(verbose : Integer := 0 ) is {
@@ -46,7 +47,7 @@ class Point(var x: Integer, var y: Integer := 0, var name: String)
    * avec setName
    */
   def clone() : Point is
-  { this.clone = 1;
+  { this.hasClone = 1;
     /* On memorise le dernier clone construit à partir de cet objet */
     this.clone := new Point(x, y, this.name & "'");
     result := this.clone;
@@ -63,7 +64,6 @@ class Point(var x: Integer, var y: Integer := 0, var name: String)
   def egal(p: Point) : Integer is {
    /* ils sont egaux s'ils ont memes coordonnees */
        var b1 : Integer := p.x - x;
-
        var b2 : Integer := p.y - y;
        is
        if b1 then result := 0; else result := b2 = 0;
@@ -124,7 +124,7 @@ object CouleurFactory is
  */
 class PointColore(x: Integer := 0, y:Integer:= 0,
                   var coul: Couleur := CouleurFactory.blanc())
-      extends Point(x, y)  is {
+      extends Point(x, y) is {
 
   def couleur() : Couleur := coul
 
@@ -215,10 +215,11 @@ class A2() extends A() is {
   /* ajoute une valmeur par defaut à x qui n'en avait pas. Le parametre
    * y conserve sa valeur par defaut definie dans la methode de la superclasse
    */
-  override def h(x : Integer, y: Integer := 3) : Integer := super.h(x, y)
+  override def h(x : Integer := 3, y: Integer) : Integer := super.h(x, y)
 }
 
 { /* Bloc qui correspond au programme principal */
+  var true: Integer := 1;
   var p1: Point := new Point(1, 5, "p1");
   var p2: Point := new Point(2, 3, "p2");
   var p3 : Point := new Point(); /* utilise toutes les valeurs par defaut */
@@ -245,7 +246,7 @@ is
   p2.print();
   o.clone().print();
   o.clone().move(54, 36).print(true);
-  O.allClones();
+  o.allClones();
   /* Ne doit pas compiler car clone() renvoie statiquement un Point alors
    * que o est declare comme PointColore
    * o := o.clone();
@@ -254,17 +255,17 @@ is
   p1.print();
   o.clone().print();
   "test(Point, PointColore, PointNoir)".println();
-  unTest.test(p1, o, pn);
+  Test.test(p1, o, pn);
   "test(PointNoir, PointNoir, PointNoir)".println();
-  unTest.test(pn, pn, pn);
+  Test.test(pn, pn, pn);
   p1 := pn; /* affectation entre pointeurs ! */
-  unTest.test2(o);
-  unTest.test2(pn);
+  Test.test2(o);
+  Test.test2(pn);
   o := pn;  /* Idem : on doit avoir de la liaison dynamique ci-dessous */
 
   "test(PointNoir, PointNoir, PointNoir)".println();
-  unTest.test(p1, o, pn);
-  unTest.test2(o);
-  unTest.test2(pn);
+  Test.test(p1, o, pn);
+  Test.test2(o);
+  Test.test2(pn);
   "\nDone".println();
 }
