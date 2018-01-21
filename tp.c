@@ -190,3 +190,24 @@ TreeP makeLeafLVar(short op, VarDeclP lvar) {
   tree->u.lvar = lvar;
   return(tree);
 }
+
+Classe makeClass(char* nom)
+{
+  ClasseP *classe = NEW(1, Classe);
+  classe->nom = nom;
+}
+
+/*Methode makeMethode(Classe typeDeRetour, char nom, Argument larg, bool override, Bloc bloc)
+{
+  Methode methode = NEW(1, Methode);
+
+  methode->typeDeRetour = typeDeRetour;
+  methode->nom = nom;
+  methode->larg = larg;
+
+  methode.override = override;
+  methode->bloc = bloc;
+
+  return (methode);
+}
+*/
