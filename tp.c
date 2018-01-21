@@ -204,6 +204,15 @@ ClasseP makeClasse(char* nom, LParamP lparam, ClasseP extendsOpt, BlocP blocOpt,
   return classe;
 }
 
+ObjetP makeObjet(ClasseP classe, LAttributP lattributs)
+{
+  ObjetP objet = NEW(1, Objet);
+  objet->classe = classe;
+  objet->lattributs = lattributs;
+  
+  return objet;
+}
+
 /*Methode makeMethode(Classe typeDeRetour, char nom, Argument larg, bool override, Bloc bloc)
 {
   Methode methode = NEW(1, Methode);

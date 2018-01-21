@@ -125,7 +125,7 @@ typedef struct LAttribut
 
 typedef struct _Objet
 {
-  struct Classe *classe;
+  struct _Classe *classe;
   struct LAttribut *lattributs; /*attributs avec leur valeur courante*/
 
 } Objet, *ObjetP;
@@ -268,7 +268,7 @@ typedef union
 
 
 ClasseP makeClasse(char* nom, LParamP lparam, ClasseP extendsOpt, BlocP blocOpt, BlocP blocObj);
-
+ObjetP makeObjet(ClasseP classe, LAttributP lattributs);
 Methode makeMethode(Classe typeDeRetour, char nom, Argument larg, bool override, Bloc bloc);
 
 
