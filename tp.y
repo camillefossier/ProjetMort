@@ -110,7 +110,7 @@ ExtendsOpt: EXTENDS Classname '(' LExprOpt ')'  {/* TreeP nC = makeLeafStr(APPC,
 |					{/* $$ = NIL(Tree); */}
 ;
 
-Expr: 		Cste 								{/* $$ = makeLeafInt(ECONST, $1); */}
+Expr: Cste 										{/* $$ = makeLeafInt(ECONST, $1); */}
 | '(' Expr ')'  								{/* $$ = makeTree(EPEXP, 2, NIL(Tree), $2); */}
 | '(' TypeC Id ')' 								{/* $$ = makeTree(ECAST, 2, NIL(Tree), $1); */}	//CCast
 | Selection    									{/* $$ = makeTree(ESEL, 2, NIL(Tree), $1); */}
@@ -119,8 +119,6 @@ Expr: 		Cste 								{/* $$ = makeLeafInt(ECONST, $1); */}
 | ExprOperateur 								{/* $$ = makeTree(EOPER, 2, NIL(Tree), $1); */}
 | TypeC											{	}
 ;
-
-
 
 LExprOpt: LExpr 								{/* $$ = makeTree(EEXPO, 2, NIL(Tree), $1); */}
 | 												{/* $$ = NIL(Tree); */}
