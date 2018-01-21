@@ -19,7 +19,7 @@
 			ExprOperateur Instr LInstrOpt 
 			LInstr Bloc 
 			Envoi Selection
-%type <pC> 	Class classTete LClassOpt
+%type <pC> 	Class classTete classLOpt
 %type <pM> 	DeclMethode
 %type <pV> 	LDeclChamp DeclChamp Param LParamOpt
 			LParam ValVar
@@ -28,19 +28,20 @@
 %{
 #include "tp.h"
 #include "tp_y.h"
+#include "structures.h"
 
 extern int yylex();
 extern void yyerror(const char *); /*const necessaire pour eviter les warning de string literals*/
 %}
 
 %%
-Prog : LClassOpt Bloc
+Prog : classLOpt Bloc
 ;
 
 classTete: CLASS Classname 						{/* $$ = makeClass($2); */}
 ;
 
-LClassOpt: Class LClassOpt 						{/* $1->nextClass = $2; $$ = $1 ;*/}
+classLOpt: Class classLOpt 						{/* $1->nextClass = $2; $$ = $1 ;*/}
 | 												{/*$$ = NIL(Class)*/}
 ;
 
