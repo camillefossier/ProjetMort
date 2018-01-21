@@ -28,6 +28,7 @@
 %{
 #include "tp.h"
 #include "tp_y.h"
+#include "structures.h"
 
 extern int yylex();
 extern void yyerror(const char *); /*const necessaire pour eviter les warning de string literals*/
