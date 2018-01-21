@@ -37,7 +37,7 @@ extern void yyerror(const char *); /*const necessaire pour eviter les warning de
 Prog : classLOpt Bloc
 ;
 
-classTete: CLASS Classname 						{/* $$ = makeClass($2); */}
+classTete: CLASS Classname 						{ $$ = makeClass($2); }
 ;
 
 classLOpt: Class classLOpt 						{/* $1->nextClass = $2; $$ = $1 ;*/}
