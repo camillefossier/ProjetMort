@@ -107,7 +107,7 @@ OverrideOpt: OVERRIDE 							{/* $$ = TRUE; */}
 ;
 
 ExtendsOpt: EXTENDS Classname '(' LExprOpt ')'  {/* TreeP nC = makeLeafStr(APPC, $2); $$ = makeTree(EXTO, 2, nC, $4); */}
-|					{/* $$ = NIL(Tree); */}
+|												{/* $$ = NIL(Tree); */}
 ;
 
 Expr: Cste 										{/* $$ = makeLeafInt(ECONST, $1); */}
@@ -153,8 +153,8 @@ LInstr : Instr LInstr 							{/*$$ = makeTree(LINST, 2, $1, $2);*/}
 | Instr		 									{/*$$ = makeTree(EINST, 2, $1, NIL(Tree)); */}
 ;
 
-BlocOpt: Bloc {}
-| {}
+BlocOpt: Bloc 									{	}
+| 												{	}
 ;
 
 Bloc : '{' Contenu '}'    						{/* $$ = makeTree(EIB, 2, NIL(Tree), $2); */}
