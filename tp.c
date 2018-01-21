@@ -191,11 +191,15 @@ TreeP makeLeafLVar(short op, VarDeclP lvar) {
   return(tree);
 }
 
-ClasseP makeClasse(char* nom, LParam lparam, ClasseP extendsOpt, Bloc blocOpt, Bloc blocObj)
+ClasseP makeClasse(char* nom, LParamP lparam, ClasseP extendsOpt, BlocP blocOpt, BlocP blocObj)
 {
-  printf("salut\n");
   ClasseP classe = NEW(1, Classe);
   classe->nom = nom;
+
+  char *str = classe->nom;
+  printf("%c %c\n", str[0], str[1]);
+
+
   classe->nextClasse = NIL(Classe);
   return classe;
 }

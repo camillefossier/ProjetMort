@@ -1,4 +1,3 @@
-
 /* attention: NEW est defini dans tp.h Utilisez un autre nom de token */
 %token IS CLASS VAR EXTENDS DEF OVERRIDE RETURN AS IF THEN ELSE AFF NEWC VOIDC INTC STRINGC ADD SUB MUL DIV CONCAT
 %token OBJECT
@@ -23,13 +22,13 @@
 
 %type <pB> 	Bloc BlocOpt BlocObj
 
-%type <pC> 	Class classLOpt ExtendsOpt
+%type <pC> 	Class LClassOpt ExtendsOpt
 
 %type <pM> 	DeclMethode
 
 %type <pV> 	LDeclChamp DeclChamp Param LParamOpt
 			LParam ValVar
-			
+
 %type <I> 	OverrideOpt
 
 %{
@@ -42,21 +41,24 @@ extern void yyerror(const char *); /*const necessaire pour eviter les warning de
 %}
 
 %%
-Prog : classLOpt Bloc
+Prog : LClassOpt Bloc
 ;
 
-Class: Objet {} 
+Class: Objet 									{			} 
+
 | CLASS Classname '(' LParamOpt ')' ExtendsOpt BlocOpt IS BlocObj
 												{ $$ = makeClasse($2,$4,$6,$7,$9);}
 ;
 
-classLOpt: Class classLOpt 						{ $1->nextClasse = $2; $$ = $1 ;}
+LClassOpt: Class LClassOpt 						{ /*$1->nextClasse = $2; */$$ = $1 ;}
 | 												{ $$ = NIL(Classe);}
 ;
 
 
 Objet: OBJECT Classname IS BlocObj 				{	}
 ;
+
+
  LParamOpt: LParam 								{/*	$$ = $1; */}
 |				  								{/* $$ = NIL(VarDecl); */}
 ;
