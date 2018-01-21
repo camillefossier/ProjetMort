@@ -106,7 +106,7 @@ enum typeIdent {INTEGER, STRING}; /*et les methodes ?*/
 typedef struct Ident
 {
 	char* nom;
-	struct typeIdent type;
+	struct typeIdent* type;
 	union valeur 
 	{
 		char[20] str;
