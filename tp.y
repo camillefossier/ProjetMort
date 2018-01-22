@@ -26,8 +26,9 @@
 
 %type <pM> 	DeclMethode
 
-%type <pV> 	LDeclChamp DeclChamp Param LParamOpt
-			LParam ValVar
+%type <pV> 	Param LParamOpt LParam 		/*type LParamP*/
+
+%type <pVD>	LDeclChamp DeclChamp ValVar	/*type var decl (LAttributP)*/
 
 %type <I> 	OverrideOpt
 
@@ -44,33 +45,33 @@ extern void yyerror(const char *); /*const necessaire pour eviter les warning de
 Prog : LClassOpt Bloc
 ;
 
-Class: OBJECT Classname IS BlocObj 							{printf("On cree un objet. \n"); } 
+Class: OBJECT Classname IS BlocObj 						{printf("On cree un objet. \n"); } 
 
 | CLASS Classname '(' LParamOpt ')' ExtendsOpt BlocOpt IS BlocObj
-												{ $$ = makeClasse($2,$4,$6,$7,$9);}
+														{ $$ = makeClasse($2,$4,$6,$7,$9);}
 ;
 
-LClassOpt: Class LClassOpt 						{printf("On appelle pas NextClasse. \n"); 
-													 $1->nextClasse = $2; $$ = $1 ;}
+LClassOpt: Class LClassOpt 								{printf("On appelle pas NextClasse. \n"); 
+															/* $1->nextClasse = $2; */	$$ = $1 ;}
 
-| 												{ $$ = NIL(Classe);}
+| 														{printf("NIL Classe\n"); $$ = NIL(Classe);}
 ;
 
 
- LParamOpt: LParam 								{/*	$$ = $1; */}
-|				  								{/* $$ = NIL(VarDecl); */}
+ LParamOpt: LParam 										{printf("LParam \n"); $$ = $1; }
+|				  										{printf("NIL LParam \n"); $$ = NIL(LParam); }
 ;
 
-LParam: Param ',' LParam 						{/* $1->nextParam = $3; $$=$1; */}
-| Param            	     						{/* $$ = $1; */}
+LParam: Param ',' LParam 								{$1->nextAttribut = $3; $$=$1; 						printf("Param , LParam \n"); }
+| Param            	     								{ $$ = $1; 											printf("Param \n");	}
 ;
 
-Param: VAR Id ':' TypeC ValVar 					{/* $$ = makeParam($1,$3,NIL(Tree),0); */}
-| Id ':' TypeC ValVar 							{/* $$ = makeParam($1,$3,NIL(Tree),0); */}
+Param: VAR Id ':' TypeC ValVar 							{/*$$ = makeParam($1,$3,NIL(Tree),0);*/}
+| Id ':' TypeC ValVar 									{/* $$ = makeParam($1,$3,NIL(Tree),0); */}
 ;
 
-ValVar: AFF Expr 								{	}
-| 												{	}
+ValVar: AFF Expr 										{	}
+| 														{/*$$ = NIL(ValVar);*/	}
 ;
 
 LDeclChamp: DeclChamp LDeclChamp 				{/* $1->nextParam = $3; $$ = $1;*/}

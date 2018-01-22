@@ -213,6 +213,11 @@ ObjetP makeObjet(ClasseP classe, LAttributP lattributs)
   return objet;
 }
 
+ParamP makeParam(char* nom, typeCP type)
+{
+  ParamP param = NEW(1,Param);
+}
+
 /*Methode makeMethode(Classe typeDeRetour, char nom, Argument larg, bool override, Bloc bloc)
 {
   Methode methode = NEW(1, Methode);

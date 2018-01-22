@@ -119,7 +119,7 @@ typedef struct _Attribut
 typedef struct LAttribut
 {
   struct Attribut* attribut;
-  struct LAttribut* nextAtribut;
+  struct LAttribut* nextAttribut;
 } LAttribut, LParam, LChamp, *LAttributP, *LParamP, *LChampP;
 
 
@@ -264,12 +264,14 @@ typedef union
   TreeP pT;
   LParamP pV; /* same comment as above */
   BlocP pB;
+  LAttributP pVD;
 } YYSTYPE;
 
 
 ClasseP makeClasse(char* nom, LParamP lparam, ClasseP extendsOpt, BlocP blocOpt, BlocP blocObj);
 ObjetP makeObjet(ClasseP classe, LAttributP lattributs);
 Methode makeMethode(Classe typeDeRetour, char nom, Argument larg, bool override, Bloc bloc);
+ParamP makeParam(char* nom, typeCP type);
 
 
 #define YYSTYPE YYSTYPE
