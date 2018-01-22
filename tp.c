@@ -291,7 +291,7 @@ void printTree(TreeP tree)
       break;
     case SEXPR :
 
-      printf(" SEXPR : ");
+      printf(" @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@SEXPR : ");
       printTree(tree->u.children[0]);
       printf(" . ");
       printTree(tree->u.children[1]);
@@ -302,7 +302,7 @@ void printTree(TreeP tree)
       break;
 
     case YEXT :
-      printf(" YEXT \n");   /*non plus je crois)*/
+      printf(" #######----------------------------############YEXT \n");   /*non plus je crois)*/
       break;
 
     case YLEXPR :
