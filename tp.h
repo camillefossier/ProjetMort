@@ -30,6 +30,22 @@ typedef unsigned char bool;
 #define INFE  4
 #define SUP 5
 #define SUPE  6
+#define YPROG 7
+#define YCONT 8
+#define LDECLC 9
+#define YDECLC 10
+#define LINSTR 11
+#define YINSTR 12
+#define YITE 13
+#define EAFF 14
+#define ECONST 15
+#define ECAST 16
+#define YSELEC 17
+#define EINST 18
+#define TINTC 19
+#define TSTRINGC 20
+#define SEXPR 21
+#define YID 22
 
 
 /* Codes d'erreurs. Cette liste n'est pas obligatoire ni limitative */
@@ -243,6 +259,10 @@ typedef struct _Programme
   struct Bloc *bloc;
 } Programme, *ProgrammeP;
 
+/*typedef struct _ValVar
+{
+
+} ValVar, **/
 /*
 typedef struct ClasseTete
 {
@@ -266,8 +286,10 @@ typedef union
   TreeP pT;
   LParamP pV; /* same comment as above */
   LAttributP pVD;
-  BlocP pB;
+  /*BlocP pB;*/
   BlocObjP pBO;
+  ObjetIsoleP pOI;
+  ProgrammeP pP;
 } YYSTYPE;
 
 
@@ -277,6 +299,11 @@ ObjetIsoleP makeObjetIsole(char *nom, BlocObjP bloc);
 
 ParamP makeParam(char* nom, typeCP type,LAttributP val);
 
+TreeP makeTree(short op, int nbChildren, ...);
+TreeP makeLeafStr(short op, char *str);
+TreeP makeLeafInt(short op, int val);
+TreeP makeLeafLVar(short op, VarDeclP lvar);
+void printTree(TreeP tree) ;
 
 #define YYSTYPE YYSTYPE
 #define YYERROR_VERBOSE 1

@@ -215,16 +215,179 @@ ObjetIsoleP makeObjetIsole(char* nom, BlocObjP bloc)
   
   return objet;
 }
+void printTree(TreeP tree) 
+{
+  if(tree != NIL(Tree)) 
+  {
+    switch (tree->op) {
+    case YPROG :
+      printf(" PROG \n");
+      printTree(tree->u.children[0]);
+      printTree(tree->u.children[1]);
+      break;
+    case YCONT :
+      printf(" CONT \n");
+      printTree(tree->u.children[0]);
+      printTree(tree->u.children[1]);
+      break;
+    case LDECLC :
+      printf(" LDECLC \n");
+      printTree(tree->u.children[0]);
+      printTree(tree->u.children[1]);
+      break;
+    case YDECLC :
+      printf(" DECL \n");
+      printTree(tree->u.children[0]);
+      printTree(tree->u.children[1]);
+      printTree(tree->u.children[2]);
+      break;
+    case LINSTR :
+      printf(" LINSTR \n");
+      printTree(tree->u.children[0]);
+      printTree(tree->u.children[1]);
+      break;
+    case YINSTR :
+      printf(" INSTR \n");
+      break;
+    case STRINGC :
+      printf("%s", tree->u.str);
+      break;
+    case YITE :
+      printf(" ITE \n");
+      break;
+    case EAFF :
+      printf(" EAFF \n");
+      break;
+    case ECONST :
+      printf(" ECONST \n");
+      break;
+    case ECAST :
+      printf(" ECAST \n");
+      break;
+    case EINST :
+      printf(" EINST \n");
+      break;
+    case TINTC :
+      printf(" TINTC \n");
+      break;
+    case TSTRINGC :
+      printf(" TSTRINGC \n");
+      break;
+    case SEXPR :
 
-ParamP makeParam(char* nom, typeCP type,LAttributP val)
+      printf(" SEXPR : ");
+      printTree(tree->u.children[0]);
+      printf(" . ");
+      printTree(tree->u.children[1]);
+
+      break;
+    case YID :
+      printf(" YID \n");
+      break;
+    /*case Id :
+      printf("%s", tree->u.lvar->nom);
+      break;
+    case ADD :
+      assert(tree->nbChildren == 2);
+      printf("(");
+      printTree(tree->u.children[0]);
+      printf(" + ");
+      printTree(tree->u.children[1]);
+      printf(")");
+      break;
+    case SUB :
+      assert(tree->nbChildren == 2);
+      printf("(");
+      printTree(tree->u.children[0]);
+      printf(" - ");
+      printTree(tree->u.children[1]);
+      printf(")");
+      break;
+    case MUL :
+      assert(tree->nbChildren == 2);
+      printf("(");
+      printTree(tree->u.children[0]);
+      printf(" * ");
+      printTree(tree->u.children[1]);
+      printf(")");
+      break;
+    case DIV :
+      assert(tree->nbChildren == 2);
+      printf("(");
+      printTree(tree->u.children[0]);
+      printf(" / ");
+      printTree(tree->u.children[1]);
+      printf(")");
+      break;
+    case CONCAT :
+      assert(tree->nbChildren == 2);
+      printf("(");
+      printTree(tree->u.children[0]);
+      printf(" & ");
+      printTree(tree->u.children[1]);
+      printf(")");
+      break;
+    case EQ :
+      assert(tree->nbChildren == 2);
+      printf("(");
+      printTree(tree->u.children[0]);
+      printf(") = (");
+      printTree(tree->u.children[1]);
+      printf(")");
+    case NE :
+      assert(tree->nbChildren == 2);
+      printf("(");
+      printTree(tree->u.children[0]);
+      printf(" <> ");
+      printTree(tree->u.children[1]);
+      printf(")");
+    case INF :
+      assert(tree->nbChildren == 2);
+      printf("(");
+      printTree(tree->u.children[0]);
+      printf(" < ");
+      printTree(tree->u.children[1]);
+      printf(")");
+    case INFE :
+      assert(tree->nbChildren == 2);
+      printf("(");
+      printTree(tree->u.children[0]);
+      printf(" <= ");
+      printTree(tree->u.children[1]);
+      printf(")");
+    case SUP :
+      assert(tree->nbChildren == 2);
+      printf("(");
+      printTree(tree->u.children[0]);
+      printf(" > ");
+      printTree(tree->u.children[1]);
+      printf(")");
+    case SUPE :
+      assert(tree->nbChildren == 2);
+      printf("(");
+      printTree(tree->u.children[0]);
+      printf(" >= ");
+      printTree(tree->u.children[1]);
+      printf(")");*/
+    default :
+      printf(" unknown ");
+      break;
+  }
+  }
+
+  
+}
+
+/*
+ParamP makeParam(char* nom, typeCP type,TreeP val)
 {
   ParamP param = NEW(1,Param);
   param->nom = nom;
-  param->
+  param->typeAttribut = 
 
   return (param);
 }
-
+*/
 /*Methode makeMethode(Classe typeDeRetour, char nom, Argument larg, bool override, Bloc bloc)
 {
   Methode methode = NEW(1, Methode);
