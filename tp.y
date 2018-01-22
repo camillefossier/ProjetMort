@@ -18,7 +18,7 @@
 			ExprOperateur Instr LInstrOpt 
 			LInstr Bloc BlocOpt Contenu
 			Envoi Selection Prog
-			LDeclChamp DeclChamp
+			LDeclChamp DeclChamp ExtendsOpt
 
 /*%type <pB> 	Bloc BlocOpt*/
 
@@ -26,7 +26,7 @@
 
 %type <pOI> ObjetIsole 					/*objet isole*/
 
-%type <pC> 	Class LClassOpt ExtendsOpt
+%type <pC> 	Class LClassOpt
 
 %type <pM> 	DeclMethode
 
@@ -134,8 +134,8 @@ OverrideOpt: OVERRIDE 							{/* $$ = TRUE; */}
 |     				  							{/* $$ = FALSE; */}
 ;
 
-ExtendsOpt: EXTENDS Classname '(' LExprOpt ')'  {/* TreeP nC = makeLeafStr(APPC, $2); $$ = makeTree(EXTO, 2, nC, $4); */}
-|												{/* $$ = NIL(Tree); */}
+ExtendsOpt: EXTENDS Classname '(' LExprOpt ')'  {  $$ = makeTree(YEXT, 2, makeLeafStr(TSTRINGC, $2), $4); }
+|												{ $$ = NIL(Tree); }
 ;
 
 Expr: Cste 										{$$ = makeLeafInt(ECONST, $1); }
@@ -148,12 +148,12 @@ Expr: Cste 										{$$ = makeLeafInt(ECONST, $1); }
 | TypeC											{$$ = $1;}
 ;
 
-LExprOpt: LExpr 								{/* $$ = makeTree(EEXPO, 2, NIL(Tree), $1); */}
-| 												{/* $$ = NIL(Tree); */}
+LExprOpt: LExpr 								{ $$ = $1; /*$$ = makeTree(YLEXPR, 2, NIL(Tree), $1); */}
+| 												{ $$ = NIL(Tree); }
 ;
 
-LExpr: Expr ',' LExpr 							{/* $$ = makeTree(LEXP, 2, $1, $3); */}
-| Expr 			  								{/* $$ = makeTree(EEXP, 2, NIL(Tree), $1); */}
+LExpr: Expr ',' LExpr 							{ $$ = makeTree(YLEXPR, 2, $1, $3); }
+| Expr 			  								{ $$ = $1; /*$$ = makeTree(EEXP, 2, NIL(Tree), $1);*/ }
 ;
 
 ExprOperateur: Expr ADD Expr 					{/* $$ = makeTree(EADD, 2, $1, $3); */}
@@ -166,7 +166,7 @@ ExprOperateur: Expr ADD Expr 					{/* $$ = makeTree(EADD, 2, $1, $3); */}
 | Expr RelOp Expr 								{/* $$ = makeTree($2, 2, $1, $3); */}
 ;
 
-Instr : Expr ';' 								{$$ = $1; }
+Instr : Expr ';' 								{$$ = makeTree(YEXPR, 1, $1); }
 | Bloc  										{$$ = $1; }
 | RETURN ';' 									{$$ = NIL(Tree); }
 | Selection AFF Expr ';' 						{$$ = makeTree(EAFF, 2, $1, $3); }

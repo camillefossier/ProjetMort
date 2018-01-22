@@ -46,6 +46,9 @@ typedef unsigned char bool;
 #define TSTRINGC 20
 #define SEXPR 21
 #define YID 22
+#define YEXPR 23
+#define YLEXPR 24
+#define YEXT 25
 
 
 /* Codes d'erreurs. Cette liste n'est pas obligatoire ni limitative */

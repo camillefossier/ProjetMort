@@ -259,11 +259,27 @@ void printTree(TreeP tree)
       printf(" EAFF \n");
       break;
     case ECONST :
-      printf(" ECONST \n");
+      printf(" ##########ECONST : ");
+      printf("%d", tree->u.val);
       break;
     case ECAST :
       printf(" ECAST \n");
       break;
+
+
+    case YEXPR :
+    printf(" YEXPR \n");
+      if(tree->nbChildren <= 1){
+        printTree(tree->u.children[0]);
+      }
+      else{
+        printf("Nb children = 2");
+        printTree(tree->u.children[0]);
+        printTree(tree->u.children[1]);
+      }
+      break;
+
+
     case EINST :
       printf(" EINST \n");
       break;
@@ -282,8 +298,17 @@ void printTree(TreeP tree)
 
       break;
     case YID :
-      printf(" YID \n");
+      printf(" YID \n");  /*wow*/
       break;
+
+    case YEXT :
+      printf(" YEXT \n");   /*non plus je crois)*/
+      break;
+
+    case YLEXPR :
+      printf(" ################ YLEXPR \n");  /*Ca ne s'affiche pas*/
+      break;
+
     /*case Id :
       printf("%s", tree->u.lvar->nom);
       break;
