@@ -152,7 +152,7 @@ LExprOpt: LExpr 								{ $$ = $1; /*$$ = makeTree(YLEXPR, 2, NIL(Tree), $1); */
 | 												{ $$ = NIL(Tree); }
 ;
 
-LExpr: Expr ',' LExpr 							{ $$ = makeTree(YLEXPR, 2, $1, $3); }
+LExpr: Expr ',' LExpr 							{ $$ = makeTree(YLEXPR, 2, $1, $3); }		/*TODO BIzarre*/
 | Expr 			  								{ $$ = $1; /*$$ = makeTree(EEXP, 2, NIL(Tree), $1);*/ }
 ;
 
