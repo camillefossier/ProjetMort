@@ -20,7 +20,9 @@
 			LInstr 
 			Envoi Selection
 
-%type <pB> 	Bloc BlocOpt BlocObj
+%type <pB> 	Bloc BlocOpt
+
+%type <pBO>	BlocObj
 
 %type <pC> 	Class LClassOpt ExtendsOpt
 
@@ -45,28 +47,28 @@ extern void yyerror(const char *); /*const necessaire pour eviter les warning de
 Prog : LClassOpt Bloc
 ;
 
-Class: OBJECT Classname IS BlocObj 						{printf("On cree un objet. \n"); } 
+Class: OBJECT Classname IS BlocObj						{ $$ = makeObjetIsole($2,$4);} 
 
 | CLASS Classname '(' LParamOpt ')' ExtendsOpt BlocOpt IS BlocObj
 														{ $$ = makeClasse($2,$4,$6,$7,$9);}
 ;
 
-LClassOpt: Class LClassOpt 								{printf("On appelle pas NextClasse. \n"); 
-															/* $1->nextClasse = $2; */	$$ = $1 ;}
+LClassOpt: Class LClassOpt 								{
+															$1->nextClasse = $2; 	$$ = $1 ;			printf("NextClasse. \n"); }
 
-| 														{printf("NIL Classe\n"); $$ = NIL(Classe);}
+| 														{$$ = NIL(Classe);									printf("NIL Classe\n"); 		}
 ;
 
 
- LParamOpt: LParam 										{printf("LParam \n"); $$ = $1; }
-|				  										{printf("NIL LParam \n"); $$ = NIL(LParam); }
+ LParamOpt: LParam 										{ $$ = $1; 											printf("LParam \n");			}
+|				  										{ $$ = NIL(LParam); 								printf("NIL LParam \n");		}
 ;
 
-LParam: Param ',' LParam 								{$1->nextAttribut = $3; $$=$1; 						printf("Param , LParam \n"); }
-| Param            	     								{ $$ = $1; 											printf("Param \n");	}
+LParam: Param ',' LParam 								{$1->nextAttribut = $3; $$=$1; 						printf("Param , LParam \n"); 	}
+| Param            	     								{ $$ = $1; 											printf("Param \n");				}
 ;
 
-Param: VAR Id ':' TypeC ValVar 							{/*$$ = makeParam($1,$3,NIL(Tree),0);*/}
+Param: VAR Id ':' TypeC ValVar 							{$$ = makeParam($2,$4,$5);}
 | Id ':' TypeC ValVar 									{/* $$ = makeParam($1,$3,NIL(Tree),0); */}
 ;
 

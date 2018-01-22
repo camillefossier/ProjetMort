@@ -93,9 +93,6 @@ typedef struct _LMethode
 }LMethode, *LMethodeP;
 
 
-
-
-
 enum typeAttribut 
 {
   INTATTR, STRATTR, OTHER
@@ -122,6 +119,18 @@ typedef struct LAttribut
   struct LAttribut* nextAttribut;
 } LAttribut, LParam, LChamp, *LAttributP, *LParamP, *LChampP;
 
+typedef struct _BlocObj
+{
+  struct LAttributs* lattributs;
+  struct LMethode* lmethodes;
+}BlocObj, *BlocObjP;
+
+typedef struct _Bloc
+{
+  struct DeclChamp *ldeclchamp;
+  struct LInstruction *lInstr;
+}Bloc, *BlocP;
+
 
 typedef struct _Objet
 {
@@ -134,8 +143,7 @@ typedef struct _Objet
 typedef struct _ObjetIsole
 {
   char *nom;
-  struct Methode *lmethodes;
-  struct LAttribut *lattributs;
+  BlocObjP bloc;
 } ObjetIsole, *ObjetIsoleP;
 
 
@@ -216,12 +224,6 @@ typedef struct _LInstruction
 } LInstruction, *LInstructionP;
 
 
-typedef struct _Bloc
-{
-  struct DeclChamp *ldeclchamp;
-  struct LInstruction *lInstr;
-}Bloc, *BlocP;
-
 typedef struct _Envoi{
   struct Expression *dst;/*probleme ambiguité*/
   struct Methode *methode;
@@ -263,15 +265,17 @@ typedef union
   int I;
   TreeP pT;
   LParamP pV; /* same comment as above */
-  BlocP pB;
   LAttributP pVD;
+  BlocP pB;
+  BlocObjP pBO;
 } YYSTYPE;
 
 
-ClasseP makeClasse(char* nom, LParamP lparam, ClasseP extendsOpt, BlocP blocOpt, BlocP blocObj);
-ObjetP makeObjet(ClasseP classe, LAttributP lattributs);
-Methode makeMethode(Classe typeDeRetour, char nom, Argument larg, bool override, Bloc bloc);
-ParamP makeParam(char* nom, typeCP type);
+ClasseP makeClasse(char* nom, LParamP lparam, ClasseP extendsOpt, BlocP blocOpt, BlocObjP blocObj);
+
+ObjetIsoleP makeObjetIsole(char *nom, BlocObjP bloc);
+
+ParamP makeParam(char* nom, typeCP type,LAttributP val);
 
 
 #define YYSTYPE YYSTYPE

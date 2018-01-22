@@ -191,31 +191,38 @@ TreeP makeLeafLVar(short op, VarDeclP lvar) {
   return(tree);
 }
 
-ClasseP makeClasse(char* nom, LParamP lparam, ClasseP extendsOpt, BlocP blocOpt, BlocP blocObj)
+ClasseP makeClasse(char* nom, LParamP lparam, ClasseP extendsOpt, BlocP blocOpt, BlocObjP blocObj)
 {
   ClasseP classe = NEW(1, Classe);
   classe->nom = nom;
 
-  char *str = classe->nom;
-  printf("La classe cree est : %c%c%c%c%c%c%c%c\n", str[0], str[1], str[2], str[3], str[4], str[5], str[6], str[7]);
+  printf("La classe cree est : %s\n", classe->nom);
 
 
   classe->nextClasse = NIL(Classe);
   return classe;
 }
 
-ObjetP makeObjet(ClasseP classe, LAttributP lattributs)
+
+ObjetIsoleP makeObjetIsole(char* nom, BlocObjP bloc)
 {
-  ObjetP objet = NEW(1, Objet);
-  objet->classe = classe;
-  objet->lattributs = lattributs;
+  ObjetIsoleP objet = NEW(1, ObjetIsole);
+  objet->nom = nom;
+  objet->bloc = bloc;
+
+  printf("L'objet cree est : %s\n", objet->nom);
+
   
   return objet;
 }
 
-ParamP makeParam(char* nom, typeCP type)
+ParamP makeParam(char* nom, typeCP type,LAttributP val)
 {
   ParamP param = NEW(1,Param);
+  param->nom = nom;
+  param->
+
+  return (param);
 }
 
 /*Methode makeMethode(Classe typeDeRetour, char nom, Argument larg, bool override, Bloc bloc)
