@@ -6,6 +6,7 @@
 #include <string.h>
 #include "tp.h"
 #include "tp_y.h"
+#include <assert.h>
 
 extern int yyparse();
 extern int yylineno;
@@ -259,7 +260,7 @@ void printTree(TreeP tree)
       printf(" EAFF \n");
       break;
     case ECONST :
-      printf(" ##########ECONST : ");
+      printf(" ECONST : ");
       printf("%d", tree->u.val);
       break;
     case ECAST :
@@ -291,7 +292,7 @@ void printTree(TreeP tree)
       break;
     case SEXPR :
 
-      printf(" @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@SEXPR : ");
+      printf(" SEXPR : ");
       printTree(tree->u.children[0]);
       printf(" . ");
       printTree(tree->u.children[1]);
@@ -302,12 +303,62 @@ void printTree(TreeP tree)
       break;
 
     case YEXT :
-      printf(" #######----------------------------############YEXT \n");   /*non plus je crois)*/
+      printf(" YEXT \n");   /*non plus je crois)*/
       break;
 
     case YLEXPR :
-      printf(" ################ YLEXPR \n");  /*Ca ne s'affiche pas*/
+      printf(" YLEXPR \n");  /*Ca ne s'affiche pas*/
       break;
+    case EENVOI :
+      printf(" EENVOI \n");  /*Ca ne s'affiche pas*/
+      break;
+    case METHOD :
+      printf(" METHOD \n");  /*Ca ne s'affiche pas*/
+      break;
+    case YLCLASS :
+      
+      printf(" YLCLASS \n");  
+
+        printTree(tree->u.children[0]);
+        printTree(tree->u.children[1]);
+
+
+      break;
+    case YCLASS :
+      
+      printf(" YCLASS \n"); 
+
+        printTree(tree->u.children[0]);
+        printTree(tree->u.children[1]);
+        printTree(tree->u.children[2]);
+        printTree(tree->u.children[3]);
+
+      break;
+    case LDECLMETH :
+      printf("LDECLMETH \n");
+      printTree(tree->u.children[0]);
+      printTree(tree->u.children[1]);
+      break ;
+    case DMETHODE :
+      printf("DMETHODE\n");
+      printTree(tree->u.children[0]);
+        printTree(tree->u.children[1]);
+        printTree(tree->u.children[2]);
+        printTree(tree->u.children[3]);
+        printTree(tree->u.children[4]);
+      break;
+    case YLPARAM :
+      printf("YLPARAM\n");
+       printTree(tree->u.children[0]);
+      printTree(tree->u.children[1]);
+      break;
+    case YPARAM :
+     printf("YPARAM\n");
+     printTree(tree->u.children[0]);
+        printTree(tree->u.children[1]);
+        printTree(tree->u.children[2]);
+      break;
+
 
     /*case Id :
       printf("%s", tree->u.lvar->nom);

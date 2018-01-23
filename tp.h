@@ -49,7 +49,14 @@ typedef unsigned char bool;
 #define YEXPR 23
 #define YLEXPR 24
 #define YEXT 25
-
+#define EENVOI 26
+#define METHOD 27
+#define YLCLASS 28
+#define YCLASS 29
+#define LDECLMETH 30
+#define DMETHODE 31
+#define YLPARAM 32
+#define YPARAM 33
 
 /* Codes d'erreurs. Cette liste n'est pas obligatoire ni limitative */
 #define NO_ERROR  0
