@@ -37,7 +37,7 @@ int keywordOrId() {
   if (! strcmp(yytext, "new")) return NEWC;
   if (! strcmp(yytext, "return")) return RETURN;
   if (! strcmp(yytext, "object")) return OBJECT;
-  
+
   yylval.S = strdup(yytext);
   return(Id);
 }
@@ -83,7 +83,7 @@ void lexError(char c) {
 "/*"({NotStar}|({Star}+{NotStarPar}))*{Star}*"*/"  { }
 {Lower}{LC}*   { return keywordOrId(); }
 {Upper}{LC}*   { return keywordOrIdC(); }
-{Guill}({BS}|{PasBSG})*{Guill}   {yylval.S = strdup(yytext); return STRINGC;}
+{Guill}({BS}|{PasBSG})*{Guill}   {yylval.S = strdup(yytext); return Chaine;}
 
 . 		         { lexError(yytext[0]); }
 %%

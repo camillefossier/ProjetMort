@@ -30,23 +30,17 @@ typedef unsigned char bool;
 #define INFE  4
 #define SUP 5
 #define SUPE  6
-
 #define YPROG 7
 #define YCONT 8
 #define LDECLC 9
 #define YDECLC 10
 #define LINSTR 11
-#define YINSTR 12
+#define EAFF 12
 #define YITE 13
-#define EAFF 14
-#define ECONST 15
 #define ECAST 16
 #define YSELEC 17
 #define EINST 18
-#define TINTC 19
-#define TSTRINGC 20
 #define SELEXPR 21
-#define YID 22
 #define YEXPR 23
 #define YLEXPR 24
 #define YEXT 25
@@ -58,6 +52,7 @@ typedef unsigned char bool;
 #define DMETHODE 31
 #define YLPARAM 32
 #define YPARAM 33
+#define YOBJ 34
 
 /* Codes d'erreurs. Cette liste n'est pas obligatoire ni limitative */
 #define NO_ERROR  0
@@ -314,7 +309,7 @@ TreeP makeTree(short op, int nbChildren, ...);
 TreeP makeLeafStr(short op, char *str);
 TreeP makeLeafInt(short op, int val);
 TreeP makeLeafLVar(short op, VarDeclP lvar);
-void printTree(TreeP tree) ;
+void afficherProgramme(TreeP tree) ;
 
 #define YYSTYPE YYSTYPE
 #define YYERROR_VERBOSE 1

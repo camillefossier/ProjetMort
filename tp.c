@@ -216,249 +216,325 @@ ObjetIsoleP makeObjetIsole(char* nom, BlocObjP bloc)
   
   return objet;
 }
-void printTree(TreeP tree) 
+void afficherProgramme(TreeP tree) 
 {
   if(tree != NIL(Tree)) 
   {
     switch (tree->op) {
     case YPROG :
       printf(" PROG \n");
-      printTree(tree->u.children[0]);
-      printTree(tree->u.children[1]);
+      afficherProgramme(tree->u.children[0]);
+      afficherProgramme(tree->u.children[1]);
       break;
     case YCONT :
-      printf(" CONT \n");
-      printTree(tree->u.children[0]);
-      printTree(tree->u.children[1]);
+      printf("\n {CONT");
+      afficherProgramme(tree->u.children[0]);
+      afficherProgramme(tree->u.children[1]);
+      printf("\n}");
       break;
     case LDECLC :
-      printf(" LDECLC \n");
-      printTree(tree->u.children[0]);
-      printTree(tree->u.children[1]);
+      afficherProgramme(tree->u.children[0]);
+      afficherProgramme(tree->u.children[1]);
       break;
     case YDECLC :
-      printf(" DECL \n");
-      printTree(tree->u.children[0]);
-      printTree(tree->u.children[1]);
-      printTree(tree->u.children[2]);
+      printf("\nDECL var ");
+      afficherProgramme(tree->u.children[0]);
+
+      printf(": ");
+      afficherProgramme(tree->u.children[1]);
+
+      printf(" := ");
+      afficherProgramme(tree->u.children[2]);
+      printf("; \n");
       break;
     case LINSTR :
       printf(" LINSTR ");
-      printTree(tree->u.children[0]);
-      printTree(tree->u.children[1]);
+      afficherProgramme(tree->u.children[0]);
+      afficherProgramme(tree->u.children[1]);
       break;
-    case YINSTR :
-      printf(" INSTR ");
+
+    case YOBJ :
+      printf("\n OBJ object ");
+      afficherProgramme(tree->u.children[0]);
+      printf(" is ");
+      afficherProgramme(tree->u.children[1]);
       break;
-    case STRINGC :
+
+    case YLCLASS :
+      
+      printf("\n[LCLASS ");  
+
+      afficherProgramme(tree->u.children[0]);
+      afficherProgramme(tree->u.children[1]);
+      printf("]\n");
+      break;
+
+    case YCLASS :
+
+      printf("\n[ CLASS class ");
+      afficherProgramme(tree->u.children[0]);
+      printf("(");
+
+      afficherProgramme(tree->u.children[1]);
+      printf(") ");
+      afficherProgramme(tree->u.children[2]);
+      afficherProgramme(tree->u.children[3]);
+      printf("\nis ");
+
+      afficherProgramme(tree->u.children[4]);
+      printf("]\n");
+
+      break;
+
+    case Chaine :
       printf("%s", tree->u.str);
       break;
+
+    case STRINGC :
+      printf("String");
+      break;
+
     case YITE :
-      printf(" ITE \n");
+      printf("\nITE if ");
+        afficherProgramme(tree->u.children[0]);
+      printf("{");
+        afficherProgramme(tree->u.children[1]);
+      printf("} else ");
+      printf("{");
+        afficherProgramme(tree->u.children[2]);
+      printf(" }\n");
+
       break;
+
     case EAFF :
-      printf(" EAFF \n");
+      afficherProgramme(tree->u.children[0]);
+      printf(" := ");
+      afficherProgramme(tree->u.children[1]);
+      printf(";\n");
       break;
-    case ECONST :
-      printf(" ECONST : ");
-      printf("%d", tree->u.val);
-      break;
+
     case ECAST :
-      printf(" ECAST \n");
+      printf("CAST (");
+      afficherProgramme(tree->u.children[0]);
+      afficherProgramme(tree->u.children[1]);
+      printf(")");
       break;
 
 
     case YEXPR :
-    printf(" YEXPR \n");
+      printf("EXPR (");
       if(tree->nbChildren <= 1){
-        printTree(tree->u.children[0]);
+        afficherProgramme(tree->u.children[0]);
       }
       else{
-        printf("Nb children = 2");
-        printTree(tree->u.children[0]);
-        printTree(tree->u.children[1]);
+        afficherProgramme(tree->u.children[0]);
+        afficherProgramme(tree->u.children[1]);
       }
-      break;
+      printf(")");
 
+      break;
 
     case EINST :
-      printf(" EINST \n");
+      printf("new ");
+      afficherProgramme(tree->u.children[0]);
+      printf("(");
+      afficherProgramme(tree->u.children[1]);
+      printf(")");
       break;
-    case TINTC :
-      printf(" TINTC \n");
+
+    case INTC :
+      printf("Integer");
       break;
-    case TSTRINGC :
-      printf(" TSTRINGC \n");
-      break;
+
     case SELEXPR :
-
-      printf(" SELEXPR : ");
-      printTree(tree->u.children[0]);
-      printf(" . ");
-      printTree(tree->u.children[1]);
+      afficherProgramme(tree->u.children[0]);
+      printf(".");
+      afficherProgramme(tree->u.children[1]);
 
       break;
-    case YID :
-      printf("%s", tree->u.str);  /*wow*/
+
+    case Id :
+      printf("%s", tree->u.str);  
+      break;
+
+    case Cste :
+      printf("%d", tree->u.val);  
+      break;
+
+    case Classname :
+      printf("%s", tree->u.str);  
       break;
 
     case YEXT :
-      printf(" YEXT \n");   /*non plus je crois)*/
+      printf("extends ");
+      afficherProgramme(tree->u.children[0]);
+      printf("(");
+      afficherProgramme(tree->u.children[1]);
+      printf(")\n");
       break;
 
     case YLEXPR :
-      printf(" YLEXPR \n");  /*Ca ne s'affiche pas*/
+      printf("(");
+      afficherProgramme(tree->u.children[0]);
+      printf(", ");
+      afficherProgramme(tree->u.children[1]);
+      printf(")\n");
       break;
+
+
     case EENVOI :
-      printf(" EENVOI \n");  /*Ca ne s'affiche pas*/
+      afficherProgramme(tree->u.children[0]);
+      printf(".");  
+      afficherProgramme(tree->u.children[1]);
+
       break;
+
     case METHOD :
-      printf(" METHOD \n");  /*Ca ne s'affiche pas*/
+      afficherProgramme(tree->u.children[0]);
+      printf("(");
+      afficherProgramme(tree->u.children[1]);
+      printf(")\n");
       break;
-    case YLCLASS :
-      
-      printf(" YLCLASS ");  
 
-        printTree(tree->u.children[0]);
-        printTree(tree->u.children[1]);
-
-
-      break;
-    case YCLASS :
-      
-      printf(" YCLASS "); 
-
-        printTree(tree->u.children[0]);
-        printTree(tree->u.children[1]);
-        printTree(tree->u.children[2]);
-        printTree(tree->u.children[3]);
-
-      break;
     case LDECLMETH :
-      printf(" LDECLMETH ");
-      printTree(tree->u.children[0]);
-      printTree(tree->u.children[1]);
+      printf("\n[LDECLMETH");
+      afficherProgramme(tree->u.children[0]);
+      afficherProgramme(tree->u.children[1]);
+      printf("]\n");
       break ;
+
     case DMETHODE :
-      printf("DMETHODE ");
-      printTree(tree->u.children[0]);
-        printTree(tree->u.children[1]);
-        printTree(tree->u.children[2]);
-        printTree(tree->u.children[3]);
-        printTree(tree->u.children[4]);
+      printf("\nDMETHODE def ");
+      afficherProgramme(tree->u.children[0]); 
+      afficherProgramme(tree->u.children[1]);
+      printf("(");
+      afficherProgramme(tree->u.children[2]); 
+      printf(") :");
+
+      afficherProgramme(tree->u.children[3]);
+      printf(" := ");
+
+      afficherProgramme(tree->u.children[4]);
+      printf("\n");
+
       break;
+
     case YLPARAM :
-      printf("YLPARAM ");
-       printTree(tree->u.children[0]);
-      printTree(tree->u.children[1]);
+      printf("\nYLPARAM");
+      afficherProgramme(tree->u.children[0]);
+      afficherProgramme(tree->u.children[1]);
+      printf("]\n");
+
       break;
     case YPARAM :
-     printf("YPARAM ");
-     printTree(tree->u.children[0]);
-        printTree(tree->u.children[1]);
-        printTree(tree->u.children[2]);
+      printf("\nYPARAM ");
+      afficherProgramme(tree->u.children[0]);
+      printf(" : ");
+      afficherProgramme(tree->u.children[1]);
+      afficherProgramme(tree->u.children[2]);
+      printf("\n");
       break;
 
 
     case ADD :
       assert(tree->nbChildren == 2);
       printf("(");
-      printTree(tree->u.children[0]);
+      afficherProgramme(tree->u.children[0]);
       printf(" + ");
-      printTree(tree->u.children[1]);
+      afficherProgramme(tree->u.children[1]);
       printf(")");
       break;
     case SUB :
       assert(tree->nbChildren == 2);
       printf("(");
-      printTree(tree->u.children[0]);
+      afficherProgramme(tree->u.children[0]);
       printf(" - ");
-      printTree(tree->u.children[1]);
+      afficherProgramme(tree->u.children[1]);
       printf(")");
       break;
     case MUL :
       assert(tree->nbChildren == 2);
       printf("(");
-      printTree(tree->u.children[0]);
+      afficherProgramme(tree->u.children[0]);
       printf(" * ");
-      printTree(tree->u.children[1]);
+      afficherProgramme(tree->u.children[1]);
       printf(")");
       break;
 
     case DIV :
       assert(tree->nbChildren == 2);
       printf("(");
-      printTree(tree->u.children[0]);
+      afficherProgramme(tree->u.children[0]);
       printf(" / ");
-      printTree(tree->u.children[1]);
+      afficherProgramme(tree->u.children[1]);
       printf(")");
       break;
 
     case CONCAT :
       assert(tree->nbChildren == 2);
       printf("(");
-      printTree(tree->u.children[0]);
+      afficherProgramme(tree->u.children[0]);
       printf(" & ");
-      printTree(tree->u.children[1]);
+      afficherProgramme(tree->u.children[1]);
       printf(")");
       break;
 
     case EQ :
       assert(tree->nbChildren == 2);
       printf("(");
-      printTree(tree->u.children[0]);
+      afficherProgramme(tree->u.children[0]);
       printf(") = (");
-      printTree(tree->u.children[1]);
+      afficherProgramme(tree->u.children[1]);
       printf(")");
       break;
 
     case NE :
       assert(tree->nbChildren == 2);
       printf("(");
-      printTree(tree->u.children[0]);
+      afficherProgramme(tree->u.children[0]);
       printf(" <> ");
-      printTree(tree->u.children[1]);
+      afficherProgramme(tree->u.children[1]);
       printf(")");
       break;
 
     case INF :
       assert(tree->nbChildren == 2);
       printf("(");
-      printTree(tree->u.children[0]);
+      afficherProgramme(tree->u.children[0]);
       printf(" < ");
-      printTree(tree->u.children[1]);
+      afficherProgramme(tree->u.children[1]);
       printf(")");
       break;
 
     case INFE :
       assert(tree->nbChildren == 2);
       printf("(");
-      printTree(tree->u.children[0]);
+      afficherProgramme(tree->u.children[0]);
       printf(" <= ");
-      printTree(tree->u.children[1]);
+      afficherProgramme(tree->u.children[1]);
       printf(")");
       break;
 
     case SUP :
       assert(tree->nbChildren == 2);
       printf("(");
-      printTree(tree->u.children[0]);
+      afficherProgramme(tree->u.children[0]);
       printf(" > ");
-      printTree(tree->u.children[1]);
+      afficherProgramme(tree->u.children[1]);
       printf(")");
       break;
 
     case SUPE :
       assert(tree->nbChildren == 2);
       printf("(");
-      printTree(tree->u.children[0]);
+      afficherProgramme(tree->u.children[0]);
       printf(" >= ");
-      printTree(tree->u.children[1]);
+      afficherProgramme(tree->u.children[1]);
       printf(")");
       break;
 
     default :
-      printf(" unknown ");
+      printf("Bonjour Monsieur Voisin, si ce message s'affiche, c'est qu'il existe un cas inconnu dans la construction de l'arbre. Veuillez nous en excuser. Cordialement.");
       break;
   }
   }
