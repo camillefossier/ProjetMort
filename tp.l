@@ -37,7 +37,7 @@ int keywordOrId() {
   if (! strcmp(yytext, "new")) return NEWC;
   if (! strcmp(yytext, "return")) return RETURN;
   if (! strcmp(yytext, "object")) return OBJECT;
-
+  
   yylval.S = strdup(yytext);
   return(Id);
 }

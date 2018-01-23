@@ -30,6 +30,7 @@ typedef unsigned char bool;
 #define INFE  4
 #define SUP 5
 #define SUPE  6
+
 #define YPROG 7
 #define YCONT 8
 #define LDECLC 9
@@ -44,7 +45,7 @@ typedef unsigned char bool;
 #define EINST 18
 #define TINTC 19
 #define TSTRINGC 20
-#define SEXPR 21
+#define SELEXPR 21
 #define YID 22
 #define YEXPR 23
 #define YLEXPR 24

@@ -243,12 +243,12 @@ void printTree(TreeP tree)
       printTree(tree->u.children[2]);
       break;
     case LINSTR :
-      printf(" LINSTR \n");
+      printf(" LINSTR ");
       printTree(tree->u.children[0]);
       printTree(tree->u.children[1]);
       break;
     case YINSTR :
-      printf(" INSTR \n");
+      printf(" INSTR ");
       break;
     case STRINGC :
       printf("%s", tree->u.str);
@@ -290,16 +290,16 @@ void printTree(TreeP tree)
     case TSTRINGC :
       printf(" TSTRINGC \n");
       break;
-    case SEXPR :
+    case SELEXPR :
 
-      printf(" SEXPR : ");
+      printf(" SELEXPR : ");
       printTree(tree->u.children[0]);
       printf(" . ");
       printTree(tree->u.children[1]);
 
       break;
     case YID :
-      printf(" YID \n");  /*wow*/
+      printf("%s", tree->u.str);  /*wow*/
       break;
 
     case YEXT :
@@ -317,7 +317,7 @@ void printTree(TreeP tree)
       break;
     case YLCLASS :
       
-      printf(" YLCLASS \n");  
+      printf(" YLCLASS ");  
 
         printTree(tree->u.children[0]);
         printTree(tree->u.children[1]);
@@ -326,7 +326,7 @@ void printTree(TreeP tree)
       break;
     case YCLASS :
       
-      printf(" YCLASS \n"); 
+      printf(" YCLASS "); 
 
         printTree(tree->u.children[0]);
         printTree(tree->u.children[1]);
@@ -335,12 +335,12 @@ void printTree(TreeP tree)
 
       break;
     case LDECLMETH :
-      printf("LDECLMETH \n");
+      printf(" LDECLMETH ");
       printTree(tree->u.children[0]);
       printTree(tree->u.children[1]);
       break ;
     case DMETHODE :
-      printf("DMETHODE\n");
+      printf("DMETHODE ");
       printTree(tree->u.children[0]);
         printTree(tree->u.children[1]);
         printTree(tree->u.children[2]);
@@ -348,21 +348,18 @@ void printTree(TreeP tree)
         printTree(tree->u.children[4]);
       break;
     case YLPARAM :
-      printf("YLPARAM\n");
+      printf("YLPARAM ");
        printTree(tree->u.children[0]);
       printTree(tree->u.children[1]);
       break;
     case YPARAM :
-     printf("YPARAM\n");
+     printf("YPARAM ");
      printTree(tree->u.children[0]);
         printTree(tree->u.children[1]);
         printTree(tree->u.children[2]);
       break;
 
 
-    /*case Id :
-      printf("%s", tree->u.lvar->nom);
-      break;
     case ADD :
       assert(tree->nbChildren == 2);
       printf("(");
@@ -387,6 +384,7 @@ void printTree(TreeP tree)
       printTree(tree->u.children[1]);
       printf(")");
       break;
+
     case DIV :
       assert(tree->nbChildren == 2);
       printf("(");
@@ -395,6 +393,7 @@ void printTree(TreeP tree)
       printTree(tree->u.children[1]);
       printf(")");
       break;
+
     case CONCAT :
       assert(tree->nbChildren == 2);
       printf("(");
@@ -403,6 +402,7 @@ void printTree(TreeP tree)
       printTree(tree->u.children[1]);
       printf(")");
       break;
+
     case EQ :
       assert(tree->nbChildren == 2);
       printf("(");
@@ -410,6 +410,8 @@ void printTree(TreeP tree)
       printf(") = (");
       printTree(tree->u.children[1]);
       printf(")");
+      break;
+
     case NE :
       assert(tree->nbChildren == 2);
       printf("(");
@@ -417,6 +419,8 @@ void printTree(TreeP tree)
       printf(" <> ");
       printTree(tree->u.children[1]);
       printf(")");
+      break;
+
     case INF :
       assert(tree->nbChildren == 2);
       printf("(");
@@ -424,6 +428,8 @@ void printTree(TreeP tree)
       printf(" < ");
       printTree(tree->u.children[1]);
       printf(")");
+      break;
+
     case INFE :
       assert(tree->nbChildren == 2);
       printf("(");
@@ -431,6 +437,8 @@ void printTree(TreeP tree)
       printf(" <= ");
       printTree(tree->u.children[1]);
       printf(")");
+      break;
+
     case SUP :
       assert(tree->nbChildren == 2);
       printf("(");
@@ -438,13 +446,17 @@ void printTree(TreeP tree)
       printf(" > ");
       printTree(tree->u.children[1]);
       printf(")");
+      break;
+
     case SUPE :
       assert(tree->nbChildren == 2);
       printf("(");
       printTree(tree->u.children[0]);
       printf(" >= ");
       printTree(tree->u.children[1]);
-      printf(")");*/
+      printf(")");
+      break;
+
     default :
       printf(" unknown ");
       break;

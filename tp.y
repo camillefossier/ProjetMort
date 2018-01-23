@@ -1,5 +1,5 @@
 /* attention: NEW est defini dans tp.h Utilisez un autre nom de token */
-%token IS CLASS VAR EXTENDS DEF OVERRIDE RETURN AS IF THEN ELSE AFF NEWC VOIDC INTC STRINGC ADD SUB MUL DIV CONCAT
+%token IS CLASS VAR EXTENDS DEF OVERRIDE RETURN IF THEN ELSE AFF NEWC VOIDC INTC STRINGC ADD SUB MUL DIV CONCAT
 %token OBJECT
 %token<S> Id Classname 
 %token<I> Cste
@@ -36,7 +36,7 @@ extern void yyerror(const char *); /*const necessaire pour eviter les warning de
 %}
 
 %%
-Prog : LClassOpt Bloc 						{$$ = makeTree(YPROG,2,$1,$2); printTree($$);}
+Prog : LClassOpt Bloc 								{$$ = makeTree(YPROG,2,$1,$2); printTree($$);}
 ;
 
 Class: ObjetIsole									{$$ = $1; } 
@@ -51,17 +51,17 @@ ObjetIsole : OBJECT Classname IS BlocObj			{$$ = $4;}
 
 
 
-LClassOpt: Class LClassOpt 						{$$ = makeTree(YLCLASS,2,$1,$2);}
+LClassOpt: Class LClassOpt 							{$$ = makeTree(YLCLASS,2,$1,$2);}
 
-| 												{$$ = NIL(Tree); }
+| 													{$$ = NIL(Tree); }
 ;
 
 
  LParamOpt: LParam 									{ $$ = $1; }
-|				  								{$$ = NIL(Tree); }
+|				  									{$$ = NIL(Tree); }
 ;
 
-LParam: Param ',' LParam 							{$$ = makeTree(YLPARAM,2,$1,$3); /*$1->nextAttribut = $3; $$=$1; 	printf("Param , LParam \n"); */	}
+LParam: Param ',' LParam 							{$$ = makeTree(YLPARAM,2,$1,$3);}
 | Param            	     							{$$ = $1;}
 ;
 
@@ -70,68 +70,60 @@ Param: VAR Id ':' TypeC ValVar 						{ $$ = makeTree(YPARAM,3,makeLeafStr(TSTRIN
 ;
 
 ValVar: AFF Expr 									{ $$ = $2; }
-| 												{$$ = NIL(Tree); }
+| 													{$$ = NIL(Tree); }
 ;
 
-LDeclChamp: DeclChamp LDeclChamp 				{$$ = makeTree(LDECLC,2,$1,$2);}
-| DeclChamp 									{$$ = $1; }
+LDeclChamp: DeclChamp LDeclChamp 					{$$ = makeTree(LDECLC,2,$1,$2);}
+| DeclChamp 										{$$ = $1; }
 ;
 
-DeclChamp: VAR Id ':' TypeC AffOpt ';' 			{$$ = makeTree(YDECLC,3, makeLeafStr(TSTRINGC,$2), $4, $5);}
+DeclChamp: VAR Id ':' TypeC AffOpt ';' 				{$$ = makeTree(YDECLC,3, makeLeafStr(TSTRINGC,$2), $4, $5);}
 ;
 
-TypeC: INTC 									{$$ = makeLeafStr(TINTC, "Integer");}    	//INTC STRINGC ET VOIDC peuvent êtres traités dans Classname en les mettant dans le même environnement
+TypeC: INTC 										{$$ = makeLeafStr(TINTC, "Integer");}    	//INTC STRINGC ET VOIDC peuvent êtres traités dans Classname en les mettant dans le même environnement
 																								//(qui sera rentré à la main à la compilation)
-| STRINGC 										{$$ = makeLeafStr(TSTRINGC, "String"); }
-| VOIDC 										{$$ = NIL(Tree);}
-| Classname 									{$$ = makeLeafStr(TSTRINGC, $1); }
+| STRINGC 											{$$ = makeLeafStr(TSTRINGC, "String"); }
+| VOIDC 											{$$ = NIL(Tree);}
+| Classname 										{$$ = makeLeafStr(TSTRINGC, $1); }
 ;
 		
-AffOpt: AFF Expr 								{ $$ = $2; }
-|				 								{ $$ = NIL(Tree); }
+AffOpt: AFF Expr 									{ $$ = $2; }
+|				 									{ $$ = NIL(Tree); }
 ;
 
-/* method inutile
-DeclMethodeLOpt: DeclMethode ';' DeclMethodeLOpt { $1->nextMethode = $2; $$ = $1; }
-|  												{ $$ = NIL(Methode); }
-;
-*/
 
 DeclMethode : OverrideOpt DEF Id '(' LParamOpt ')' ':' TypeC AFF Expr { $$ = makeTree(DMETHODE, 5,$1, makeLeafStr(TSTRINGC,$3),$5,$8,$10); }
 | OverrideOpt DEF Id '(' LParamOpt ')' TypeCOpt IS Bloc 			  { $$ = makeTree(DMETHODE, 5,$1, makeLeafStr(TSTRINGC,$3),$5,$7,$9);}
-
-/*TODO Bloc { $$ = makeMethode($1, $3, $5, $7, $9, 1); }*/
-
 ;
 
 TypeCOpt: ':' TypeC 								{ $$ = $2; }
-| 												{ $$ = NIL(Tree); }
+| 													{ $$ = NIL(Tree); }
 ;
 	
 OverrideOpt: OVERRIDE 								{ $$ = makeLeafStr(TSTRINGC, "Override"); }
 |     				  								{ $$ = NIL(Tree); }
 ;
 
-ExtendsOpt: EXTENDS Classname '(' LExprOpt ')'  { $$ = makeTree(YEXT, 2, makeLeafStr(TSTRINGC, $2), $4); }
-|												{ $$ = NIL(Tree); }
+ExtendsOpt: EXTENDS Classname '(' LExprOpt ')'  	{ $$ = makeTree(YEXT, 2, makeLeafStr(TSTRINGC, $2), $4); }
+|													{ $$ = NIL(Tree); }
 ;
 
-Expr: Cste 										{$$ = makeLeafInt(ECONST, $1); }
-| '(' Expr ')'  								{$$ = $2; }
-| '(' TypeC Id ')' 								{$$ = makeTree(ECAST, 2, $2, $3); }	
-| Selection    									{$$ = $1; }
-| NEWC Classname '(' LExprOpt ')' 				{$$ = makeTree(EINST, 2, $2, $4); }   
-| Envoi  										{$$ = $1;}
-| ExprOperateur 								{$$ = $1;}
-| TypeC											{$$ = $1;}
+Expr: Cste 											{$$ = makeLeafInt(ECONST, $1); }
+| '(' Expr ')'  									{$$ = $2; }
+| '(' TypeC Id ')' 									{$$ = makeTree(ECAST, 2, $2, $3); }	
+| Selection    										{$$ = $1; }
+| NEWC Classname '(' LExprOpt ')' 					{$$ = makeTree(EINST, 2, $2, $4); }    
+| Envoi  											{$$ = $1;}
+| ExprOperateur 									{$$ = $1;}
+| TypeC												{$$ = $1;}
 ;
 
-LExprOpt: LExpr 								{ $$ = $1; /*$$ = makeTree(YLEXPR, 2, NIL(Tree), $1); */}
-| 												{ $$ = NIL(Tree); }
+LExprOpt: LExpr 									{ $$ = $1; }
+| 													{ $$ = NIL(Tree); }
 ;
 
-LExpr: Expr ',' LExpr 								{ $$ = makeTree(YLEXPR, 2, $1, $3); }							/*TODO BIzarre*/
-| Expr 			  									{ $$ = $1; /*$$ = makeTree(EEXP, 2, NIL(Tree), $1);*/ }
+LExpr: Expr ',' LExpr 								{ $$ = makeTree(YLEXPR, 2, $1, $3); }							
+| Expr 			  									{ $$ = $1;  }
 ;
 
 ExprOperateur: Expr ADD Expr 						{ $$ = makeTree(ADD, 2, $1, $3); }
@@ -141,56 +133,56 @@ ExprOperateur: Expr ADD Expr 						{ $$ = makeTree(ADD, 2, $1, $3); }
 | SUB Expr %prec UNARY 								{ $$ = makeTree(SUB, 2, makeLeafInt(Cste, 0), $2); }
 | ADD Expr %prec UNARY 								{ $$ = makeTree(ADD, 2, makeLeafInt(Cste, 0), $2); }      
 | Expr CONCAT Expr 									{ $$ = makeTree(CONCAT, 2, $1, $3); }
-| Expr RelOp Expr 									{ $$ = makeTree(RelOp, 2, $1, $3); }
+| Expr RelOp Expr 									{ $$ = makeTree($2, 2, $1, $3); }
 ;
 
-Instr : Expr ';' 								{$$ = makeTree(YEXPR, 1, $1); }
-| Bloc  										{$$ = $1; }
-| RETURN ';' 									{$$ = NIL(Tree); }
-| Selection AFF Expr ';' 						{$$ = makeTree(EAFF, 2, $1, $3); }
-| IF Expr THEN Instr ELSE Instr 				{$$ = makeTree(YITE, 3, $2, $4, $6); }
+Instr : Expr ';' 									{$$ = makeTree(YEXPR, 1, $1); }
+| Bloc  											{$$ = $1; }
+| RETURN ';' 										{$$ = NIL(Tree); }
+| Selection AFF Expr ';' 							{$$ = makeTree(EAFF, 2, $1, $3); }
+| IF Expr THEN Instr ELSE Instr 					{$$ = makeTree(YITE, 3, $2, $4, $6); }
 ;
 
 LInstrOpt: LInstr 									{$$= $1;}
 |  			 										{$$ = NIL(Tree);}
 ;
 
-LInstr : Instr LInstr 							{$$ = makeTree(LINSTR, 2, $1, $2);}
-| Instr		 									{$$ = $1; }
+LInstr : Instr LInstr 								{$$ = makeTree(LINSTR, 2, $1, $2);}
+| Instr		 										{$$ = $1; }
 ;
 
 BlocOpt: Bloc 										{ $$ =$1; }
-| 												{$$ = NIL(Tree);}
+| 													{$$ = NIL(Tree);}
 ;
 
-Bloc : '{' Contenu '}'    						{$$ = $2;}
+Bloc : '{' Contenu '}'    							{$$ = $2;}
 ;
 
 BlocObj: '{' LDeclChampMethodeOpt '}' 				{ $$ = $2;	}
 ;
 
-LDeclChampMethodeOpt: LDeclChampMethode 				{ $$ = $1;}
+LDeclChampMethodeOpt: LDeclChampMethode 			{ $$ = $1;}
 | 													{$$ = NIL(Tree);}
 ;
 
-LDeclChampMethode: LDeclChampMethode DeclChampMethode 	{	$$ = makeTree(LDECLMETH,2,$1,$2);	}
+LDeclChampMethode: LDeclChampMethode DeclChampMethode 	{$$ = makeTree(LDECLMETH,2,$1,$2);	}
 | DeclChampMethode 									{ $$ = $1;	}
 ;
 
-DeclChampMethode: DeclChamp 							{$$ = $1;	}
+DeclChampMethode: DeclChamp 						{$$ = $1;	}
 | DeclMethode 										{$$ = $1;	}
 ;
 
-Contenu : LInstrOpt  							{$$ = $1; }
-| LDeclChamp IS LInstr 							{$$ = makeTree(YCONT, 2, $1, $3);}
+Contenu : LInstrOpt  								{$$ = $1; }
+| LDeclChamp IS LInstr 								{$$ = makeTree(YCONT, 2, $1, $3);}
 ;
 
-Envoi: Expr '.' MethodeC 						{ $$ = makeTree(EENVOI, 2, $1, $3); }
+Envoi: Expr '.' MethodeC 							{ $$ = makeTree(EENVOI, 2, $1, $3); }
 ;
 
-MethodeC: Id '(' LExprOpt ')' 					{ $$ = makeTree(METHOD,2,$1,$3);}
+MethodeC: Id '(' LExprOpt ')' 						{ $$ = makeTree(METHOD,2,$1,$3);}
 ;
-
-Selection: Expr '.' Id 							{$$ = makeTree(SEXPR, 2, $1, makeLeafStr(YID, $3)); }
-| Id 				   							{$$ = makeLeafStr(YID, $1); }
+	
+Selection: Expr '.' Id 								{$$ = makeTree(SELEXPR, 2, $1, makeLeafStr(YID, $3)); }
+| Id 				   								{$$ = makeLeafStr(YID, $1); }
 ;
