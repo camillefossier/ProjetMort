@@ -82,7 +82,7 @@ DeclChamp: VAR Id ':' TypeC AffOpt ';' 				{$$ = makeTree(YDECLC,3, makeLeafStr(
 ;
 
 TypeC: INTC 										{$$ = makeLeafStr(INTC, "Integer");}    	//INTC STRINGC ET VOIDC peuvent êtres traités dans Classname en les mettant dans le même environnement
-																								//(qui sera rentré à la main à la compilation)
+						//(qui sera rentré à la main à la compilation)
 | STRINGC 											{$$ = makeLeafStr(STRINGC, "String"); }
 | VOIDC 											{$$ = NIL(Tree);}
 | Classname 										{$$ = makeLeafStr(Classname, $1); }

@@ -309,7 +309,14 @@ TreeP makeTree(short op, int nbChildren, ...);
 TreeP makeLeafStr(short op, char *str);
 TreeP makeLeafInt(short op, int val);
 TreeP makeLeafLVar(short op, VarDeclP lvar);
+TreeP getChild(TreeP tree, int rank);
 void afficherProgramme(TreeP tree) ;
+
+char* checkExpr(TreeP tree, ClasseP classes, VarDeclP env);
+bool checkClassDefine(ClasseP env_classe, char* nom);
+void transmettreEnv(TreeP tree);
+bool checkPortee(VarDeclP lvar, char* nom);
+
 
 #define YYSTYPE YYSTYPE
 #define YYERROR_VERBOSE 1
