@@ -66,11 +66,31 @@ typedef unsigned char bool;
 #define EVAL_ERROR  50  /* dubious when writing a compiler ! */
 #define UNEXPECTED  10O
 
+enum typeAttribut 
+{
+  INTATTR, STRATTR, OTHER
+};
+typedef struct _Attribut
+{
+  char *nom;
+  struct _Classe *type;
+  enum typeAttribut typeA;
+
+
+  union valeurAttribut
+  {
+    int i;
+    char *str;
+    struct Objet *obj;
+  } valeurAttribut;
+
+} Attribut, Param, Champ, *AttributP, *ParamP, *ChampP;
 
 /* Adapt as needed. Currently it is simply a list of names ! */
 typedef struct _varDecl {
   char *name;
   struct _varDecl *next;
+  struct _Attribut *attr;
 } VarDecl, *VarDeclP;
 
 
@@ -94,15 +114,19 @@ typedef struct _Classe /*represente la meta classe*/
   struct LMethode *lmethodes;
   struct Methode *constructeur;
   struct LAttribut *lattributs; /*peut etre null si pas de valeur par defaut*/
-  struct _Classe* nextClasse;
 } Classe, *ClasseP;
 
+typedef struct _LClasse
+{
+  struct _Classe *classe;
+  struct _LClasse *next;
+}LClasse, *LClasseP;
 
 typedef struct _Methode
 {
-  struct Classe *typeDeRetour;
+  struct _Classe *typeDeRetour;
   char *nom;
-  struct Argument *larg;
+  struct LParam *larg;
   bool override;
   struct Bloc* Bloc;
 
@@ -111,34 +135,14 @@ typedef struct _Methode
 typedef struct _LMethode
 {
   struct Methode* methode;
-  struct LMethode* nextMethode;
+  struct LMethode* next;
 }LMethode, *LMethodeP;
 
 
-enum typeAttribut 
-{
-  INTATTR, STRATTR, OTHER
-};
-typedef struct _Attribut
-{
-  char *nom;
-  struct Classe *type;
-  enum typeAttribut typeA;
-
-
-  union valeurAttribut
-  {
-    int i;
-    char *str;
-    struct Objet *obj;
-  } valeurAttribut;
-
-} Attribut, Param, Champ, *AttributP, *ParamP, *ChampP;
-
 typedef struct LAttribut
 {
-  struct Attribut* attribut;
-  struct LAttribut* nextAttribut;
+  struct _Attribut* attribut;
+  struct LAttribut* next;
 } LAttribut, LParam, LChamp, *LAttributP, *LParamP, *LChampP;
 
 typedef struct _BlocObj
@@ -168,13 +172,13 @@ typedef struct _ObjetIsole
   BlocObjP bloc;
 } ObjetIsole, *ObjetIsoleP;
 
-
+/*
 typedef struct _Argument
 {
   struct Classe *type;
   char *nom;
 } Argument, *ArgumentP;
-
+*/
 
 
 /*ATTENTION A PARTIR DICI C LE ZBEUL**********************OK G COMPRIS JE GERE TKT*/
@@ -299,11 +303,9 @@ typedef union
 } YYSTYPE;
 
 
-ClasseP makeClasse(char* nom, LParamP lparam, ClasseP extendsOpt, BlocP blocOpt, BlocObjP blocObj);
+ClasseP makeClasse(char* nom);
 
 ObjetIsoleP makeObjetIsole(char *nom, BlocObjP bloc);
-
-ParamP makeParam(char* nom, typeCP type,LAttributP val);
 
 TreeP makeTree(short op, int nbChildren, ...);
 TreeP makeLeafStr(short op, char *str);
@@ -311,11 +313,17 @@ TreeP makeLeafInt(short op, int val);
 TreeP makeLeafLVar(short op, VarDeclP lvar);
 TreeP getChild(TreeP tree, int rank);
 void afficherProgramme(TreeP tree) ;
-
+void makeStructures(TreeP lclasse);
 char* checkExpr(TreeP tree, ClasseP classes, VarDeclP env);
 bool checkClassDefine(ClasseP env_classe, char* nom);
 void transmettreEnv(TreeP tree);
 bool checkPortee(VarDeclP lvar, char* nom);
+void compile(TreeP lclasse, TreeP main);
+void makeClassesParDefaut();
+void addClasse(ClasseP classe);
+
+ParamP makeParam(char *nom, ClasseP type);
+void initClasse(ClasseP classe, TreeP lparam, TreeP mere, TreeP constructeur, TreeP methode);
 
 
 #define YYSTYPE YYSTYPE

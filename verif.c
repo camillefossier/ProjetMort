@@ -7,7 +7,7 @@ extern char *strdup(const char*);
 extern void setError(int code);
 
 /*Verifie la portee d'une variable nom*/
-bool checkPortee(VarDeclP lvar, char* nom)
+/*bool checkPortee(VarDeclP lvar, char* nom)
 {
 	if(nom != NULL)
 	{
@@ -23,7 +23,7 @@ bool checkPortee(VarDeclP lvar, char* nom)
     fprintf(stderr, "Erreur checkPortee pour la var : %s\n",nom);
     return FALSE;
 }
-
+*/
 /*
 void transmettreEnv(TreeP tree)
 {
@@ -36,25 +36,27 @@ void transmettreEnv(TreeP tree)
 */
 
 /*Verifie si le nom est bien attribue a une classe defini*/
-bool checkClassDefine(ClasseP env_classe, char* nom)
+/*bool checkClassDefine(LClasseP lenv_classe, char* nom)
 {
+
 	if(nom != NULL)
 	{
-		 while(env_classe != NIL(Classe))
+		ClasseP env_classe = lenv_classe->classe;
+		while(env_classe != NIL(Classe))
     	{
     	    if(strcmp(env_classe->nom, nom)==0)
    		    {
        		    return TRUE;
    		    }
-        env_classe = env_classe->nextClasse;
+        env_classe = lenv_classe->next->classe;
   		}
 	}
    
     fprintf(stderr, "Erreur checkClassDefine pour la classe : %s\n",nom);
     return FALSE;
 }
-
-/*Verifie qu'une expression*/
+*/
+/*Verifie qu'une expression*//*
 char* checkExpr(TreeP tree, ClasseP classes, VarDeclP env)
 {
     if(tree != NIL(Tree))
@@ -71,8 +73,8 @@ char* checkExpr(TreeP tree, ClasseP classes, VarDeclP env)
             		while(env != NIL(VarDecl))
             		{
             			if(strcmp(type, env->name) == 0)
-            			{
-            				/*return env->type->type->nom;*/
+            			{*/
+            				/*return env->type->type->nom;*//*
             			}
             			env = env->next;
             		}
@@ -127,7 +129,7 @@ char* checkExpr(TreeP tree, ClasseP classes, VarDeclP env)
                 fprintf(stderr, "ERREUR getType concat : %s ou %s \n",type,typeD);
                 return NULL;
             case ECAST :
-                /* TODO */
+                /* TODO *//*
                 break;
             case EINST :
             	type = checkExpr(getChild(tree, 0), classes, env);
