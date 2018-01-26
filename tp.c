@@ -31,7 +31,7 @@ int errorCode = NO_ERROR; /* defini dans tp.h */
 FILE *out; /* fichier de sortie pour le code engendre */
 
 /* VARIABLE GLOBALE QUI CONTIENT LA LISTE DES STRUCTURES CLASSES DU PROGRAMME issou de la rbre*/
-LClasseP lclasse = NIL(LClasse);
+/*LClasseP lclasse ;*/
 
 int main(int argc, char **argv) {
   int fi;
@@ -195,6 +195,15 @@ TreeP makeLeafLVar(short op, VarDeclP lvar) {
 }
 
 
+
+
+
+
+/*-------------METHODES DE STRUCTURES--------------*/
+
+
+
+
 ObjetIsoleP makeObjetIsole(char* nom, BlocObjP bloc)
 {
   ObjetIsoleP objet = NEW(1, ObjetIsole);
@@ -207,14 +216,18 @@ ObjetIsoleP makeObjetIsole(char* nom, BlocObjP bloc)
   return objet;
 }
 
-void compile(TreeP lclasse, TreeP main)
+void compile(TreeP arbreClasse, TreeP main)
 {
-  makeStructures(lclasse);
+    if(arbreClasse != NIL(Tree) )
+    {
+        LClasseP lclasse = NIL(LClasse);
+        makeStructures(arbreClasse, lclasse);
+    }
 
   /*blabla*/
 }
 
-ClasseP getClassePointer(char *nomClasse)
+ClasseP getClassePointer(char *nomClasse, LClasseP lclasse)
 {
   LClasseP cur = lclasse;
   while (cur != NIL(LClasse))
@@ -228,32 +241,100 @@ ClasseP getClassePointer(char *nomClasse)
   return NIL(Classe);
 }
 
-void makeStructures(TreeP lclasse)
+void makeStructures(TreeP arbreClasse, LClasseP lclasse)
 {
-   TreeP courant = lclasse;
+    TreeP courant = arbreClasse;
+    makeClassesParDefaut(lclasse);
+    while(courant != NIL(Tree))
+    {
+        makeClasse(getChild(courant, 0)->u.str, lclasse); /* TODO a verifier */
+        courant = getChild(courant, 1);
+    }
 
-   /*makeClassesParDefaut();*/
+    initClasse(arbreClasse, lclasse);
+    printLClasse(lclasse);
+}
 
-  while(courant != NIL(Tree))
-  {
-    /*makeClasse(getChild(courant, 0));*/
-    courant = getChild(courant, 1);
-  }
+void initClasse(TreeP arbreClasse, LClasseP lclasse)
+{
+    ClasseP buffer = NIL(Classe);
+    TreeP temp = NIL(Tree);
+    TreeP courant = arbreClasse;
+    while(courant != NIL(Tree))
+    {
+        buffer = getClassePointer(getChild(courant, 0)->u.str, lclasse); 
+        temp = getChild(courant, 2);
+        if(temp != NIL(Tree))
+            buffer->mereOpt = getClassePointer(getChild(temp, 0)->u.str, lclasse);
+
+        temp = NIL(Tree);
+        temp = getChild(courant, 1);
+
+        if(temp != NIL(Tree))
+        {
+            TreeP tmp = temp;
+            LParamP lparam = NEW(1, LParam);
+            while(tmp != NIL(Tree)){
+
+                char *nom = getChild(tmp, 0)->u.str;
+                ClasseP type = getClassePointer(getChild(tmp, 1)->u.str, lclasse);
+                ParamP param = makeParam(nom, type);  
+                lparam = addParam(param, lparam);
+                tmp = getChild(courant, 1); 
+            }
+
+            buffer->lattributs = lparam;
+        }
+
+        /*buffer->constructeur && buffer->lmethodes */
+
+        courant = getChild(courant, 1);
+    }
 }
 
 
-ClasseP makeClasse(char *nom)
+void printLClasse(LClasseP lclasse)
+{
+    while(lclasse != NIL(LClasse))
+    {
+        printf("#####################################\n");
+        printf("Classe : %s\n", lclasse->classe->nom);
+        printf("Mere : %s\n", lclasse->classe->mereOpt->nom);
+        printLAttr(lclasse->classe->lattributs);
+        printf("Le reste est a faire !!!\n\n");
+        lclasse = lclasse->next;
+    }
+}
+
+void printLAttr(LAttributP lattr)
+{
+    while(lattr != NIL(LAttribut))
+    {
+        printf("Attribut/Param nom : %s de type : %s", lattr->attribut->nom, lattr->attribut->type->nom);
+        lattr = lattr->next;
+    }
+}
+
+ClasseP makeClasse(char *nom, LClasseP lclasse)
 {
   ClasseP classe = NEW(1, Classe);
   classe->nom = nom;
 
-  addClasse(classe);
-  printf("La classe cree est : %s\n", classe->nom);
+  classe->mereOpt = NIL(Classe);
+  classe->lmethodes = NEW(1, LMethode);
+  classe->lmethodes->methode =  NIL(Methode);
+  classe->lmethodes->next = NIL(LMethode);
+  classe->constructeur = NIL(Methode);
+  classe->lattributs = NEW(1, LAttribut);
+  classe->lattributs->attribut = NIL(Attribut);
+  classe->lattributs->next = NIL(LAttribut);
+
+  addClasse(classe, lclasse);
 
   return classe;
 }
 
-void addClasse(ClasseP classe){
+void addClasse(ClasseP classe, LClasseP lclasse){
 
     LClasseP newClasse = NEW(1, LClasse);
 
@@ -278,6 +359,33 @@ void addClasse(ClasseP classe){
     }
 }
 
+
+LParamP addParam(ParamP param, LParamP lparam)
+{
+    LParamP newParam = NEW(1, LParam);
+
+    newParam->attribut = param;
+    newParam->next = NIL(LParam);  
+    if(lparam == NIL(LParam))
+    {
+        lparam = newParam;
+    }
+    else
+    {
+        LParamP current = lparam;
+        while (TRUE) { 
+            if(current->next == NULL)
+            {
+                current->next = newParam;
+                break; 
+            }
+            current = current->next;
+        };
+    }
+
+    return lparam;
+}
+
 ParamP makeParam(char *nom, ClasseP type){
 
   ParamP p = NEW(1, Param);
@@ -286,6 +394,7 @@ ParamP makeParam(char *nom, ClasseP type){
 
   return p;
 }
+
 /*
 Methode makeMethode(TreeP override, TreeP nom, TreeP)
 {
@@ -302,32 +411,75 @@ Methode makeMethode(TreeP override, TreeP nom, TreeP)
 }*/
 
 
-void makeClassesParDefaut()
+/*Creation des types primitifs Integer, String et Void*/
+void makeClassesParDefaut(LClasseP lclasse)
 {
-  ClasseP integer = makeClasse("Integer");
-  ClasseP string = makeClasse("String");
-  ClasseP voidC = makeClasse("Void");
+  ClasseP integer = makeClasse("Integer", lclasse);
+  ClasseP string = makeClasse("String", lclasse);
+  ClasseP voidC = makeClasse("Void", lclasse); /*Par defaut a NIL*/
 
+  printf("Debut");
 
   LParamP lp = NEW(1,LParam);
-  ParamP param = makeParam("val", getClassePointer("Integer"));
+  ParamP param = makeParam("val", getClassePointer("Integer", lclasse));
   lp->next = NIL(LParam);
   lp->attribut = param;
 
+  /*Constructeur du type Integer*/
   MethodeP constrInt = NEW(1, Methode);
   constrInt->typeDeRetour = integer;
   constrInt->override = FALSE;
   constrInt->nom = "Integer";
   constrInt->larg = lp;
 
-  /*initClasse(integer,  , NIL(Classe), NIL(Bloc), NIL(Bloc));*/
- /* initClasse(integer, )*/
+  /*methode toString*/
+  MethodeP toString = NEW(1, Methode);
+  toString->typeDeRetour = string;
+  toString->override = FALSE;
+  toString->nom = "toString";
+  toString->larg = NIL(LParam);
+
+
+  integer->mereOpt = NIL(Classe);
+  integer->lmethodes->methode = toString;
+  integer->lmethodes->next = NIL(LMethode);
+  integer->constructeur = constrInt;
+  integer->lattributs->attribut = param;
+  integer->lattributs->next = NIL(LAttribut);
+
+
+  LParamP lpstr = NEW(1,LParam);
+  ParamP paramstr = makeParam("str", getClassePointer("String", lclasse));
+  lpstr->next = NIL(LParam);
+  lpstr->attribut = paramstr;
+
+
+  /*Constructeur du type Integer*/
+  MethodeP constrStr = NEW(1, Methode);
+  constrStr->typeDeRetour = string;
+  constrStr->override = FALSE;
+  constrStr->nom = "String";
+  constrStr->larg = lpstr;
+
+
+  string->mereOpt = NIL(Classe);
+  string->lmethodes->methode = toString;
+  string->lmethodes->next = NIL(LMethode);
+  string->constructeur = constrStr;
+  string->lattributs->attribut = paramstr;
+  string->lattributs->next = NIL(LAttribut);
+
+  printf("Fin");
+
+/*
+  addClasse(integer, lclasse);
+  addClasse(string, lclasse);
+  addClasse(voidC, lclasse);
+
+  printf("addClasse OK");*/
 }
 
-void initClasse(ClasseP classe, TreeP lparam, TreeP mere, TreeP constructeur, TreeP methode)
-{
 
-}
 
 void afficherProgramme(TreeP tree) 
 {
@@ -658,7 +810,7 @@ void afficherProgramme(TreeP tree)
 /*
 ParamP makeParam(char* nom, typeCP type,TreeP val)
 {
-  ParamP param = NEW(1,Param);
+  ParamP paramstr = NEW(1,Param);
   param->nom = nom;
   param->typeAttribut = 
 

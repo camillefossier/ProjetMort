@@ -108,13 +108,13 @@ typedef struct _Tree {
 
 typedef struct _Classe /*represente la meta classe*/
 {
-
   char *nom;
   struct _Classe* mereOpt;
-  struct LMethode *lmethodes;
-  struct Methode *constructeur;
-  struct LAttribut *lattributs; /*peut etre null si pas de valeur par defaut*/
+  struct _LMethode *lmethodes;
+  struct _Methode *constructeur;
+  struct _LAttribut *lattributs; /*peut etre null si pas de valeur par defaut*/
 } Classe, *ClasseP;
+
 
 typedef struct _LClasse
 {
@@ -122,39 +122,42 @@ typedef struct _LClasse
   struct _LClasse *next;
 }LClasse, *LClasseP;
 
+
+
+typedef struct _LAttribut
+{
+  struct _Attribut* attribut;
+  struct _LAttribut* next;
+}LAttribut, LParam, LChamp, *LAttributP, *LParamP, *LChampP;
+
+
+
 typedef struct _Methode
 {
   struct _Classe *typeDeRetour;
   char *nom;
-  struct LParam *larg;
+  LParamP larg;
   bool override;
-  struct Bloc* Bloc;
+  struct _Bloc* Bloc;
 
 }Methode, *MethodeP;
 
 typedef struct _LMethode
 {
-  struct Methode* methode;
-  struct LMethode* next;
+  struct _Methode* methode;
+  struct _LMethode* next;
 }LMethode, *LMethodeP;
-
-
-typedef struct LAttribut
-{
-  struct _Attribut* attribut;
-  struct LAttribut* next;
-} LAttribut, LParam, LChamp, *LAttributP, *LParamP, *LChampP;
 
 typedef struct _BlocObj
 {
-  struct LAttributs* lattributs;
-  struct LMethode* lmethodes;
+  struct _LAttributs* lattributs;
+  struct _LMethode* lmethodes;
 }BlocObj, *BlocObjP;
 
 typedef struct _Bloc
 {
-  struct DeclChamp *ldeclchamp;
-  struct LInstruction *lInstr;
+  struct _DeclChamp *ldeclchamp;
+  struct _LInstruction *lInstr;
 }Bloc, *BlocP;
 
 
@@ -183,21 +186,21 @@ typedef struct _Argument
 
 /*ATTENTION A PARTIR DICI C LE ZBEUL**********************OK G COMPRIS JE GERE TKT*/
 enum typeExpr {ID, CST, /*EXPR, */CAST, SELECT, INST, ENVOI, EXPROPE};
-typedef struct _Expression
+/* CIMER typedef struct _Expression
 {
   enum typeExpr type;
   union expr
   {
     struct Ident *id;
     struct Const *cst;
-    struct Expression *expr; /*utilité ?*/
+    struct Expression *expr; 
     struct Cast *c;
     struct Selection *s;
     struct Instanciation *inst;
     struct Envoi *e;
     struct ExprOpe *eo;
   } expr;
-} Expression, *ExpressionP;
+} Expression, *ExpressionP;*/
 
 enum typeIdent {INTIDENT, STRIDENT}; /*et les methodes ?*/
 typedef struct _Ident
@@ -231,13 +234,13 @@ typedef struct _Instruction
 
   union instr
   {
-    struct Expression *expr;
-    struct Bloc *bloc;
-    struct Selection *select;
+    struct _Expression *expr;
+    struct _Bloc *bloc;
+    struct _Selection *select;
     struct {
-      struct Expression *iteIf;
-      struct Instruction *iteThen;
-      struct Instruction *iteElse;
+      struct _Expression *iteIf;
+      struct _Instruction *iteThen;
+      struct _Instruction *iteElse;
     } *ite;
   } instr;
 
@@ -245,8 +248,8 @@ typedef struct _Instruction
 
 typedef struct _LInstruction
 {
-  struct Instruction* instruction;
-  struct LInstruction* nextInstruction;
+  struct _Instruction* instruction;
+  struct _LInstruction* nextInstruction;
 } LInstruction, *LInstructionP;
 
 
@@ -303,7 +306,7 @@ typedef union
 } YYSTYPE;
 
 
-ClasseP makeClasse(char* nom);
+ClasseP makeClasse(char* nom, LClasseP lclasse);
 
 ObjetIsoleP makeObjetIsole(char *nom, BlocObjP bloc);
 
@@ -313,18 +316,22 @@ TreeP makeLeafInt(short op, int val);
 TreeP makeLeafLVar(short op, VarDeclP lvar);
 TreeP getChild(TreeP tree, int rank);
 void afficherProgramme(TreeP tree) ;
-void makeStructures(TreeP lclasse);
+void makeStructures(TreeP arbreClasse, LClasseP lclasse);
 char* checkExpr(TreeP tree, ClasseP classes, VarDeclP env);
 bool checkClassDefine(ClasseP env_classe, char* nom);
 void transmettreEnv(TreeP tree);
 bool checkPortee(VarDeclP lvar, char* nom);
-void compile(TreeP lclasse, TreeP main);
-void makeClassesParDefaut();
-void addClasse(ClasseP classe);
+void compile(TreeP arbreClasse, TreeP main);
+void makeClassesParDefaut(LClasseP lclasse);
+void addClasse(ClasseP classe, LClasseP lclasse);
 
 ParamP makeParam(char *nom, ClasseP type);
-void initClasse(ClasseP classe, TreeP lparam, TreeP mere, TreeP constructeur, TreeP methode);
+void initClasse(TreeP arbreClasse, LClasseP lclasse);
 
+LParamP addParam(ParamP param, LParamP lparam);
+
+void printLClasse(LClasseP lclasse);
+void printLAttr(LAttributP lattr);
 
 #define YYSTYPE YYSTYPE
 #define YYERROR_VERBOSE 1

@@ -129,7 +129,7 @@ char* checkExpr(TreeP tree, ClasseP classes, VarDeclP env)
                 fprintf(stderr, "ERREUR getType concat : %s ou %s \n",type,typeD);
                 return NULL;
             case ECAST :
-                /* TODO *//*
+                 TODO 
                 break;
             case EINST :
             	type = checkExpr(getChild(tree, 0), classes, env);
@@ -153,7 +153,7 @@ char* checkExpr(TreeP tree, ClasseP classes, VarDeclP env)
     return NULL;
 }
 
-/*
+
 bool checkTypeAff(VarDeclP var, char* nom, ExpressionP expr)
 {
 
