@@ -274,14 +274,20 @@ void initClasse(TreeP arbreClasse, LClasseP lclasse)
         {
             TreeP tmp = temp;
             LParamP lparam = NEW(1, LParam);
-            while(tmp != NIL(Tree)){
+            while(tmp->op == YLPARAM){
 
                 char *nom = getChild(tmp, 0)->u.str;
                 ClasseP type = getClassePointer(getChild(tmp, 1)->u.str, lclasse);
                 ParamP param = makeParam(nom, type);  
                 lparam = addParam(param, lparam);
                 tmp = getChild(courant, 1); 
+                
             }
+
+            /*char *nom = getChild(tmp, 0)->u.str;
+            ClasseP type = getClassePointer(getChild(tmp, 1)->u.str, lclasse);
+            ParamP param = makeParam(nom, type);  
+            lparam = addParam(param, lparam);*/
 
             buffer->lattributs = lparam;
         }
@@ -349,6 +355,7 @@ void addClasse(ClasseP classe, LClasseP lclasse){
     {
         LClasseP current = lclasse;
         while (TRUE) { 
+            printf("addClasse \n");
             if(current->next == NULL)
             {
                 current->next = newClasse;
@@ -374,13 +381,13 @@ LParamP addParam(ParamP param, LParamP lparam)
     {
         LParamP current = lparam;
         while (TRUE) { 
-            if(current->next == NULL)
+            if(current->next == NIL(LParam))
             {
                 current->next = newParam;
                 break; 
             }
             current = current->next;
-        };
+        }
     }
 
     return lparam;
@@ -414,6 +421,7 @@ Methode makeMethode(TreeP override, TreeP nom, TreeP)
 /*Creation des types primitifs Integer, String et Void*/
 void makeClassesParDefaut(LClasseP lclasse)
 {
+
   ClasseP integer = makeClasse("Integer", lclasse);
   ClasseP string = makeClasse("String", lclasse);
   ClasseP voidC = makeClasse("Void", lclasse); /*Par defaut a NIL*/
