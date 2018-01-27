@@ -306,7 +306,7 @@ typedef union
 } YYSTYPE;
 
 
-ClasseP makeClasse(char* nom, LClasseP lclasse);
+ClasseP makeClasse(char* nom);
 
 ObjetIsoleP makeObjetIsole(char *nom, BlocObjP bloc);
 
@@ -316,21 +316,21 @@ TreeP makeLeafInt(short op, int val);
 TreeP makeLeafLVar(short op, VarDeclP lvar);
 TreeP getChild(TreeP tree, int rank);
 void afficherProgramme(TreeP tree) ;
-void makeStructures(TreeP arbreClasse, LClasseP lclasse);
+void makeStructures(TreeP arbreClasse);
 char* checkExpr(TreeP tree, ClasseP classes, VarDeclP env);
 bool checkClassDefine(ClasseP env_classe, char* nom);
 void transmettreEnv(TreeP tree);
 bool checkPortee(VarDeclP lvar, char* nom);
 void compile(TreeP arbreClasse, TreeP main);
-void makeClassesParDefaut(LClasseP lclasse);
-void addClasse(ClasseP classe, LClasseP lclasse);
+void makeClassesParDefaut();
+void addClasse(ClasseP classe);
 
 ParamP makeParam(char *nom, ClasseP type);
-void initClasse(TreeP arbreClasse, LClasseP lclasse);
+void initClasse(TreeP arbreClasse);
 
 LParamP addParam(ParamP param, LParamP lparam);
 
-void printLClasse(LClasseP lclasse);
+void printLClasse();
 void printLAttr(LAttributP lattr);
 
 #define YYSTYPE YYSTYPE
