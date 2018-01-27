@@ -265,7 +265,7 @@ void initClasse(TreeP arbreClasse)
     {
         buffer = getClassePointer(getChild(getChild(arbreCourant, 0), 0)->u.str); 
         TreeP arbreExtendOpt = NIL(Tree);
-        arbreExtendOpt = getChild(arbreCourant, 2);
+        arbreExtendOpt = getChild(arbreCourant, 1);
         if(arbreExtendOpt != NIL(Tree))
             buffer->mereOpt = getClassePointer(getChild(getChild(arbreExtendOpt, 0), 0)->u.str);
 
@@ -277,7 +277,7 @@ void initClasse(TreeP arbreClasse)
             LParamP lparam = NEW(1, LParam);
             while(arbreLParam->op == YLPARAM){
                 char *nom = getChild(getChild(getChild(arbreLParam, 0), 0), 0)->u.str;
-                ClasseP type = getClassePointer(getChild(getChild(getChild(arbreLParam, 1), 1),0)->u.str);
+                ClasseP type = getClassePointer(getChild(getChild(getChild(arbreLParam,0), 1),0)->u.str);
                 ParamP param = makeParam(nom, type);  
                 lparam = addParam(param, lparam);
                 arbreLParam = getChild(arbreLParam, 1); 
@@ -286,8 +286,8 @@ void initClasse(TreeP arbreClasse)
             /*char *nom = getChild(getChild(arbreLParam, 0), 0)->u.str;
             ClasseP type = getClassePointer(getChild(getChild(arbreLParam, 1), 0)->u.str);
             ParamP param = makeParam(nom, type);  
-            lparam = addParam(param, lparam);*/
-            buffer->lattributs = lparam;
+            lparam = addParam(param, lparam);
+            buffer->lattributs = lparam;*/
         }
 
         /* A  faire : buffer->constructeur && buffer->lmethodes */
@@ -303,17 +303,17 @@ void printLClasse()
     while(tmp != NIL(LClasse))
     {
         printf("#####################################\n");
-        printf("Classe : %s\n", lclasse->classe->nom);
-        if(lclasse->classe->mereOpt != NIL(Classe))
+        printf("Classe : %s\n", tmp->classe->nom);
+        if(tmp->classe->mereOpt != NIL(Classe))
         {
-          printf("Mere : %s\n", lclasse->classe->mereOpt->nom);
+          printf("Mere : %s\n", tmp->classe->mereOpt->nom);
         }
         else
         {
           printf("Mere : NIL\n");
         }
 
-        printLAttr(lclasse->classe->lattributs); 
+        printLAttr(tmp->classe->lattributs); 
         printf("Le reste est a faire !!!\n\n");
 
         tmp = tmp->next;
