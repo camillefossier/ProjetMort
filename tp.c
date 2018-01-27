@@ -216,11 +216,11 @@ ObjetIsoleP makeObjetIsole(char* nom, BlocObjP bloc)
   return objet;
 }
 
-void compile(TreeP arbreClasse, TreeP main)
+void compile(TreeP arbreLClasse, TreeP main)
 {
-    if(arbreClasse != NIL(Tree))
+    if(arbreLClasse != NIL(Tree))
     {
-        makeStructures(arbreClasse);
+        makeStructures(arbreLClasse);
     }
 
   /*blabla*/
@@ -231,7 +231,7 @@ ClasseP getClassePointer(char *nomClasse)
   LClasseP cur = lclasse;
   while (cur != NIL(LClasse))
   {
-    printf("comparaison : %s et %s\n", cur->classe->nom, nomClasse);
+  
     if (strcmp(cur->classe->nom, nomClasse) == 0)
     {
       return cur->classe;
@@ -243,63 +243,60 @@ ClasseP getClassePointer(char *nomClasse)
   return NIL(Classe);
 }
 
-void makeStructures(TreeP arbreClasse)
+void makeStructures(TreeP arbreLClasse)
 {
-    TreeP courant = arbreClasse;
+    TreeP courant = arbreLClasse;
     makeClassesParDefaut();
-    printf("MakeClasseDefault\n");
+
     while(courant != NIL(Tree))
     {
         makeClasse(getChild(getChild(courant, 0), 0)->u.str); 
         courant = getChild(courant, 1);
     }
 
-    initClasse(arbreClasse);
+    initClasse(arbreLClasse);
     printLClasse(lclasse);
 }
 
-void initClasse(TreeP arbreClasse)
+void initClasse(TreeP arbreLClasse)
 {
     ClasseP buffer = NIL(Classe);
-    TreeP arbreCourant = arbreClasse;
+    TreeP arbreCourant = arbreLClasse;
     while(arbreCourant != NIL(Tree))
     {
-        buffer = getClassePointer(getChild(getChild(arbreCourant, 0), 0)->u.str); 
-        TreeP arbreExtendOpt = NIL(Tree);
-        /*arbreExtendOpt = getChild(getChild(arbreCourant, 0),2);
-        if(arbreExtendOpt != NIL(Tree))
-            buffer->mereOpt = getClassePointer(getChild(getChild(arbreExtendOpt, 0), 0)->u.str);*/
+        TreeP arbreClasse = getChild(arbreCourant, 0);
+        buffer = getClassePointer(getChild(arbreClasse, 0)->u.str); 
 
-        TreeP arbreLParam = NIL(Tree); 
-        arbreLParam = getChild(getChild(arbreCourant, 0),1);
+        TreeP arbreExtendOpt = getChild(getChild(arbreCourant, 0), 2);
+        if(arbreExtendOpt != NIL(Tree))
+            buffer->mereOpt = getClassePointer(getChild(arbreExtendOpt, 0)->u.str); 
+        
+
+        TreeP arbreLParam = getChild(arbreClasse, 1);
 
         if(arbreLParam != NIL(Tree))
         {
             LParamP lparam = NEW(1, LParam);
-            while(arbreLParam->op == YLPARAM){
+            while(arbreLParam->op == YLPARAM)
+            {
                 char *nom = getChild(getChild(arbreLParam, 0), 0)->u.str;
-                printf("%s\n",nom);
-                if(getChild(getChild(arbreLParam,1), 0) != NIL(Tree))
+                if(getChild(getChild(arbreLParam, 1), 0) != NIL(Tree))
                 {
-                  printf("%s\n",getChild(getChild(arbreLParam,0), 1)->u.str );
-                  ClasseP type = getClassePointer(getChild(getChild(arbreLParam,0), 1)->u.str);
-                  printf("il y a un typ%s\n", type->nom);
-                  ParamP param = makeParam(nom, type); 
-                  lparam = addParam(param, lparam);
+                    ClasseP type = getClassePointer(getChild(getChild(arbreLParam, 0), 1)->u.str);
+                    ParamP param = makeParam(nom, type); 
+                    lparam = addParam(param, lparam);
                 }
                 arbreLParam = getChild(arbreLParam, 1); 
             }
             
             char *nom = getChild(arbreLParam, 0)->u.str;
-            printf("%s\n",nom);
-            if(getChild(arbreLParam,1) != NIL(Tree))
+            if(getChild(arbreLParam, 1) != NIL(Tree))
             {
-              printf("%s\n",getChild(arbreLParam,1)->u.str );
-              ClasseP type = getClassePointer(getChild(arbreLParam,1)->u.str);
-              printf("il y a un typ%s\n", type->nom);
-              ParamP param = makeParam(nom, type); 
-              lparam = addParam(param, lparam);
+                ClasseP type = getClassePointer(getChild(arbreLParam, 1)->u.str);
+                ParamP param = makeParam(nom, type); 
+                lparam = addParam(param, lparam);
             }
+
             buffer->lattributs = lparam;
         }
 
@@ -338,7 +335,7 @@ void printLAttr(LAttributP lattr)
     LAttributP tmp = lattr; 
     while(tmp != NIL(LAttribut))
     {
-        if(tmp->attribut->type != NIL(Classe))
+        if(tmp->attribut != NIL(Attribut) && tmp->attribut->type != NIL(Classe))
           printf("Attribut/Param nom : %s de type : %s\n", tmp->attribut->nom, tmp->attribut->type->nom);
         tmp = tmp->next;
     }
@@ -477,9 +474,7 @@ void makeClassesParDefaut()
 
 
   LParamP lpstr = NEW(1,LParam);
-  printf("Avant\n");
   ParamP paramstr = makeParam("str", getClassePointer("String"));
-  printf("Apres\n");
   lpstr->next = NIL(LParam);
   lpstr->attribut = paramstr;
 
