@@ -1,8 +1,3 @@
-object CptPoint is           /* Compteur d'instances de Point */
-{ var next : Integer := 1;   /* index de la prochaine instance de Point */
-  def incr() : Integer is { result := next; next := next + 1;}
-  def howMany() : Integer := next - 1
-}
 
 class Point(var x: Integer, var y: Integer := 0, var name: String := "")
       { CptPoint.incr(); } is
@@ -101,16 +96,6 @@ class Couleur(var coul: Integer := 0)
 
 }
 
-object CouleurFactory is
-{  var theBlanc: Couleur := new Couleur();
-   var theNoir : Couleur := new Couleur(1);
-   var theGris : Couleur := new Couleur(2);
-
-  def blanc() : Couleur := theBlanc
-  def noir() : Couleur := theNoir
-  def gris() : Couleur := theGris
-}
-
 /* ci-dessous on ne met pas var devant x et y sinon ca definirait deux
  * nouveaux champs qui masqueraient ceux herites de Point
  */
@@ -164,30 +149,6 @@ is {
   override def couleur() : Couleur := CouleurFactory.blanc()
 }
 
-object Test is {
-  def test(p: Point, p2: PointColore, p3: PointNoir) is {
-      var c: String; var c2: String; var c3: String;
-      var true: Integer := 1;
-      is
-      p.print(true);
-      p2.print(true);
-      "Appel 1: ".println();
-      if p2.colore() <> 0 then c := "colore";  else c := "gris";
-      "Appel 2: ".println();
-      if p3.colore() <> 0 then c2 := "colore"; else c2 := "gris";
-      "Appel 3: ".println();
-      if p3.colore() <> 0 then c3 := "colore"; else c3 := "gris";
-      "Resultats de test: ".println();
-      c.print(); " ".print();
-      c2.print(); " ".print();
-      c3.print();
-      "".println(); /* imprime une ligne vide */
-  }
-
-  def test2(p: PointColore) is {
-      p.couleur().name().print();
-  }
-}
 
 /* des exemples ad-hoc qui montrent d'autres aspects ... */
 class A() is {
