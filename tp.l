@@ -43,15 +43,10 @@ int keywordOrId() {
 }
 
 
-int keywordOrIdC() {
-  if (! strcmp(yytext, "Integer")) return INTC;
-  if (! strcmp(yytext, "String")) return STRINGC;
-  if (! strcmp(yytext, "Void")) return VOIDC;
-
+int IdClasse() {
 	yylval.S = strdup(yytext);
 	return(Classname);
 }
-
 
 
 void lexError(char c) {
@@ -60,12 +55,15 @@ void lexError(char c) {
   setError(LEXICAL_ERROR);
 }
 
+
 %}
+
 
 %%
 {Entier} 	{ yylval.I = atoi(yytext); return(Cste); }
 {Delim}        { }
 {Symbole}	{ return(yytext[0]); }
+
 ":="		{ return(AFF); }
 "="		{ yylval.C = EQ; return(RelOp); }
 "<>"		{ yylval.C = NE; return(RelOp); }
@@ -82,8 +80,10 @@ void lexError(char c) {
 
 "/*"({NotStar}|({Star}+{NotStarPar}))*{Star}*"*/"  { }
 {Lower}{LC}*   { return keywordOrId(); }
-{Upper}{LC}*   { return keywordOrIdC(); }
+{Upper}{LC}*   { return IdClasse(); }
 {Guill}({BS}|{PasBSG})*{Guill}   {yylval.S = strdup(yytext); return Chaine;}
 
 . 		         { lexError(yytext[0]); }
+
+
 %%
