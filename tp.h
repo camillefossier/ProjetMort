@@ -96,7 +96,8 @@ typedef struct _Classe /*represente la meta classe*/
   char *nom;
   struct _varDecl *lparametres;
   struct _Classe* superClasse;
-  struct _Methode *constructeur;
+  /* struct _Methode *constructeur; */ 
+  struct _varDecl *constructeur;							/* TODO Je suis pas sur de ca*/
   struct _varDecl *lchamps;
   struct _LMethode *lmethodes;
 } Classe, *ClasseP;

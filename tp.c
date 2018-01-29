@@ -248,7 +248,8 @@ ClasseP makeClasse(char *nom)
 
   classe->superClasse = NIL(Classe);
 
-  classe->constructeur = NIL(Methode);
+  /* classe->constructeur = NIL(Methode); */
+  classe->constructeur = NIL(VarDecl);
 
   classe->lchamps = NEW(1, VarDecl);
   classe->lchamps->nom = "NIL";
@@ -575,6 +576,7 @@ void makeClassesPrimitives()
   ParamP paramInt = makeVarDecl("val", type, exprOpt);
 
   /*Constructeur du type Integer*/
+  /*
   MethodeP constrInt = NEW(1, Methode);
   constrInt->override = FALSE;
   constrInt->nom = "Integer";
@@ -582,17 +584,18 @@ void makeClassesPrimitives()
   constrInt->typeDeRetour = integer;
   constrInt->bloc = NIL(Tree);
 
+  integer->constructeur = constrInt;
+  */
+
   /*methode toString*/
   MethodeP toString = NEW(1, Methode);
   toString->override = FALSE;
   toString->nom = "toString";
-  constrInt->lparametres = NIL(VarDecl);
   toString->typeDeRetour = string;
   toString->bloc = NIL(Tree);
 
   integer->lparametres = paramInt;
   integer->superClasse = NIL(Classe);
-  integer->constructeur = constrInt;
   integer->lchamps = paramInt;
   integer->lmethodes->methode = toString;
   integer->lmethodes->next = NIL(LMethode);
@@ -603,17 +606,19 @@ void makeClassesPrimitives()
   ParamP paramStr = makeVarDecl("str", type, exprOpt);
 
   /*Constructeur du type String*/
+  /*
   MethodeP constrStr = NEW(1, Methode);
   constrStr->override = FALSE;
   constrStr->nom = "String";
   constrStr->lparametres = NIL(VarDecl);
   constrStr->typeDeRetour = string;
   constrStr->bloc = NIL(Tree);
-  
+
+  string->constructeur = constrStr;
+  */
 
   string->lparametres = paramStr;
   string->superClasse = NIL(Classe);
-  string->constructeur = constrStr;
   string->lchamps = paramStr;
   string->lmethodes = NIL(LMethode);
 
@@ -664,8 +669,17 @@ void initClasse(TreeP arbreLClasse)
             TreeP arbreConstructeur = getChild(arbreClasse, 3);
 
             /* TODO 
-            * bufferClasse->constructeur
-            */ 
+            * Verifier cette partie pour le constructeur
+            */
+
+            if(arbreConstructeur != NIL(Tree))
+            {
+                if(arbreConstructeur->op == YCONT)
+                {
+                    ChampP constructeur = makeLParam(getChild(arbreConstructeur, 0));
+                    bufferClasse->constructeur = constructeur;
+                }
+            }
         }
         else
         {
@@ -768,6 +782,9 @@ void printClasse(ClasseP classe)
     printf("\n");
     printf("Parametres :\n");
     printVarDecl(classe->lparametres); 
+    printf("\n");
+    printf("Constructeur :\n");
+    printVarDecl(classe->constructeur); 
     printf("\n");
     printf("Champs :\n");
     printVarDecl(classe->lchamps);
@@ -944,7 +961,7 @@ void afficherProgramme(TreeP tree, bool verbose)
           printf(" )");
           break;
 
-        case YEXPR :                                                            /* Attention */
+        case YEXPR :                                                            
           if(verbose) printf("EXPR\n");
           afficherProgramme(tree->u.children[0], verbose);
           printf(";");
