@@ -199,7 +199,8 @@ TreeP makeLeafLVar(short op, VarDeclP lvar) {
 
 /*-------------------------MAKEPERSO-------------------------*/
 
-
+/* Creer une variable à partir des elements de la grammaire
+*  Cette fonction est appele dans la grammaire pour creer une feuille LVar */
 VarDeclP makeVarDecl(char *nom, TreeP type, TreeP exprOpt)
 {
     VarDeclP newVar = NEW(1, VarDecl);
@@ -232,6 +233,7 @@ VarDeclP makeVarDecl(char *nom, TreeP type, TreeP exprOpt)
 }
 
 
+/* Creer une classe sans aucun element initialise sauf le nom */
 ClasseP makeClasse(char *nom)
 {
   ClasseP classe = NEW(1, Classe);
@@ -262,6 +264,7 @@ ClasseP makeClasse(char *nom)
 }
 
 
+/* Creer un objet isole sans aucun element initialise sauf le nom */
 ObjetP makeObjet(char *nom)
 {
   ObjetP objet = NEW(1, Objet);
@@ -284,34 +287,153 @@ ObjetP makeObjet(char *nom)
 }
 
 
-MethodeP makeMethode(char *override, char *nom, VarDeclP lparametres, char *type, TreeP bloc)
+/* Creer une methode a partir d'un arbre' */
+MethodeP makeMethode(TreeP declMethode)
 {
     MethodeP newMethode = NEW(1, Methode);
 
-    newMethode->override = (strcmp(override, "TRUE") == 0) ? TRUE : FALSE;
-    newMethode->nom = nom;
+    /* liste de parametres */
+    TreeP arbreParamMeth = getChild(declMethode, 2);
+    ParamP lparametres = makeLParam(arbreParamMeth);
     newMethode->lparametres = lparametres;
 
-    ClasseP classeType = getClassePointer(type);
+    /* pointeur vers le type de retour */
+    char *typeDeRetour = "Void";
+    if(declMethode->op == DMETHODEL)
+    {
+        typeDeRetour = getChild(declMethode, 3)->u.str;
+    }
+    else
+    {
+        TreeP typeOpt = getChild(declMethode, 3);
+        if(typeOpt != NIL(Tree))
+            typeDeRetour = typeOpt->u.str;
+    }
+
+    ClasseP classeType = getClassePointer(typeDeRetour);
     if(classeType != NIL(Classe))
     {
         newMethode->typeDeRetour = classeType;
     }
     else
     {
-        classeType = makeClasse(type);
+        classeType = makeClasse(typeDeRetour);
         newMethode->typeDeRetour = classeType;
     }
 
-    newMethode->bloc = bloc;
+    /* override */
+    newMethode->override = (strcmp(getChild(declMethode, 0)->u.str, "TRUE") == 0) ? TRUE : FALSE;
+
+    /* nom de la methode */
+    newMethode->nom = getChild(declMethode, 1)->u.str;
+
+    /* expression optionnelle */
+    newMethode->bloc = getChild(declMethode, 4);
 
     return newMethode;
 }
 
 
-/*-------------METHODES DE STRUCTURES--------------*/
+/* Creer une liste de parametres a partir d'un arbre */
+VarDeclP makeLParam(TreeP arbreLParam)
+{
+  ParamP lparam = NIL(VarDecl);
+
+  if(arbreLParam != NIL(Tree))
+  {
+      lparam = NEW(1, VarDecl);
+
+      while(arbreLParam->op == YLPARAM)
+      {
+          ParamP tmp = getChild(arbreLParam, 0)->u.lvar;
+          addVarDecl(tmp, lparam);
+
+          arbreLParam = getChild(arbreLParam, 1);
+      }
+            
+      ParamP tmp = arbreLParam->u.lvar;
+      addVarDecl(tmp, lparam);
+  }
+
+  return lparam;
+}
 
 
+/* creer une liste des champs d'un objet ou d'une classe */
+ChampP makeChampsBlocObj(TreeP blocObj)
+{
+    VarDeclP lChamps = NIL(VarDecl);
+
+    if(blocObj != NIL(Tree))
+    {
+        lChamps = NEW(1, VarDecl);
+
+        TreeP arbreChampMethode = blocObj;
+
+        while(arbreChampMethode->op == LDECLMETH)
+        {
+            TreeP declChampMethode = getChild(arbreChampMethode, 1);
+
+            if(declChampMethode->op == YDECLC)
+            {
+                VarDeclP tmp = declChampMethode->u.lvar;
+                addVarDecl(tmp, lChamps);
+            }
+
+            arbreChampMethode = getChild(arbreChampMethode, 0);
+        }
+
+        if(arbreChampMethode->op == YDECLC)
+        {
+            VarDeclP tmp = arbreChampMethode->u.lvar;
+            addVarDecl(tmp, lChamps);
+        }
+    }
+
+    return lChamps;
+}
+
+
+/* creer une liste des methodes d'une classe ou d'un objet */
+LMethodeP makeMethodeBlocObj(TreeP blocObj)
+{
+    LMethodeP lMethodes = NIL(LMethode);
+
+    if(blocObj != NIL(Tree))
+    {
+        TreeP arbreChampMethode = blocObj;
+
+        while(arbreChampMethode->op == LDECLMETH)
+        {
+            TreeP declChampMethode = getChild(arbreChampMethode, 1);
+
+            if(declChampMethode->op != YDECLC)
+            {
+                MethodeP tmp = makeMethode(declChampMethode);
+                lMethodes = addMethode(tmp, lMethodes);
+            }
+
+            arbreChampMethode = getChild(arbreChampMethode, 0);
+        }
+
+
+        if(arbreChampMethode->op != YDECLC)
+        {
+            MethodeP tmp = makeMethode(arbreChampMethode);
+            lMethodes = addMethode(tmp, lMethodes);
+        }
+    }
+
+    return lMethodes;
+}
+
+
+
+
+/*--------------------------GET POINTEUR---------------------------*/
+
+
+/* recupere le pointeur vers une classe nommee nom ou NIL */
 ClasseP getClassePointer(char *nom)
 {
   LClasseP cur = lclasse;
@@ -328,6 +450,7 @@ ClasseP getClassePointer(char *nom)
 }
 
 
+/* recupere le pointeur vers un objet nomme nom ou NIL */
 ObjetP getObjetPointer(char *nom)
 {
   ObjetP cur = lobjet;
@@ -345,6 +468,12 @@ ObjetP getObjetPointer(char *nom)
 }
 
 
+
+
+/*--------------------------ADD TO---------------------------*/
+
+
+/* ajoute une classe dans la liste de classe globale */
 void addClasse(ClasseP classe)
 {
     LClasseP newClasse = NEW(1, LClasse);
@@ -369,6 +498,8 @@ void addClasse(ClasseP classe)
     }
 }
 
+
+/* ajoute un objet dans la liste d'objet globale */
 void addObjet(ObjetP objet)
 {
     if(lobjet == NIL(Objet))
@@ -389,6 +520,8 @@ void addObjet(ObjetP objet)
     }
 }
 
+
+/* ajoute dans une liste une variable var */
 void addVarDecl(VarDeclP var, VarDeclP liste)
 {
     if(liste != NIL(VarDecl))
@@ -409,6 +542,7 @@ void addVarDecl(VarDeclP var, VarDeclP liste)
 }
 
 
+/* ajoute dans une liste une methode methode */
 LMethodeP addMethode(MethodeP methode, LMethodeP liste)
 {
     LMethodeP newListe = NEW(1, LMethode);
@@ -419,6 +553,139 @@ LMethodeP addMethode(MethodeP methode, LMethodeP liste)
 }
 
 
+
+/*--------------------------STOCKAGE DES CLASSES ET DES OBJETS---------------------------*/
+
+
+/*Creation des types primitifs Integer, String et Void*/
+void makeClassesPrimitives()
+{
+  ClasseP integer = makeClasse("Integer");
+  ClasseP string = makeClasse("String");
+  ClasseP voidC = makeClasse("Void"); 
+
+  /* printLClasse(); */
+
+  TreeP exprOpt = NIL(Tree);
+  TreeP type = NEW(1, Tree);
+
+  /*Initialisation d'Integer*/
+
+  type->u.str = "Integer";
+  ParamP paramInt = makeVarDecl("val", type, exprOpt);
+
+  /*Constructeur du type Integer*/
+  MethodeP constrInt = NEW(1, Methode);
+  constrInt->override = FALSE;
+  constrInt->nom = "Integer";
+  constrInt->lparametres = NIL(VarDecl);
+  constrInt->typeDeRetour = integer;
+  constrInt->bloc = NIL(Tree);
+
+  /*methode toString*/
+  MethodeP toString = NEW(1, Methode);
+  toString->override = FALSE;
+  toString->nom = "toString";
+  constrInt->lparametres = NIL(VarDecl);
+  toString->typeDeRetour = string;
+  toString->bloc = NIL(Tree);
+
+  integer->lparametres = paramInt;
+  integer->superClasse = NIL(Classe);
+  integer->constructeur = constrInt;
+  integer->lchamps = paramInt;
+  integer->lmethodes->methode = toString;
+  integer->lmethodes->next = NIL(LMethode);
+  
+  /*Initialisation de String*/
+
+  type->u.str = "String";
+  ParamP paramStr = makeVarDecl("str", type, exprOpt);
+
+  /*Constructeur du type String*/
+  MethodeP constrStr = NEW(1, Methode);
+  constrStr->override = FALSE;
+  constrStr->nom = "String";
+  constrStr->lparametres = NIL(VarDecl);
+  constrStr->typeDeRetour = string;
+  constrStr->bloc = NIL(Tree);
+  
+
+  string->lparametres = paramStr;
+  string->superClasse = NIL(Classe);
+  string->constructeur = constrStr;
+  string->lchamps = paramStr;
+  string->lmethodes = NIL(LMethode);
+
+  /* TODO
+  * methode print
+  * methode println
+  */
+
+  addClasse(integer);
+  addClasse(string);
+  addClasse(voidC);
+}
+
+
+/* Permet de mettre a jour les classes et les objets */
+void initClasse(TreeP arbreLClasse)
+{
+    ClasseP bufferClasse = NIL(Classe);
+    ObjetP bufferObj = NIL(Objet);
+    TreeP arbreCourant = arbreLClasse;
+
+    while(arbreCourant != NIL(Tree))
+    {
+        TreeP arbreClasse = getChild(arbreCourant, 0);
+        if(arbreClasse->op == YCLASS)
+        { 
+            bufferClasse = getClassePointer(getChild(arbreClasse, 0)->u.str); 
+
+            TreeP arbreExtendOpt = getChild(getChild(arbreCourant, 0), 2);
+            if(arbreExtendOpt != NIL(Tree))
+                bufferClasse->superClasse = getClassePointer(getChild(arbreExtendOpt, 0)->u.str); 
+        
+
+            TreeP arbreLParam = getChild(arbreClasse, 1);
+            ParamP lparam = makeLParam(arbreLParam);
+
+            bufferClasse->lparametres = lparam;
+            
+
+            TreeP arbreBloc = getChild(arbreClasse, 4); 
+
+            ChampP lchamps = makeChampsBlocObj(arbreBloc);
+            LMethodeP lmethodes = makeMethodeBlocObj(arbreBloc);
+
+            bufferClasse->lchamps = lchamps;
+            bufferClasse->lmethodes = lmethodes;
+
+            TreeP arbreConstructeur = getChild(arbreClasse, 3);
+
+            /* TODO 
+            * bufferClasse->constructeur
+            */ 
+        }
+        else
+        {
+            bufferObj = getObjetPointer(getChild(arbreClasse, 0)->u.str);
+
+            TreeP arbreBloc = getChild(arbreClasse, 1); 
+
+            ChampP lchamps = makeChampsBlocObj(arbreBloc);
+            LMethodeP lmethodes = makeMethodeBlocObj(arbreBloc);
+
+            bufferObj->lchamps = lchamps;
+            bufferObj->lmethodes = lmethodes;
+        }
+
+        arbreCourant = getChild(arbreCourant, 1);
+    }
+}
+
+
+/* initialise les variables globales lclasse et lobjet */
 void stockerClasse(TreeP arbreLClasse, bool verbose)
 {
     TreeP courant = arbreLClasse;
@@ -455,357 +722,10 @@ void stockerClasse(TreeP arbreLClasse, bool verbose)
 }
 
 
-/*Creation des types primitifs Integer, String et Void*/
-void makeClassesPrimitives()
-{
-  ClasseP integer = makeClasse("Integer");
-  ClasseP string = makeClasse("String");
-  ClasseP voidC = makeClasse("Void"); 
-
-  /* printLClasse(); */
-
-  TreeP exprOpt = NIL(Tree);
-  TreeP type = NEW(1, Tree);
-
-  /*Initialisation d'Integer*/
-
-  type->u.str = "Integer";
-  ParamP paramInt = makeVarDecl("val", type, exprOpt);
-
-  /*Constructeur du type Integer*/
-  MethodeP constrInt = NEW(1, Methode);
-  constrInt->override = FALSE;
-  constrInt->nom = "Integer";
-  constrInt->lparametres = NIL(VarDecl);
-  constrInt->typeDeRetour = integer;
-  constrInt->bloc = NIL(Tree);
-
-  /*methode toString*/
-  MethodeP toString = NEW(1, Methode);
-  toString->override = FALSE;
-  toString->nom = "toString";
-  constrInt->lparametres = NIL(VarDecl);
-  toString->typeDeRetour = string;
-  toString->bloc = NIL(Tree);
-
-
-  integer->lparametres = paramInt;
-  integer->superClasse = NIL(Classe);
-  integer->constructeur = constrInt;
-  integer->lchamps = paramInt;
-  integer->lmethodes->methode = toString;
-  integer->lmethodes->next = NIL(LMethode);
-  
-
-
-  /*Initialisation de String*/
-
-  type->u.str = "String";
-  ParamP paramStr = makeVarDecl("str", type, exprOpt);
-
-  /*Constructeur du type String*/
-  MethodeP constrStr = NEW(1, Methode);
-  constrStr->override = FALSE;
-  constrStr->nom = "String";
-  constrStr->lparametres = NIL(VarDecl);
-  constrStr->typeDeRetour = string;
-  constrStr->bloc = NIL(Tree);
-  
-
-  string->lparametres = paramStr;
-  string->superClasse = NIL(Classe);
-  string->constructeur = constrStr;
-  string->lchamps = paramStr;
-  string->lmethodes = NIL(LMethode);
-
-
-  /* TODO
-  * methode print
-  * methode println
-  */
-
-  addClasse(integer);
-  addClasse(string);
-  addClasse(voidC);
-}
-
-
-void initClasse(TreeP arbreLClasse)
-{
-    ClasseP bufferClasse = NIL(Classe);
-    ObjetP bufferObj = NIL(Objet);
-    TreeP arbreCourant = arbreLClasse;
-
-    while(arbreCourant != NIL(Tree))
-    {
-        TreeP arbreClasse = getChild(arbreCourant, 0);
-        if(arbreClasse->op == YCLASS)
-        { 
-            bufferClasse = getClassePointer(getChild(arbreClasse, 0)->u.str); 
-
-            TreeP arbreExtendOpt = getChild(getChild(arbreCourant, 0), 2);
-            if(arbreExtendOpt != NIL(Tree))
-                bufferClasse->superClasse = getClassePointer(getChild(arbreExtendOpt, 0)->u.str); 
-        
-
-            TreeP arbreLParam = getChild(arbreClasse, 1);
-
-            if(arbreLParam != NIL(Tree))
-            {
-                ParamP lparam = NEW(1, VarDecl);
-
-                while(arbreLParam->op == YLPARAM)
-                {
-                    ParamP tmp = getChild(arbreLParam, 0)->u.lvar;
-                    addVarDecl(tmp, lparam);
-
-                    arbreLParam = getChild(arbreLParam, 1);
-                }
-            
-                ParamP tmp = arbreLParam->u.lvar;
-                addVarDecl(tmp, lparam);
-
-                bufferClasse->lparametres = lparam;
-            }
-
-            
-            TreeP arbreBloc = getChild(arbreClasse, 4); 
-
-            ChampP lchamps = NIL(VarDecl);
-            LMethodeP lmethodes = NIL(LMethode);
-
-            if(arbreBloc != NIL(Tree))
-            {
-                lchamps = NEW(1, VarDecl);
-                /* lmethodes = NEW(1, LMethode); */ 
-
-                TreeP arbreChampMethode = arbreBloc;
-
-                while(arbreChampMethode->op == LDECLMETH)
-                {
-                    TreeP declChampMethode = getChild(arbreChampMethode, 1);
-
-                    if(declChampMethode->op == YDECLC)
-                    {
-                        VarDeclP tmp = declChampMethode->u.lvar;
-                        addVarDecl(tmp, lchamps);
-                    }
-                    else
-                    {
-                        TreeP arbreParamMeth = getChild(declChampMethode, 2);
-                        ParamP lparam = NIL(VarDecl);
-
-                        if(arbreParamMeth != NIL(Tree))
-                        {
-                            lparam = NEW(1, VarDecl);
-
-                            while(arbreParamMeth->op == YLPARAM)
-                            {
-                                ParamP tmp = getChild(arbreParamMeth, 0)->u.lvar;
-                                addVarDecl(tmp, lparam);
-
-                                arbreParamMeth = getChild(arbreParamMeth, 1);
-                            }
-            
-                            ParamP tmp = arbreParamMeth->u.lvar;
-                            addVarDecl(tmp, lparam);
-                        }
-
-                        char *typeDeRetour = "Void";
-                        if(declChampMethode->op == DMETHODEL)
-                        {
-                            typeDeRetour = getChild(declChampMethode, 3)->u.str;
-                        }
-                        else
-                        {
-                            TreeP typeOpt = getChild(declChampMethode, 3);
-                            if(typeOpt != NIL(Tree))
-                                typeDeRetour = typeOpt->u.str;
-                        }
-
-
-                        MethodeP tmp = makeMethode(getChild(declChampMethode, 0)->u.str, getChild(declChampMethode, 1)->u.str, lparam, typeDeRetour, getChild(declChampMethode, 4));
-                        lmethodes = addMethode(tmp, lmethodes);
-                    }
-
-                    arbreChampMethode = getChild(arbreChampMethode, 0);
-                }
-
-
-                if(arbreChampMethode->op == YDECLC)
-                {
-                    VarDeclP tmp = arbreChampMethode->u.lvar;
-                    addVarDecl(tmp, lchamps);
-                }
-                else
-                {
-                    TreeP arbreParamMeth = getChild(arbreChampMethode, 2);
-                    ParamP lparam = NIL(VarDecl);
-
-                    if(arbreParamMeth != NIL(Tree))
-                    {
-                        lparam = NEW(1, VarDecl);
-
-                        while(arbreParamMeth->op == YLPARAM)
-                        {
-                            ParamP tmp = getChild(arbreParamMeth, 0)->u.lvar;
-                            addVarDecl(tmp, lparam);
-
-                            arbreParamMeth = getChild(arbreParamMeth, 1);
-                        }
-            
-                        ParamP tmp = arbreParamMeth->u.lvar;
-                        addVarDecl(tmp, lparam);
-                    }
-
-                    char *typeDeRetour = "Void";
-                    if(arbreChampMethode->op == DMETHODEL)
-                    {
-                          typeDeRetour = getChild(arbreChampMethode, 3)->u.str;
-                    }
-                    else
-                    {
-                        TreeP typeOpt = getChild(arbreChampMethode, 3);
-                        if(typeOpt != NIL(Tree))
-                            typeDeRetour = typeOpt->u.str;
-                    }
-
-                    MethodeP tmp = makeMethode(getChild(arbreChampMethode, 0)->u.str, getChild(arbreChampMethode, 1)->u.str, lparam, typeDeRetour, getChild(arbreChampMethode, 4));
-                    lmethodes = addMethode(tmp, lmethodes);
-                }
-            }
-
-            /* TODO 
-            * bufferClasse->constructeur
-            */ 
-
-            bufferClasse->lchamps = lchamps;
-            bufferClasse->lmethodes = lmethodes;
-
-            arbreCourant = getChild(arbreCourant, 1);
-        }
-        else
-        {
-            bufferObj = getObjetPointer(getChild(arbreClasse, 0)->u.str);
-
-            TreeP arbreBloc = getChild(arbreClasse, 1); 
-
-            ChampP lchamps = NIL(VarDecl);
-            LMethodeP lmethodes = NIL(LMethode);
-
-            if(arbreBloc != NIL(Tree))
-            {
-                lchamps = NEW(1, VarDecl);
-
-                TreeP arbreChampMethode = arbreBloc;
-
-                while(arbreChampMethode->op == LDECLMETH)
-                {
-                    TreeP declChampMethode = getChild(arbreChampMethode, 1);
-
-                    if(declChampMethode->op == YDECLC)
-                    {
-                        VarDeclP tmp = declChampMethode->u.lvar;
-                        addVarDecl(tmp, lchamps);
-
-                        arbreChampMethode = getChild(arbreChampMethode, 0);
-                    }
-                    else
-                    {
-                        TreeP arbreParamMeth = getChild(declChampMethode, 2);
-                        ParamP lparam = NIL(VarDecl);
-
-                        if(arbreParamMeth != NIL(Tree))
-                        {
-                            lparam = NEW(1, VarDecl);
-
-                            while(arbreParamMeth->op == YLPARAM)
-                            {
-                                ParamP tmp = getChild(arbreParamMeth, 0)->u.lvar;
-                                addVarDecl(tmp, lparam);
-
-                                arbreParamMeth = getChild(arbreParamMeth, 1);
-                            }
-            
-                            ParamP tmp = getChild(arbreParamMeth, 0)->u.lvar;
-                            addVarDecl(tmp, lparam);
-                        }
-
-
-                        char *typeDeRetour = "Void";
-                        if(declChampMethode->op == DMETHODEL)
-                        {
-                            typeDeRetour = getChild(declChampMethode, 3)->u.str;
-                        }
-                        else
-                        {
-                            TreeP typeOpt = getChild(declChampMethode, 3);
-                            if(typeOpt != NIL(Tree))
-                                typeDeRetour = typeOpt->u.str;
-                        }
-
-                        MethodeP tmp = makeMethode(getChild(declChampMethode, 0)->u.str, getChild(declChampMethode, 1)->u.str, lparam, typeDeRetour, getChild(declChampMethode, 4));
-                        lmethodes = addMethode(tmp, lmethodes);
-
-                        arbreChampMethode = getChild(arbreChampMethode, 0);
-                    }
-                }
-
-                if(arbreChampMethode->op == YDECLC)
-                {
-                    VarDeclP tmp = arbreChampMethode->u.lvar;
-                    addVarDecl(tmp, lchamps);
-                }
-                else
-                {
-                    TreeP arbreParamMeth = getChild(arbreChampMethode, 2);
-                    ParamP lparam = NIL(VarDecl);
-
-                    if(arbreParamMeth != NIL(Tree))
-                    {
-                        lparam = NEW(1, VarDecl);
-
-                        while(arbreParamMeth->op == YLPARAM)
-                        {
-                            ParamP tmp = getChild(arbreParamMeth, 0)->u.lvar;
-                            addVarDecl(tmp, lparam);
-
-                            arbreParamMeth = getChild(arbreParamMeth, 1);
-                        }
-            
-                        ParamP tmp = getChild(arbreParamMeth, 0)->u.lvar;
-                        addVarDecl(tmp, lparam);
-                    }
-
-                    char *typeDeRetour = "Void";
-                    if(arbreChampMethode->op == DMETHODEL)
-                    {
-                          typeDeRetour = getChild(arbreChampMethode, 3)->u.str;
-                    }
-                    else
-                    {
-                        TreeP typeOpt = getChild(arbreChampMethode, 3);
-                        if(typeOpt != NIL(Tree))
-                            typeDeRetour = typeOpt->u.str;
-                    }
-
-                    MethodeP tmp = makeMethode(getChild(arbreChampMethode, 0)->u.str, getChild(arbreChampMethode, 1)->u.str, lparam, typeDeRetour, getChild(arbreChampMethode, 4));
-                    lmethodes = addMethode(tmp, lmethodes);
-                }
-
-                bufferObj->lchamps = lchamps;
-                bufferObj->lmethodes = lmethodes;
-            }
-
-            arbreCourant = getChild(arbreCourant, 1);
-        }
-    }
-}
-
-
 /*---------------------------C'EST GOOD----------------------------*/
 
 
+/* fonction principale pour le stockage de donnees */
 void compile(TreeP arbreLClasse, TreeP main)
 {
     if(arbreLClasse != NIL(Tree))
@@ -816,16 +736,10 @@ void compile(TreeP arbreLClasse, TreeP main)
 
 
 
-
-
-
-
-
-
-
 /*---------------------------AFFICHAGE----------------------------*/
 
 
+/* affiche une liste de variables */
 void printVarDecl(VarDeclP lvar)
 {
     VarDeclP tmp = lvar; 
@@ -838,37 +752,46 @@ void printVarDecl(VarDeclP lvar)
 }
 
 
+/* affiche une classe */
+void printClasse(ClasseP classe)
+{
+    printf("#####################################\n");
+    printf("Classe : %s\n", classe->nom);
+    if(classe->superClasse != NIL(Classe))
+    {
+        printf("\nSuperClasse : %s\n", classe->superClasse->nom);
+    }
+    else
+    {
+        printf("\nSuperClasse : NIL\n");
+    }
+    printf("\n");
+    printf("Parametres :\n");
+    printVarDecl(classe->lparametres); 
+    printf("\n");
+    printf("Champs :\n");
+    printVarDecl(classe->lchamps);
+    printf("\n");
+    printf("Methodes :\n\n");
+    printLMethode(classe->lmethodes);
+    printf("\n");
+}
+
+
+/* affiche une liste de classe */
 void printLClasse()
 {
     LClasseP tmp = lclasse;
     while(tmp != NIL(LClasse))
     {
-        printf("#####################################\n");
-        printf("Classe : %s\n", tmp->classe->nom);
-        if(tmp->classe->superClasse != NIL(Classe))
-        {
-          printf("\nSuperClasse : %s\n", tmp->classe->superClasse->nom);
-        }
-        else
-        {
-          printf("\nSuperClasse : NIL\n");
-        }
-        printf("\n");
-        printf("Parametres :\n");
-        printVarDecl(tmp->classe->lparametres); 
-        printf("\n");
-        printf("Champs :\n");
-        printVarDecl(tmp->classe->lchamps);
-        printf("\n");
-        printf("Methodes :\n\n");
-        printLMethode(tmp->classe->lmethodes);
-        printf("\n");
-
+        if(tmp->classe != NIL(Classe))
+            printClasse(tmp->classe);
         tmp = tmp->next;
     }
 }
 
 
+/* affiche un objet */
 void printObjet()
 {
     ObjetP tmp = lobjet;
@@ -889,6 +812,7 @@ void printObjet()
 }
 
 
+/* affiche une methode */
 void printMethode(MethodeP methode)
 {
     if(methode != NIL(Methode))
@@ -907,6 +831,7 @@ void printMethode(MethodeP methode)
 }
 
 
+/* affiche une liste de methode */
 void printLMethode(LMethodeP lmethode)
 {
     LMethodeP tmp = lmethode;
@@ -919,7 +844,9 @@ void printLMethode(LMethodeP lmethode)
     }
 }
 
-void afficherProgramme(TreeP tree) 
+
+/* affiche l'arbre syntaxique */
+void afficherProgramme(TreeP tree, bool verbose) 
 {
     if(tree != NIL(Tree)) 
     {
@@ -927,311 +854,318 @@ void afficherProgramme(TreeP tree)
         {
 
         case YPROG :
-            printf(" PROG \n");
-            afficherProgramme(tree->u.children[0]);
-            afficherProgramme(tree->u.children[1]);
-            break;
+          if(verbose) printf("PROG\n");
+          afficherProgramme(tree->u.children[0], verbose);
+          afficherProgramme(tree->u.children[1], verbose);
+          break;
 
         case YCONT :
-            printf("\n {CONT");
-            afficherProgramme(tree->u.children[0]);
-            afficherProgramme(tree->u.children[1]);
-            printf("\n}");
-            break;
+          if(verbose) printf("YCONT\n");
+          afficherProgramme(tree->u.children[0], verbose);
+          printf(" IS ");
+          afficherProgramme(tree->u.children[1], verbose);
+          break;
 
         case LDECLC :
-          afficherProgramme(tree->u.children[0]);
-          afficherProgramme(tree->u.children[1]);
+          if(verbose) printf("LDECLC\n");
+          afficherProgramme(tree->u.children[0], verbose);
+          printf("\n");
+          afficherProgramme(tree->u.children[1], verbose);
           break;
 
         case YDECLC :
-          printf("\nDECL var ");
+          if(verbose) printf("YDECLC\n");
           printVarDecl(tree->u.lvar);
-          printf("; \n");
           break;
 
         case LINSTR :
-          printf(" LINSTR ");
-          afficherProgramme(tree->u.children[0]);
-          afficherProgramme(tree->u.children[1]);
+          if(verbose) printf("LINSTR\n");
+          afficherProgramme(tree->u.children[0], verbose);
+          printf("\n");
+          afficherProgramme(tree->u.children[1], verbose);
           break;
 
         case YOBJ :
-          printf("\n OBJ object ");
-          afficherProgramme(tree->u.children[0]);
-          printf(" is ");
-          afficherProgramme(tree->u.children[1]);
+          if(verbose) printf("YOBJ\n");
+          printf("OBJECT ");
+          afficherProgramme(tree->u.children[0], verbose);
+          printf(" IS ");
+          afficherProgramme(tree->u.children[1], verbose);
           break;
 
         case YLCLASS :
-          printf("\n[LCLASS ");  
-          afficherProgramme(tree->u.children[0]);
-          afficherProgramme(tree->u.children[1]);
-          printf("]\n");
+          if(verbose) printf("YLCLASS\n");  
+          afficherProgramme(tree->u.children[0], verbose);
+          printf("\n");
+          afficherProgramme(tree->u.children[1], verbose);
           break;
 
         case YCLASS :
-          printf("\n[ CLASS class ");
-          afficherProgramme(tree->u.children[0]);
-          printf("(");
-
-          afficherProgramme(tree->u.children[1]);
-          printf(") ");
-          afficherProgramme(tree->u.children[2]);
-          afficherProgramme(tree->u.children[3]);
-          printf("\nis ");
-
-          afficherProgramme(tree->u.children[4]);
-          printf("]\n");
+          if(verbose) printf("YCLASS\n");
+          printf("CLASS ");
+          afficherProgramme(tree->u.children[0], verbose);
+          printf("( ");
+          afficherProgramme(tree->u.children[1], verbose);
+          printf(" )");
+          afficherProgramme(tree->u.children[2], verbose);
+          afficherProgramme(tree->u.children[3], verbose);
+          printf(" IS ");
+          afficherProgramme(tree->u.children[4], verbose);
           break;
 
         case Chaine :
+          if(verbose) printf("Chaine\n");
           printf("%s", tree->u.str);
           break;
 
         case YITE :
-          printf("\nITE if ");
-          afficherProgramme(tree->u.children[0]);
-          printf("{");
-          afficherProgramme(tree->u.children[1]);
-          printf("} else ");
-          printf("{");
-          afficherProgramme(tree->u.children[2]);
-          printf(" }\n");
+          if(verbose) printf("ITE\n");
+          printf("IF ");
+          afficherProgramme(tree->u.children[0], verbose);
+          printf(" THEN ");
+          afficherProgramme(tree->u.children[1], verbose);
+          printf(" ELSE ");
+          afficherProgramme(tree->u.children[2], verbose);
           break;
 
         case EAFF :
-          afficherProgramme(tree->u.children[0]);
+          if(verbose) printf("EAFF\n");
+          afficherProgramme(tree->u.children[0], verbose);
           printf(" := ");
-          afficherProgramme(tree->u.children[1]);
-          printf(";\n");
+          afficherProgramme(tree->u.children[1], verbose);
+          printf(";");
           break;
 
         case ECAST :
-          printf("CAST (");
-          afficherProgramme(tree->u.children[0]);
-          afficherProgramme(tree->u.children[1]);
-          printf(")");
+          if(verbose) printf("CAST\n");
+          printf("( ");
+          afficherProgramme(tree->u.children[0], verbose);
+          afficherProgramme(tree->u.children[1], verbose);
+          printf(" )");
           break;
 
-        case YEXPR :
-          printf("EXPR (");
-          if(tree->nbChildren <= 1){
-            afficherProgramme(tree->u.children[0]);
-          }
-          else{
-            afficherProgramme(tree->u.children[0]);
-            afficherProgramme(tree->u.children[1]);
-          }
-          printf(")");
+        case YEXPR :                                                            /* Attention */
+          if(verbose) printf("EXPR\n");
+          afficherProgramme(tree->u.children[0], verbose);
+          printf(";");
           break;
 
         case EINST :
-          printf("new ");
-          afficherProgramme(tree->u.children[0]);
-          printf("(");
-          afficherProgramme(tree->u.children[1]);
-          printf(")");
+          if(verbose) printf("EINST\n");
+          printf("NEW ");
+          afficherProgramme(tree->u.children[0], verbose);
+          printf("( ");
+          afficherProgramme(tree->u.children[1], verbose);
+          printf(" )");
           break;
 
         case SELEXPR :
-          afficherProgramme(tree->u.children[0]);
-          printf(".");
-          afficherProgramme(tree->u.children[1]);
+          if(verbose) printf("SELEXPR\n");
+          if(tree->nbChildren == 2)
+          {
+            afficherProgramme(tree->u.children[0], verbose);
+            printf(".");
+            afficherProgramme(tree->u.children[1], verbose);
+          }
+          afficherProgramme(tree->u.children[1], verbose);
           break;
 
         case Id :
+          if(verbose) printf("Id\n");
           printf("%s", tree->u.str);  
           break;
 
         case Cste :
+          if(verbose) printf("Cste\n");
           printf("%d", tree->u.val);  
           break;
 
         case Classname :
+          if(verbose) printf("Classname\n");
           printf("%s", tree->u.str);  
           break;
 
         case YEXT :
-          printf("extends ");
-          afficherProgramme(tree->u.children[0]);
-          printf("(");
-          afficherProgramme(tree->u.children[1]);
-          printf(")\n");
+          if(verbose) printf("YEXT\n");
+          printf("EXTENDS ");
+          afficherProgramme(tree->u.children[0], verbose);
+          printf("( ");
+          afficherProgramme(tree->u.children[1], verbose);
+          printf(" )");
           break;
 
         case YLEXPR :
+          if(verbose) printf("YLEXPR\n");
           printf("(");
-          afficherProgramme(tree->u.children[0]);
+          afficherProgramme(tree->u.children[0], verbose);
           printf(", ");
-          afficherProgramme(tree->u.children[1]);
-          printf(")\n");
+          afficherProgramme(tree->u.children[1], verbose);
+          printf(")");
           break;
 
         case EENVOI :
-          afficherProgramme(tree->u.children[0]);
+          if(verbose) printf("EENVOI\n");
+          afficherProgramme(tree->u.children[0], verbose);
           printf(".");  
-          afficherProgramme(tree->u.children[1]);
+          afficherProgramme(tree->u.children[1], verbose);
           break;
 
         case METHOD :
-          afficherProgramme(tree->u.children[0]);
-          printf("(");
-          afficherProgramme(tree->u.children[1]);
-          printf(")\n");
+          if(verbose) printf("METHOD\n");
+          afficherProgramme(tree->u.children[0], verbose);
+          printf("( ");
+          afficherProgramme(tree->u.children[1], verbose);
+          printf(" )");
           break;
 
         case LDECLMETH :
-          printf("\n[LDECLMETH");
-          afficherProgramme(tree->u.children[0]);
-          afficherProgramme(tree->u.children[1]);
-          printf("]\n");
-          break ;
+          if(verbose) printf("LDECLMETH\n");
+          afficherProgramme(tree->u.children[0], verbose);
+          printf("\n");
+          afficherProgramme(tree->u.children[1], verbose);
+          break;
 
         case DMETHODE :
-          printf("\nDMETHODE def ");
-          afficherProgramme(tree->u.children[0]); 
-          afficherProgramme(tree->u.children[1]);
-          printf("(");
-          afficherProgramme(tree->u.children[2]); 
-          printf(") :");
-
-          afficherProgramme(tree->u.children[3]);
-          printf(" := ");
-
-          afficherProgramme(tree->u.children[4]);
-          printf("\n");
+          if(verbose) printf("DMETHODE\n");
+          afficherProgramme(tree->u.children[0], verbose); 
+          printf(" DEF ");
+          afficherProgramme(tree->u.children[1], verbose);
+          printf(" ( ");
+          afficherProgramme(tree->u.children[2], verbose); 
+          printf(" ) ");
+          afficherProgramme(tree->u.children[3], verbose);
+          printf(" IS ");
+          afficherProgramme(tree->u.children[4], verbose);
           break;
 
         case DMETHODEL :
-          printf("\nDMETHODEL def ");
-          afficherProgramme(tree->u.children[0]); 
-          afficherProgramme(tree->u.children[1]);
-          printf("(");
-          afficherProgramme(tree->u.children[2]); 
+          if(verbose) printf("DMETHODEL\n");
+          afficherProgramme(tree->u.children[0], verbose); 
+          printf(" DEF ");
+          afficherProgramme(tree->u.children[1], verbose);
+          printf(" ( ");
+          afficherProgramme(tree->u.children[2], verbose); 
           printf(") :");
-
-          afficherProgramme(tree->u.children[3]);
+          afficherProgramme(tree->u.children[3], verbose);
           printf(" := ");
-
-          afficherProgramme(tree->u.children[4]);
-          printf("\n");
+          afficherProgramme(tree->u.children[4], verbose);
           break;
 
         case YLPARAM :
-          printf("\nYLPARAM");
-          afficherProgramme(tree->u.children[0]);
-          afficherProgramme(tree->u.children[1]);
-          printf("]\n");
+          if(verbose) printf("YLPARAM\n");
+          afficherProgramme(tree->u.children[0], verbose);
+          printf(" , ");
+          afficherProgramme(tree->u.children[1], verbose);
           break;
 
         case YPARAM :
-          printf("\nYPARAM ");
+          if(verbose) printf("YPARAM\n");
           printVarDecl(tree->u.lvar);
-          printf("\n");
           break;
 
         case ADD :
-          assert(tree->nbChildren == 2);
-          printf("(");
-          afficherProgramme(tree->u.children[0]);
+          if(verbose) printf("ADD\n");
+          printf("( ");
+          afficherProgramme(tree->u.children[0], verbose);
           printf(" + ");
-          afficherProgramme(tree->u.children[1]);
-          printf(")");
+          afficherProgramme(tree->u.children[1], verbose);
+          printf(" )");
           break;
 
         case SUB :
-          assert(tree->nbChildren == 2);
-          printf("(");
-          afficherProgramme(tree->u.children[0]);
+          if(verbose) printf("SUB\n");
+          printf("( ");
+          afficherProgramme(tree->u.children[0], verbose);
           printf(" - ");
-          afficherProgramme(tree->u.children[1]);
-          printf(")");
+          afficherProgramme(tree->u.children[1], verbose);
+          printf(" )");
           break;
 
         case MUL :
-          assert(tree->nbChildren == 2);
-          printf("(");
-          afficherProgramme(tree->u.children[0]);
+          if(verbose) printf("MUL\n");
+          printf("( ");
+          afficherProgramme(tree->u.children[0], verbose);
           printf(" * ");
-          afficherProgramme(tree->u.children[1]);
-          printf(")");
+          afficherProgramme(tree->u.children[1], verbose);
+          printf(" )");
           break;
 
         case DIV :
-          assert(tree->nbChildren == 2);
-          printf("(");
-          afficherProgramme(tree->u.children[0]);
+          if(verbose) printf("DIV\n");
+          printf("( ");
+          afficherProgramme(tree->u.children[0], verbose);
           printf(" / ");
-          afficherProgramme(tree->u.children[1]);
-          printf(")");
+          afficherProgramme(tree->u.children[1], verbose);
+          printf(" )");
           break;
 
         case CONCAT :
-          assert(tree->nbChildren == 2);
-          printf("(");
-          afficherProgramme(tree->u.children[0]);
+          if(verbose) printf("CONCAT\n");
+          printf("( ");
+          afficherProgramme(tree->u.children[0], verbose);
           printf(" & ");
-          afficherProgramme(tree->u.children[1]);
-          printf(")");
+          afficherProgramme(tree->u.children[1], verbose);
+          printf(" )");
           break;
 
         case EQ :
-          assert(tree->nbChildren == 2);
-          printf("(");
-          afficherProgramme(tree->u.children[0]);
-          printf(") = (");
-          afficherProgramme(tree->u.children[1]);
-          printf(")");
+          if(verbose) printf("EQ\n");
+          printf("( ");
+          afficherProgramme(tree->u.children[0], verbose);
+          printf(" ) = ( ");
+          afficherProgramme(tree->u.children[1], verbose);
+          printf(" )");
           break;
 
         case NE :
-          assert(tree->nbChildren == 2);
-          printf("(");
-          afficherProgramme(tree->u.children[0]);
+          if(verbose) printf("NE\n");
+          printf("( ");
+          afficherProgramme(tree->u.children[0], verbose);
           printf(" <> ");
-          afficherProgramme(tree->u.children[1]);
-          printf(")");
+          afficherProgramme(tree->u.children[1], verbose);
+          printf(" )");
           break;
 
         case INF :
-          assert(tree->nbChildren == 2);
-          printf("(");
-          afficherProgramme(tree->u.children[0]);
+          if(verbose) printf("INF\n");
+          printf("( ");
+          afficherProgramme(tree->u.children[0], verbose);
           printf(" < ");
-          afficherProgramme(tree->u.children[1]);
-          printf(")");
+          afficherProgramme(tree->u.children[1], verbose);
+          printf(" )");
           break;
 
         case INFE :
-          assert(tree->nbChildren == 2);
-          printf("(");
-          afficherProgramme(tree->u.children[0]);
+          if(verbose) printf("INFE\n");
+          printf("( ");
+          afficherProgramme(tree->u.children[0], verbose);
           printf(" <= ");
-          afficherProgramme(tree->u.children[1]);
-          printf(")");
+          afficherProgramme(tree->u.children[1], verbose);
+          printf(" )");
           break;
 
         case SUP :
-          assert(tree->nbChildren == 2);
-          printf("(");
-          afficherProgramme(tree->u.children[0]);
+          if(verbose) printf("SUP\n");
+          printf("( ");
+          afficherProgramme(tree->u.children[0], verbose);
           printf(" > ");
-          afficherProgramme(tree->u.children[1]);
-          printf(")");
+          afficherProgramme(tree->u.children[1], verbose);
+          printf(" )");
           break;
 
         case SUPE :
-          assert(tree->nbChildren == 2);
-          printf("(");
-          afficherProgramme(tree->u.children[0]);
+          if(verbose) printf("SUPE\n");
+          printf("( ");
+          afficherProgramme(tree->u.children[0], verbose);
           printf(" >= ");
-          afficherProgramme(tree->u.children[1]);
-          printf(")");
+          afficherProgramme(tree->u.children[1], verbose);
+          printf(" )");
           break;
 
         case OVERRIDE :
-          printf(" override ");
+          if(verbose) printf("OVERRIDE\n");
+          if(strcmp(tree->u.str, "TRUE") == 0)
+            printf("OVERRIDE ");
           break;
 
         default :

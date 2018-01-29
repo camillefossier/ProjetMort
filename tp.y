@@ -36,7 +36,7 @@ extern void yyerror(const char *); /*const necessaire pour eviter les warning de
 
 %%
 
-Prog : LClassOpt Bloc 														{ $$ = makeTree(YPROG, 2, $1, $2);  /*afficherProgramme($$);*/ compile($1, $2); }
+Prog : LClassOpt Bloc 														{ $$ = makeTree(YPROG, 2, $1, $2);  afficherProgramme($$, FALSE); /*compile($1, $2);*/ }
 ;
 
 

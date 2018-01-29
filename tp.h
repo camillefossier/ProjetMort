@@ -165,7 +165,10 @@ void setChild(TreeP tree, int rank, TreeP arg);
 VarDeclP makeVarDecl(char *nom, TreeP type, TreeP exprOpt);
 ClasseP makeClasse(char* nom);
 ObjetP makeObjet(char *nom);
-MethodeP makeMethode(char *override, char *nom, VarDeclP lparametres, char *type, TreeP bloc);
+MethodeP makeMethode(TreeP declMethode);
+VarDeclP makeLParam(TreeP arbreLParam);
+ChampP makeChampsBlocObj(TreeP blocObj);
+LMethodeP makeMethodeBlocObj(TreeP blocObj);
 
 ClasseP getClassePointer(char *nom);
 ObjetP getObjetPointer(char *nom);
@@ -175,19 +178,19 @@ void addObjet(ObjetP objet);
 void addVarDecl(VarDeclP var, VarDeclP liste);
 LMethodeP addMethode(MethodeP methode, LMethodeP liste);
 
-
-void stockerClasse(TreeP arbreLClasse, bool verbose);
 void makeClassesPrimitives();
 void initClasse(TreeP arbreLClasse);
+void stockerClasse(TreeP arbreLClasse, bool verbose);
 
 void compile(TreeP arbreLClasse, TreeP main);
 
 void printVarDecl(VarDeclP lvar);
+void printClasse(ClasseP classe);
 void printLClasse();
 void printObjet();
 void printMethode(MethodeP methode);
 void printLMethode(LMethodeP lmethode);
-void afficherProgramme(TreeP tree);
+void afficherProgramme(TreeP tree, bool verbose);
 
 
 #define YYSTYPE YYSTYPE
