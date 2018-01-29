@@ -125,7 +125,7 @@ typedef struct _Methode
 	struct _varDecl *lparametres;
   	struct _Classe *typeDeRetour;
   	struct _Tree *bloc;
-  	/* struct _Classe *classeAppartenance; */                   /* Ca foire pour un objet :/ */
+  	/* struct _Classe *classeAppartenance; */                   /* TODO Ca foire pour un objet :/ */
 } Methode, *MethodeP;
 
 

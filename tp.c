@@ -441,22 +441,36 @@ VarDeclP makeVarBloc(TreeP bloc)
 
     if(bloc != NIL(Tree))
     {
-        if(bloc->op == YCONT)
+        VarDeclP tmp = NIL(VarDecl);
+
+        switch(bloc->op)
         {
-            VarDeclP tmp = makeLParam(getChild(bloc, 0));
-            addVarDecl(tmp, var);
-            addVarDecl(makeVarBloc(getChild(bloc, 1)), var);
-        }
-        else /* arbreConstructeur->op == LINSTR */
-        {
-            /* TODO
-            * stocker les variables declare dans une liste d'instructions
-            * on depile quand les variables en fin de bloc ???
-            */
+            case YCONT :
+              tmp = makeLParam(getChild(bloc, 0));
+              addVarDecl(tmp, var);
+              addVarDecl(makeVarBloc(getChild(bloc, 1)), var);
+              break;
+            
+            case LINSTR :
+              makeVarBloc(getChild(bloc, 0));
+              makeVarBloc(getChild(bloc, 1));
+              break;
+
+            case YITE :
+              makeVarBloc(getChild(bloc, 1));
+              makeVarBloc(getChild(bloc, 2));
+              break;
+
+            default :
+              break;
         }
     }
+    else
+    {
+      /* TODO : return/sortie de bloc */
+    }
 
-    return var;
+  return var;
 }
 
 
