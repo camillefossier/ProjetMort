@@ -345,7 +345,7 @@ VarDeclP makeLParam(TreeP arbreLParam)
   {
       lparam = NEW(1, VarDecl);
 
-      while(arbreLParam->op == YLPARAM)
+      while(arbreLParam->op == YLPARAM || arbreLParam->op == LDECLC)
       {
           ParamP tmp = getChild(arbreLParam, 0)->u.lvar;
           addVarDecl(tmp, lparam);
@@ -526,20 +526,21 @@ void addObjet(ObjetP objet)
 /* ajoute dans env une variable var */
 void addEnv(VarDeclP var)
 {
-    if(env != NIL(VarDecl))
+    if(env == NIL(VarDecl))
     {
-        VarDeclP tmp = env;
-
-        while(tmp->next != NIL(VarDecl))
-        {
-            tmp = tmp->next;
-        }
-
-        tmp->next = var;
+        env = var;      
     }
     else
     {
-      env = var;
+        VarDeclP current = env;
+        while (TRUE) { 
+            if(current->next == NULL)
+            {
+                current->next = var;
+                break; 
+            }
+            current = current->next;
+        }
     }
 }
 
@@ -794,7 +795,8 @@ void stockerEnv(TreeP arbreMain, bool verbose)
     if(verbose)
     {
         printf("----------------------------ENVIRONNEMENT----------------------------\n");
-        printVarDecl(env);
+        printf("Variables :\n")
+        printVarDecl(env); 
         printf("\n");
     }
 }
