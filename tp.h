@@ -170,6 +170,7 @@ MethodeP makeMethode(TreeP declMethode);
 VarDeclP makeLParam(TreeP arbreLParam);
 ChampP makeChampsBlocObj(TreeP blocObj);
 LMethodeP makeMethodeBlocObj(TreeP blocObj);
+VarDeclP makeVarBloc(TreeP bloc);
 
 ClasseP getClassePointer(char *nom);
 ObjetP getObjetPointer(char *nom);

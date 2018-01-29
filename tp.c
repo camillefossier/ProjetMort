@@ -430,6 +430,30 @@ LMethodeP makeMethodeBlocObj(TreeP blocObj)
 }
 
 
+/* Creer une liste des variables d'un bloc */
+VarDeclP makeVarBloc(TreeP bloc)
+{
+    VarDeclP var = NEW(1, VarDecl);
+
+    if(bloc != NIL(Tree))
+    {
+        if(bloc->op == YCONT)
+        {
+            VarDeclP tmp = makeLParam(getChild(bloc, 0));
+            addVarDecl(tmp, var);
+            addVarDecl(makeVarBloc(getChild(bloc, 1)), var);
+        }
+        else /* arbreConstructeur->op == LINSTR */
+        {
+            /* TODO
+            * stocker les variables declare dans une liste d'instructions
+            * on depile quand les variables en fin de bloc ???
+            */
+        }
+    }
+
+    return var;
+}
 
 
 /*--------------------------GET POINTEUR---------------------------*/
@@ -704,13 +728,13 @@ void initClasse(TreeP arbreLClasse)
                     bufferClasse->constructeur = constructeur;
 
                     /* TODO 
-                    * stocker les variables declare dans une liste d'instructions
+                    * stocker les variables declare dans une liste d'instructions ??
                     */
                 }
                 else
                 {
                     /* TODO 
-                    * stocker les variables declare dans une liste d'instructions
+                    * stocker les variables declare dans une liste d'instructions ??
                     */
                 }
             }
@@ -773,29 +797,13 @@ void stockerClasse(TreeP arbreLClasse, bool verbose)
 /* Permet de mettre a jour l'env */
 void stockerEnv(TreeP arbreMain, bool verbose)
 {
-    if(arbreMain != NIL(Tree))
-    {
-        if(arbreMain->op == YCONT)
-        {
-            VarDeclP var = makeLParam(getChild(arbreMain, 0));
-            addEnv(var);
-
-            /* TODO 
-            * stocker les variables declare dans une liste d'instructions
-            */
-        }
-        else
-        {
-            /* TODO 
-            * stocker les variables declare dans une liste d'instructions
-            */
-        }
-    }
+    VarDeclP tmp = makeVarBloc(arbreMain);
+    addEnv(tmp);
 
     if(verbose)
     {
         printf("----------------------------ENVIRONNEMENT----------------------------\n");
-        printf("Variables :\n")
+        printf("Variables :\n");
         printVarDecl(env); 
         printf("\n");
     }
