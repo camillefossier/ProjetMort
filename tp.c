@@ -249,8 +249,7 @@ ClasseP makeClasse(char *nom)
 
   classe->superClasse = NIL(Classe);
 
-  /* classe->constructeur = NIL(Methode); */
-  classe->constructeur = NIL(VarDecl);
+  classe->constructeur = NIL(Methode);
 
   classe->lchamps = NEW(1, VarDecl);
   classe->lchamps->nom = "NIL";
@@ -331,6 +330,11 @@ MethodeP makeMethode(TreeP declMethode)
 
     /* expression optionnelle */
     newMethode->bloc = getChild(declMethode, 4);
+
+    /* classe d'appartenance */
+    /*
+    newMethode->classeAppartenance = classe;
+    */
 
     return newMethode;
 }
@@ -602,6 +606,23 @@ LMethodeP addMethode(MethodeP methode, LMethodeP liste)
 }
 
 
+/* ajoute un constructeur à la classe */
+void addConstructeur(TreeP blocOpt, ClasseP classe)
+{
+  if(classe != NIL(Classe))
+  {
+      MethodeP constr = NEW(1, Methode);
+      constr->override = FALSE;
+      constr->nom = classe->nom;
+      constr->lparametres = classe->lparametres;    /* TODO : OK OU KO */
+      constr->typeDeRetour = classe;
+      constr->bloc = blocOpt;
+      /* constr->classeAppartenance = classe; */
+      
+      classe->constructeur = constr;
+  }
+}
+
 
 /*--------------------------STOCKAGE DES CLASSES ET DES OBJETS---------------------------*/
 
@@ -622,18 +643,10 @@ void makeClassesPrimitives()
 
   type->u.str = "Integer";
   ParamP paramInt = makeVarDecl("val", type, exprOpt);
+  integer->lparametres = paramInt;
 
   /*Constructeur du type Integer*/
-  /*
-  MethodeP constrInt = NEW(1, Methode);
-  constrInt->override = FALSE;
-  constrInt->nom = "Integer";
-  constrInt->lparametres = NIL(VarDecl);
-  constrInt->typeDeRetour = integer;
-  constrInt->bloc = NIL(Tree);
-
-  integer->constructeur = constrInt;
-  */
+  addConstructeur(exprOpt, integer);
 
   /*methode toString*/
   MethodeP toString = NEW(1, Methode);
@@ -641,39 +654,31 @@ void makeClassesPrimitives()
   toString->nom = "toString";
   toString->typeDeRetour = string;
   toString->bloc = NIL(Tree);
+  /* toString->classeAppartenance = integer; */
 
-  integer->lparametres = paramInt;
+  integer->lmethodes = addMethode(toString, integer->lmethodes);
   integer->superClasse = NIL(Classe);
   integer->lchamps = paramInt;
-  integer->lmethodes->methode = toString;
-  integer->lmethodes->next = NIL(LMethode);
+  
   
   /*Initialisation de String*/
 
   type->u.str = "String";
   ParamP paramStr = makeVarDecl("str", type, exprOpt);
+  string->lparametres = paramStr;
 
   /*Constructeur du type String*/
-  /*
-  MethodeP constrStr = NEW(1, Methode);
-  constrStr->override = FALSE;
-  constrStr->nom = "String";
-  constrStr->lparametres = NIL(VarDecl);
-  constrStr->typeDeRetour = string;
-  constrStr->bloc = NIL(Tree);
+  addConstructeur(exprOpt, string);
 
-  string->constructeur = constrStr;
-  */
-
-  string->lparametres = paramStr;
   string->superClasse = NIL(Classe);
   string->lchamps = paramStr;
-  string->lmethodes = NIL(LMethode);
 
   /* TODO
   * methode print
   * methode println
   */
+
+  string->lmethodes = NIL(LMethode);
 
   addClasse(integer);
   addClasse(string);
@@ -706,47 +711,29 @@ void initClasse(TreeP arbreLClasse)
             bufferClasse->lparametres = lparam;
             
 
-            TreeP arbreBloc = getChild(arbreClasse, 4); 
+            TreeP arbreBlocObj = getChild(arbreClasse, 4); 
 
-            ChampP lchamps = makeChampsBlocObj(arbreBloc);
-            LMethodeP lmethodes = makeMethodeBlocObj(arbreBloc);
+            ChampP lchamps = makeChampsBlocObj(arbreBlocObj);
+            LMethodeP lmethodes = makeMethodeBlocObj(arbreBlocObj);
 
             bufferClasse->lchamps = lchamps;
             bufferClasse->lmethodes = lmethodes;
-
-            TreeP arbreConstructeur = getChild(arbreClasse, 3);
 
             /* TODO 
             * Verifier cette partie pour le constructeur
             */
 
-            if(arbreConstructeur != NIL(Tree))
-            {
-                if(arbreConstructeur->op == YCONT)
-                {
-                    ChampP constructeur = makeLParam(getChild(arbreConstructeur, 0));
-                    bufferClasse->constructeur = constructeur;
-
-                    /* TODO 
-                    * stocker les variables declare dans une liste d'instructions ??
-                    */
-                }
-                else
-                {
-                    /* TODO 
-                    * stocker les variables declare dans une liste d'instructions ??
-                    */
-                }
-            }
+            TreeP arbreBlocOpt = getChild(arbreClasse, 3);
+            addConstructeur(arbreBlocOpt, bufferClasse);
         }
         else
         {
             bufferObj = getObjetPointer(getChild(arbreClasse, 0)->u.str);
 
-            TreeP arbreBloc = getChild(arbreClasse, 1); 
+            TreeP arbreBlocObj = getChild(arbreClasse, 1); 
 
-            ChampP lchamps = makeChampsBlocObj(arbreBloc);
-            LMethodeP lmethodes = makeMethodeBlocObj(arbreBloc);
+            ChampP lchamps = makeChampsBlocObj(arbreBlocObj);
+            LMethodeP lmethodes = makeMethodeBlocObj(arbreBlocObj);
 
             bufferObj->lchamps = lchamps;
             bufferObj->lmethodes = lmethodes;
@@ -860,7 +847,7 @@ void printClasse(ClasseP classe)
     printVarDecl(classe->lparametres); 
     printf("\n");
     printf("Constructeur :\n");
-    printVarDecl(classe->constructeur); 
+    printMethode(classe->constructeur); 
     printf("\n");
     printf("Champs :\n");
     printVarDecl(classe->lchamps);

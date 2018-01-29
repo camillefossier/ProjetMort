@@ -96,8 +96,7 @@ typedef struct _Classe /*represente la meta classe*/
   char *nom;
   struct _varDecl *lparametres;
   struct _Classe* superClasse;
-  /* struct _Methode *constructeur; */ 
-  struct _varDecl *constructeur;							/* TODO Je suis pas sur de ca*/
+  struct _Methode *constructeur; 
   struct _varDecl *lchamps;
   struct _LMethode *lmethodes;
 } Classe, *ClasseP;
@@ -126,6 +125,7 @@ typedef struct _Methode
 	struct _varDecl *lparametres;
   	struct _Classe *typeDeRetour;
   	struct _Tree *bloc;
+  	/* struct _Classe *classeAppartenance; */                   /* Ca foire pour un objet :/ */
 } Methode, *MethodeP;
 
 
@@ -138,12 +138,10 @@ typedef struct _LMethode
 
 typedef union 
 { 
-
   char *S;
   char C;
   int I;
   TreeP pT;
-
 } YYSTYPE; 
 
 
@@ -180,6 +178,7 @@ void addObjet(ObjetP objet);
 void addEnv(VarDeclP var);
 void addVarDecl(VarDeclP var, VarDeclP liste);
 LMethodeP addMethode(MethodeP methode, LMethodeP liste);
+void addConstructeur(TreeP blocOpt, ClasseP classe);
 
 void makeClassesPrimitives();
 void initClasse(TreeP arbreLClasse);
