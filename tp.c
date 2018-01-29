@@ -33,6 +33,7 @@ FILE *out; /* fichier de sortie pour le code engendre */
 /* VARIABLE GLOBALE */
 LClasseP lclasse = NIL(LClasse);
 ObjetP lobjet = NIL(Objet); 
+VarDeclP env = NIL(VarDecl);
 
 int main(int argc, char **argv) {
   int fi;
@@ -522,6 +523,28 @@ void addObjet(ObjetP objet)
 }
 
 
+/* ajoute dans env une variable var */
+void addEnv(VarDeclP var)
+{
+    if(env != NIL(VarDecl))
+    {
+        VarDeclP tmp = env;
+
+        while(tmp->next != NIL(VarDecl))
+        {
+            tmp = tmp->next;
+        }
+
+        tmp->next = var;
+    }
+    else
+    {
+      env = var;
+    }
+}
+
+
+
 /* ajoute dans une liste une variable var */
 void addVarDecl(VarDeclP var, VarDeclP liste)
 {
@@ -678,6 +701,16 @@ void initClasse(TreeP arbreLClasse)
                 {
                     ChampP constructeur = makeLParam(getChild(arbreConstructeur, 0));
                     bufferClasse->constructeur = constructeur;
+
+                    /* TODO 
+                    * stocker les variables declare dans une liste d'instructions
+                    */
+                }
+                else
+                {
+                    /* TODO 
+                    * stocker les variables declare dans une liste d'instructions
+                    */
                 }
             }
         }
@@ -736,6 +769,37 @@ void stockerClasse(TreeP arbreLClasse, bool verbose)
 }
 
 
+/* Permet de mettre a jour l'env */
+void stockerEnv(TreeP arbreMain, bool verbose)
+{
+    if(arbreMain != NIL(Tree))
+    {
+        if(arbreMain->op == YCONT)
+        {
+            VarDeclP var = makeLParam(getChild(arbreMain, 0));
+            addEnv(var);
+
+            /* TODO 
+            * stocker les variables declare dans une liste d'instructions
+            */
+        }
+        else
+        {
+            /* TODO 
+            * stocker les variables declare dans une liste d'instructions
+            */
+        }
+    }
+
+    if(verbose)
+    {
+        printf("----------------------------ENVIRONNEMENT----------------------------\n");
+        printVarDecl(env);
+        printf("\n");
+    }
+}
+
+
 /*---------------------------C'EST GOOD----------------------------*/
 
 
@@ -746,6 +810,8 @@ void compile(TreeP arbreLClasse, TreeP main)
     {
         stockerClasse(arbreLClasse, TRUE);
     }
+
+    stockerEnv(main, TRUE);
 }
 
 

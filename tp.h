@@ -176,12 +176,14 @@ ObjetP getObjetPointer(char *nom);
 
 void addClasse(ClasseP classe);
 void addObjet(ObjetP objet);
+void addEnv(VarDeclP var);
 void addVarDecl(VarDeclP var, VarDeclP liste);
 LMethodeP addMethode(MethodeP methode, LMethodeP liste);
 
 void makeClassesPrimitives();
 void initClasse(TreeP arbreLClasse);
 void stockerClasse(TreeP arbreLClasse, bool verbose);
+void stockerEnv(TreeP arbreMain, bool verbose);
 
 void compile(TreeP arbreLClasse, TreeP main);
 
