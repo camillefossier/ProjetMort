@@ -33,7 +33,7 @@ FILE *out; /* fichier de sortie pour le code engendre */
 /* VARIABLE GLOBALE */
 LClasseP lclasse = NIL(LClasse);
 ObjetP lobjet = NIL(Objet); 
-VarDeclP env = NIL(VarDecl);
+ScopeP env = NIL(Scope);
 
 int main(int argc, char **argv) {
   int fi;
@@ -437,17 +437,19 @@ LMethodeP makeMethodeBlocObj(TreeP blocObj)
 /* Creer une liste des variables d'un bloc */
 VarDeclP makeVarBloc(TreeP bloc)
 {
-    VarDeclP var = NEW(1, VarDecl);
+    VarDeclP var = NIL(VarDecl);
 
     if(bloc != NIL(Tree))
     {
+        var = NEW(1, VarDecl);
         VarDeclP tmp = NIL(VarDecl);
 
         switch(bloc->op)
         {
             case YCONT :
               tmp = makeLParam(getChild(bloc, 0));
-              addVarDecl(tmp, var);
+              if(tmp != NIL(VarDecl))
+                addVarDecl(tmp, var);
               addVarDecl(makeVarBloc(getChild(bloc, 1)), var);
               break;
             
@@ -568,17 +570,33 @@ void addObjet(ObjetP objet)
 /* ajoute dans env une variable var */
 void addEnv(VarDeclP var)
 {
-    if(env == NIL(VarDecl))
+    int i = 0;
+    if(var != NIL(VarDecl))
     {
-        env = var;      
+        VarDeclP current = var;
+        while (TRUE) { 
+            i++;
+            if(current->next == NULL)
+            {
+                break; 
+            }
+            current = current->next;
+        }
+    }
+
+    if(env->env == NIL(VarDecl))
+    {
+        env->env = var;
+        env->taille = env->taille + i;     
     }
     else
     {
-        VarDeclP current = env;
+        VarDeclP current = env->env;
         while (TRUE) { 
             if(current->next == NULL)
             {
                 current->next = var;
+                env->taille = env->taille + i;
                 break; 
             }
             current = current->next;
@@ -587,24 +605,49 @@ void addEnv(VarDeclP var)
 }
 
 
-
-/* ajoute dans une liste une variable var */
-void addVarDecl(VarDeclP var, VarDeclP liste)
+/* retire n variables de l'env */
+void removeEnv(int n)
 {
-    if(liste != NIL(VarDecl))
+    if(env->taille < n)
     {
-        VarDeclP tmp = liste;
+        fprintf(stderr, "Erreur removeEnv\n");
+        return;
+    }
 
-        while(tmp->next != NIL(VarDecl))
+    if(n > 0)
+    {
+        int i;
+        VarDeclP tmp = env->env;
+        for(i = 0; i < (env->taille)-n; i++)
         {
             tmp = tmp->next;
         }
 
-        tmp->next = var;
+        tmp->next = NIL(VarDecl);
+        env->taille = env->taille - n;
     }
-    else
-    {
-      liste = var;
+}
+
+
+/* ajoute dans une liste une variable var */
+void addVarDecl(VarDeclP var, VarDeclP liste)
+{
+    if(var != NIL(VarDecl)){
+        if(liste != NIL(VarDecl))
+        {
+            VarDeclP tmp = liste;
+
+            while(tmp->next != NIL(VarDecl))
+            {
+                tmp = tmp->next;
+            }
+
+            tmp->next = var;
+        }
+        else
+        {
+          liste = var;
+        }
     }
 }
 
@@ -796,18 +839,28 @@ void stockerClasse(TreeP arbreLClasse, bool verbose)
 
 
 /* Permet de mettre a jour l'env */
-void stockerEnv(TreeP arbreMain, bool verbose)
+void stockerEnv(TreeP arbre, bool verbose)
 {
-    VarDeclP tmp = makeVarBloc(arbreMain);
+    VarDeclP tmp = makeVarBloc(arbre);
     addEnv(tmp);
+
+    removeEnv(2);
 
     if(verbose)
     {
         printf("----------------------------ENVIRONNEMENT----------------------------\n");
-        printf("Variables :\n");
-        printVarDecl(env); 
+        printScope(env); 
         printf("\n");
     }
+}
+
+
+/* initialise l'environnement */
+void initEnv()
+{
+    env = NEW(1, Scope);
+    env->env = NIL(VarDecl);
+    env->taille = 0;
 }
 
 
@@ -817,6 +870,8 @@ void stockerEnv(TreeP arbreMain, bool verbose)
 /* fonction principale pour le stockage de donnees */
 void compile(TreeP arbreLClasse, TreeP main)
 {
+    initEnv();
+
     if(arbreLClasse != NIL(Tree))
     {
         stockerClasse(arbreLClasse, TRUE);
@@ -834,11 +889,14 @@ void compile(TreeP arbreLClasse, TreeP main)
 void printVarDecl(VarDeclP lvar)
 {
     VarDeclP tmp = lvar; 
+    int i = 0;
     while(tmp != NIL(VarDecl))
     {
+        i++;
           if(tmp->type != NIL(Classe))
-              printf("\t%s : %s\n", tmp->nom, tmp->type->nom);
+              printf("\t%s : %s", tmp->nom, tmp->type->nom);
           tmp = tmp->next;
+        printf("i : %d\n", i);
     }
 }
 
@@ -935,6 +993,30 @@ void printLMethode(LMethodeP lmethode)
           printMethode(methode);
           printf("\n");
           tmp = tmp->next;
+    }
+}
+
+
+/* affiche l'environnement */
+void printScope()
+{
+    printf("taillle : %d\n", env->taille);
+    printf("Variable accessible :\n");
+    printVarDecl(env->env);
+
+    printf("------------\n");
+    if(env->env != NIL(VarDecl))
+    {
+        int i = 0;
+        VarDeclP tmp = env->env;
+         while(tmp->next != NIL(VarDecl))
+         {
+            i++;
+            printf("i : %d\n", i);
+            tmp = tmp->next;
+         }
+         i++;
+         printf("i : %d", i);
     }
 }
 

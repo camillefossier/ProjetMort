@@ -78,6 +78,13 @@ typedef struct _varDecl {
 } Param, Champ, VarDecl, *ParamP, *ChampP, *VarDeclP;
 
 
+/* utile pour le check de portee */
+typedef struct _Scope {
+  int taille;
+  struct _varDecl *env;
+} Scope, *ScopeP;
+
+
 /* la structure d'un arbre (noeud ou feuille) */
 typedef struct _Tree {
   short op;         /* etiquette de l'operateur courant */
@@ -123,9 +130,9 @@ typedef struct _Methode
 	bool override;
 	char *nom;
 	struct _varDecl *lparametres;
-  	struct _Classe *typeDeRetour;
-  	struct _Tree *bloc;
-  	/* struct _Classe *classeAppartenance; */                   /* TODO Ca foire pour un objet :/ */
+  struct _Classe *typeDeRetour;
+  struct _Tree *bloc;
+  /* struct _Classe *classeAppartenance; */                   /* TODO Ca foire pour un objet :/ */
 } Methode, *MethodeP;
 
 
@@ -176,6 +183,7 @@ ObjetP getObjetPointer(char *nom);
 void addClasse(ClasseP classe);
 void addObjet(ObjetP objet);
 void addEnv(VarDeclP var);
+void removeEnv(int n);
 void addVarDecl(VarDeclP var, VarDeclP liste);
 LMethodeP addMethode(MethodeP methode, LMethodeP liste);
 void addConstructeur(TreeP blocOpt, ClasseP classe);
@@ -183,7 +191,8 @@ void addConstructeur(TreeP blocOpt, ClasseP classe);
 void makeClassesPrimitives();
 void initClasse(TreeP arbreLClasse);
 void stockerClasse(TreeP arbreLClasse, bool verbose);
-void stockerEnv(TreeP arbreMain, bool verbose);
+void stockerEnv(TreeP arbre, bool verbose);
+void initEnv();
 
 void compile(TreeP arbreLClasse, TreeP main);
 
@@ -193,6 +202,7 @@ void printLClasse();
 void printObjet();
 void printMethode(MethodeP methode);
 void printLMethode(LMethodeP lmethode);
+void printScope();
 void afficherProgramme(TreeP tree, bool verbose);
 
 
