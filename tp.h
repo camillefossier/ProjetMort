@@ -168,14 +168,14 @@ void setChild(TreeP tree, int rank, TreeP arg);
 
 /*------------------protype perso------------------*/
 
-VarDeclP makeVarDecl(char *nom, TreeP type, TreeP exprOpt);
+VarDeclP makeVarDecl(char *nom, char *type, TreeP exprOpt);
 ClasseP makeClasse(char* nom);
 ObjetP makeObjet(char *nom);
 MethodeP makeMethode(TreeP declMethode);
-VarDeclP makeLParam(TreeP arbreLParam);
+VarDeclP makeLParam(TreeP arbreLParam, int *i);
 ChampP makeChampsBlocObj(TreeP blocObj);
 LMethodeP makeMethodeBlocObj(TreeP blocObj);
-VarDeclP makeVarBloc(TreeP bloc);
+VarDeclP makeVarBloc(TreeP bloc, int *i);
 
 ClasseP getClassePointer(char *nom);
 ObjetP getObjetPointer(char *nom);
@@ -184,7 +184,7 @@ void addClasse(ClasseP classe);
 void addObjet(ObjetP objet);
 void addEnv(VarDeclP var);
 void removeEnv(int n);
-void addVarDecl(VarDeclP var, VarDeclP liste);
+VarDeclP addVarDecl(VarDeclP var, VarDeclP liste);
 LMethodeP addMethode(MethodeP methode, LMethodeP liste);
 void addConstructeur(TreeP blocOpt, ClasseP classe);
 

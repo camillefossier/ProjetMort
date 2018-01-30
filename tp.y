@@ -13,7 +13,7 @@
 %nonassoc '.'
 
 
-%type <pT> 	TypeC ValVar MethodeC
+%type <pT> 	ValVar MethodeC
 			TypeCOpt Expr LExprOpt LExpr
 			ExprOperateur Instr LInstrOpt 
 			LInstr Bloc BlocOpt Contenu
@@ -64,8 +64,8 @@ LParam: Param ',' LParam 													{ $$ = makeTree(YLPARAM, 2, $1, $3); }
 ;
 
  
-Param: VAR Id ':' TypeC ValVar 												{ $$ = makeLeafLVar(YPARAM, makeVarDecl($2, $4, $5)); }
-| Id ':' TypeC ValVar 														{ $$ = makeLeafLVar(YPARAM, makeVarDecl($1, $3, $4)); }
+Param: VAR Id ':' Classname ValVar 											{ $$ = makeLeafLVar(YPARAM, makeVarDecl($2, $4, $5)); }
+| Id ':' Classname ValVar 													{ $$ = makeLeafLVar(YPARAM, makeVarDecl($1, $3, $4)); }
 ;
 
 
@@ -74,25 +74,21 @@ ValVar: AFF Expr 															{ $$ = $2; }
 ;
 
 
-TypeC: Classname 															{ $$ = makeLeafStr(Classname, $1); }
-;
-
-
 LDeclChamp: DeclChamp LDeclChamp 											{ $$ = makeTree(LDECLC, 2, $1, $2); }
 | DeclChamp 																{ $$ = $1; }
 ;
 
 
-DeclChamp: VAR Id ':' TypeC ValVar ';' 										{ $$ = makeLeafLVar(YDECLC, makeVarDecl($2, $4, $5)); }
+DeclChamp: VAR Id ':' Classname ValVar ';' 									{ $$ = makeLeafLVar(YDECLC, makeVarDecl($2, $4, $5)); }
 ;
 
 
-DeclMethode : OverrideOpt DEF Id '(' LParamOpt ')' ':' TypeC AFF Expr 		{ $$ = makeTree(DMETHODEL, 5, $1, makeLeafStr(Id, $3), $5, $8, $10); }
+DeclMethode : OverrideOpt DEF Id '(' LParamOpt ')' ':' Classname AFF Expr 	{ $$ = makeTree(DMETHODEL, 5, $1, makeLeafStr(Id, $3), $5, makeLeafStr(Classname, $8), $10); }
 | OverrideOpt DEF Id '(' LParamOpt ')' TypeCOpt IS Bloc 			  		{ $$ = makeTree(DMETHODE, 5, $1, makeLeafStr(Id, $3), $5, $7, $9); }
 ;
 
 
-TypeCOpt: ':' TypeC 														{ $$ = $2; }
+TypeCOpt: ':' Classname														{ $$ = makeLeafStr(Classname, $2); }
 | 																			{ $$ = NIL(Tree); }
 ;
 	
@@ -102,7 +98,7 @@ OverrideOpt: OVERRIDE 														{ $$ = makeLeafStr(OVERRIDE, "TRUE"); }
 ;
 
 
-ExtendsOpt: EXTENDS TypeC '(' LExprOpt ')'  								{ $$ = makeTree(YEXT, 2, $2, $4); }
+ExtendsOpt: EXTENDS Classname '(' LExprOpt ')'  							{ $$ = makeTree(YEXT, 2, makeLeafStr(Classname, $2), $4); }
 |																			{ $$ = NIL(Tree); }
 ;
 
@@ -110,12 +106,12 @@ ExtendsOpt: EXTENDS TypeC '(' LExprOpt ')'  								{ $$ = makeTree(YEXT, 2, $2,
 Expr: Cste 																	{ $$ = makeLeafInt(Cste, $1); }
 | Chaine																	{ $$ = makeLeafStr(Chaine, $1); }
 | '(' Expr ')'  															{ $$ = $2; }
-| '(' TypeC Id ')' 															{ $$ = makeTree(ECAST, 2, $2, makeLeafStr(Id, $3)); }	
+| '(' Classname Id ')' 														{ $$ = makeTree(ECAST, 2, makeLeafStr(Classname, $2), makeLeafStr(Id, $3)); }	
 | Selection    																{ $$ = $1; }
-| NEWC TypeC '(' LExprOpt ')' 												{ $$ = makeTree(EINST, 2, $2, $4); }    
+| NEWC Classname '(' LExprOpt ')' 											{ $$ = makeTree(EINST, 2, makeLeafStr(Classname, $2), $4); }    
 | Envoi  																	{ $$ = $1; }
 | ExprOperateur 															{ $$ = $1; }
-| TypeC																		{ $$ = $1; }
+| Classname																	{ $$ = makeLeafStr(Classname, $1); }
 ;
 
 
