@@ -130,8 +130,8 @@ ExprOperateur: Expr ADD Expr 												{ $$ = makeTree(ADD, 2, $1, $3); }
 | Expr SUB Expr 															{ $$ = makeTree(SUB, 2, $1, $3); }
 | Expr MUL Expr 															{ $$ = makeTree(MUL, 2, $1, $3); }
 | Expr DIV Expr  															{ $$ = makeTree(DIV, 2, $1, $3); }
-| SUB Expr %prec UNARY 														{ $$ = makeTree(USUB, 2, makeLeafInt(Cste, 0), $2); }
-| ADD Expr %prec UNARY 														{ $$ = makeTree(ADD, 2, makeLeafInt(Cste, 0), $2); }      
+| SUB Expr %prec UNARY 														{ $$ = makeTree(USUB, 2, makeLeafInt(Cste, -1), $2); }
+| ADD Expr %prec UNARY 														{ $$ = makeTree(ADD, 2, makeLeafInt(Cste, 1), $2); }      
 | Expr CONCAT Expr 															{ $$ = makeTree(CONCAT, 2, $1, $3); }
 | Expr RelOp Expr 															{ $$ = makeTree($2, 2, $1, $3); }
 ;

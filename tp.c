@@ -30,10 +30,16 @@ int errorCode = NO_ERROR; /* defini dans tp.h */
 
 FILE *out; /* fichier de sortie pour le code engendre */
 
-/* VARIABLE GLOBALE */
+
+/*---------------------------VARIABLE GLOBALE---------------------------*/
+
 LClasseP lclasse = NIL(LClasse);
 ObjetP lobjet = NIL(Objet); 
+
 ScopeP env = NIL(Scope);
+
+
+
 
 int main(int argc, char **argv) {
   int fi;
@@ -334,6 +340,7 @@ MethodeP makeMethode(TreeP declMethode)
 
 
 /* Creer une liste de parametres a partir d'un arbre */
+/* TODO : pour la portee, il faudra ajouter un par un */
 VarDeclP makeLParam(TreeP arbreLParam, int *i)
 {
   ParamP lparam = NIL(VarDecl);
@@ -459,14 +466,14 @@ VarDeclP makeVarBloc(TreeP bloc, int *i)
               break;
 
             default :
-             /*removeEnv(5);*/
+              /*removeEnv(5);*/
               break;
         }
     }
     else
     {
         /* TODO : return/sortie de bloc */
-        removeEnv(*i);
+        /* removeEnv(*i); */
     }
 
   return var;
@@ -579,24 +586,24 @@ void addEnv(VarDeclP var)
             }
             current = current->next;
         }
-    }
 
-    if(env->env == NIL(VarDecl))
-    {
-        env->env = var;
-        env->taille = env->taille + i;     
-    }
-    else
-    {
-        VarDeclP current = env->env;
-        while (TRUE) { 
-            if(current->next == NULL)
-            {
-                current->next = var;
-                env->taille = env->taille + i;
-                break; 
+        if(env->env == NIL(VarDecl))
+        {
+            env->env = var;
+            env->taille = env->taille + i;     
+        }
+        else
+        {
+            VarDeclP current = env->env;
+            while (TRUE) { 
+                if(current->next == NULL)
+                {
+                    current->next = var;
+                    env->taille = env->taille + i;
+                    break; 
+                }
+                current = current->next;
             }
-            current = current->next;
         }
     }
 }
@@ -796,16 +803,21 @@ void initClasse(TreeP arbreLClasse)
     }
     
 }
+
+
 void verifContextProg(TreeP arbreLClasse, TreeP main)
 {
     verifContextLClasse(arbreLClasse);
     verifContextMain(main);
 }
 
+
 void verifContextMain(TreeP main)
 {
     /*TODO*/
 }
+
+
 void verifContextLClasse(TreeP arbreLClasse)
 {
     checkBoucleHeritage(lclasse);
@@ -813,6 +825,7 @@ void verifContextLClasse(TreeP arbreLClasse)
     /*if(checkOverrideLClasse(lclasse)) printf("tout est OK pour les overrides de méthode\n");*/
     /*TODO*/
 }
+
 
 /* initialise les variables globales lclasse et lobjet */
 void stockerClasse(TreeP arbreLClasse, bool verbose)
@@ -852,16 +865,13 @@ void stockerClasse(TreeP arbreLClasse, bool verbose)
 
 
 /* Permet de mettre a jour l'env */
+/*
 void stockerEnv(TreeP arbre, bool verbose)
 {
     int *i = NEW(1, int); 
     *i = 0;
     VarDeclP tmp = makeVarBloc(arbre, i);
     addEnv(tmp);
-
-    removeEnv(5);
-
-    /* TODO modifier makeVarBloc pour faire le stockage d'env en direct */
 
     if(verbose)
     {
@@ -870,7 +880,7 @@ void stockerEnv(TreeP arbre, bool verbose)
         printf("\n");
     }
 }
-
+*/
 
 /* initialise l'environnement */
 void initEnv()
@@ -879,7 +889,6 @@ void initEnv()
     env->env = NIL(VarDecl);
     env->taille = 0;
 }
-
 
 /*---------------------------C'EST GOOD----------------------------*/
 
@@ -893,7 +902,8 @@ void compile(TreeP arbreLClasse, TreeP main)
     {
         stockerClasse(arbreLClasse, TRUE);
     }
-    stockerEnv(main, TRUE);
+
+    /* stockerEnv(main, TRUE); */
     verifContextProg(arbreLClasse,main);
 }
 

@@ -131,6 +131,7 @@ typedef struct _Methode
 {
 	bool override;
 	char *nom;
+  int nbLocales;                                              /* TODO le mettre dans les fonctions */
 	struct _varDecl *lparametres;
   struct _Classe *typeDeRetour;
   struct _Tree *bloc;
@@ -168,7 +169,7 @@ TreeP getChild(TreeP tree, int rank);
 void setChild(TreeP tree, int rank, TreeP arg);
 
 
-/*------------------protype perso------------------*/
+/*------------------protype tp.c------------------*/
 
 VarDeclP makeVarDecl(char *nom, char *type, TreeP exprOpt);
 ClasseP makeClasse(char* nom);
@@ -210,6 +211,23 @@ void afficherProgramme(TreeP tree, bool verbose);
 void verifContextProg(TreeP arbreLClasse, TreeP main);
 void verifContextMain(TreeP main);
 void verifContextLClasse(TreeP arbreLClasse);
+
+
+/*------------------protype verif.c------------------*/
+
+bool checkDoublonClasse(LClasseP lclasse);
+bool checkBoucleHeritage(LClasseP lclasse);
+
+bool checkClassDefine(char* nom);
+bool checkPortee(VarDeclP lvar, char* nom);
+bool checkBlocMain(TreeP bloc);
+
+bool checkExpr(TreeP tree);
+bool checkSelection(TreeP selection);
+
+char* getType(TreeP expr);
+char* getTypeId(char* nom);
+
 
 
 #define YYSTYPE YYSTYPE
