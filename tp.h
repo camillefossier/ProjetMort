@@ -67,7 +67,7 @@ typedef unsigned char bool;
 #define TYPE_ERROR  42  /* type checking problem */
 #define OTHER_CONTEXTUAL_ERROR  43 /* replace by something more precise */
 #define EVAL_ERROR  50  /* dubious when writing a compiler ! */
-#define UNEXPECTED  10O
+#define UNEXPECTED  100
 
 
 
@@ -225,9 +225,20 @@ bool checkBlocMain(TreeP bloc);
 bool checkExpr(TreeP tree);
 bool checkSelection(TreeP selection);
 
-char* getType(TreeP expr);
-char* getTypeId(char* nom);
+ClasseP getType(TreeP expr);
+ClasseP getTypeId(char* nom);
+MethodeP getMethodePointer(ClasseP classe, char* nom);
 
+
+bool checkArguments(ParamP larg1, ParamP larg2);
+bool checkOverrideMethode(ClasseP classe, char* nom, ParamP larg, bool isOverride);
+bool checkOverrideLClasse(LClasseP lclasse);
+bool checkDoublonClasse(LClasseP lclasse);
+bool checkBoucleHeritage(LClasseP lclasse);
+bool checkCast(ClasseP classe, char* nom);
+bool checkMethodes(ClasseP classe, char* nom);
+bool checkTypeAff(VarDeclP var, TreeP expr);
+bool checkLArg(VarDeclP lvar);
 
 
 #define YYSTYPE YYSTYPE

@@ -136,52 +136,10 @@ bool checkOverrideLClasse(LClasseP lclasse)
     /*
 Renvoie true si même arguments*/
 
-/*Check s'il y a un doublon dans les classes*/
-bool checkDoublonClasse(LClasseP lclasse)
-{
-    if(lclasse != NIL(LClasse))
-    {
-        LClasseP tmpClasses = lclasse;
-        LClasseP tmp= tmpClasses;
-        tmpClasses = tmpClasses->next;
-        while(tmpClasses != NIL(LClasse))
-        {
-           if(strcmp(tmpClasses->classe->nom,tmp->classe->nom)==0)     
-           {
-                printf("Doublon de classe concernant la classe de nom %s\n", tmp->classe->nom);
-                return FALSE;
-           }
-           tmpClasses = tmpClasses->next;
-        }
-        return checkDoublonClasse(tmpClasses);
-    }
-    else
-    {
-        return TRUE;
-    }
-}
 
 
-/*Check s'il y a une boucle dans l'héritage des classes*/
-bool checkBoucleHeritage(LClasseP lclasse)
-{
-    LClasseP tmpClasses = lclasse;
-    while(tmpClasses != NIL(LClasse))
-    {
-        ClasseP tmpSuper= tmpClasses->classe->superClasse;
-        while(tmpSuper != NIL(Classe))
-        {
-            if(strcmp(tmpClasses->classe->nom, tmpSuper->nom) == 0)
-            {
-                printf("Erreur, Boucle d'héritage concernant la classe %s\n", tmpClasses->classe->nom);
-                return FALSE;
-            }
-            tmpSuper = tmpSuper->superClasse;
-        }
-        tmpClasses = tmpClasses->next;
-    }
-    return TRUE;
-}
+
+
 /*bool checkArguments(LParamP larg1, LPAram larg2) {
     bool retour = TRUE;
     while(arg1 != NULL && arg2 != NULL) {
@@ -333,6 +291,7 @@ bool checkBlocMain(TreeP bloc)
               break;
 
             case Id :
+             printf("checkBlocMain Id\n" );
               check = (check && checkPortee(env->env, bloc->u.str));  
               break;  
 
@@ -365,12 +324,13 @@ bool checkExpr(TreeP tree)
     {
         char* nom;
 
-        char* typeG;
-        char* typeD;
+        ClasseP typeG;
+        ClasseP typeD;
 
         switch (tree->op)
         {
             case Id :
+            printf("checkExpr Id\n");
                 nom = tree->u.str;
                 check = (check && checkPortee(env->env, nom));
                 break;
@@ -402,16 +362,23 @@ bool checkExpr(TreeP tree)
                 typeG = getType(getChild(tree, 0));
                 typeD = getType(getChild(tree, 1));
 
-                if(!(strcmp(typeG, "Integer") == 0) || (!strcmp(typeD, "Integer") == 0))
+                if(typeG != NIL(Classe) && typeD != NIL(Classe))
                 {
-                    check = FALSE;             
+                    if(!(strcmp(typeG->nom, "Integer") == 0) || (!strcmp(typeD->nom, "Integer") == 0))
+                    {
+                        check = FALSE;             
+                    }
+                }
+                else
+                {
+                    check = FALSE;
                 }
                 
                 break;
 
             case USUB :
                 /* TODO unaires*/
-                check = (check && checkExpr(getChild(tree, 2))); 
+                check = (check && checkExpr(getChild(tree, 1))); 
                 break;
 
             case CONCAT :
@@ -422,10 +389,18 @@ bool checkExpr(TreeP tree)
                 typeG = getType(getChild(tree, 0));
                 typeD = getType(getChild(tree, 1));
 
-                if(!(strcmp(typeG, "String") == 0) || (!strcmp(typeD, "String") == 0))
+                if(typeG != NIL(Classe) && typeD != NIL(Classe))
                 {
-                    check = FALSE;             
+                    if(!(strcmp(typeG->nom, "String") == 0) || (!strcmp(typeD->nom, "String") == 0))
+                    {
+                        check = FALSE;             
+                    }
                 }
+                else
+                {
+                    check = FALSE;
+                }
+                
 
                 break;
 
@@ -433,19 +408,9 @@ bool checkExpr(TreeP tree)
 
                 check = (check && checkExpr(getChild(tree, 0)));
                 check = (check && checkExpr(getChild(tree, 1)));
-
+    
                 /* TODO : cast */
-                /* ClasseP tmp = getClassePointer(getChild(tree, 1)->u.str);
-                if(tmp != NIL(Classe))
-                    check = (check && checkCast(tmp, getChild(tree, 0)->u.str)); 
-                else
-                {
-                    fprintf(stderr, "Erreur cast, la classe %s est indefini\n", getChild(tree, 1)->u.str);
-                    check = FALSE;
-                }
-                */
-                /* TODO : cast */
-                /* check = (check && checkCast(getClassePointer(getChild(tree, 1)->u.str), getChild(tree, 0)->u.str)); */
+                check = (check && checkCast(getClassePointer(getChild(tree, 1)->u.str), getChild(tree, 0)->u.str)); 
                 break;
 
             case EINST :
@@ -462,18 +427,13 @@ bool checkExpr(TreeP tree)
             case EENVOI :
 
                 check = (check && checkExpr(getChild(tree, 0)));
-                check = (check && checkExpr(getChild(tree, 1)));
+                /*check = (check && checkExpr(getChild(tree, 1)));*/
 
                 /* TODO : envoi */
-                /* check = (check && checkMethodes(lclasse, getChild(getChild(tree, 1), 0)); */
+                check = (check && checkMethodes(getType(getChild(tree, 0)), getChild(getChild(tree, 1), 0)->u.str));
                 break;
 
             case YLEXPR : 
-                check = (check && checkExpr(getChild(tree, 0)));
-                check = (check && checkExpr(getChild(tree, 1)));
-                break; 
-
-            case METHOD :
                 check = (check && checkExpr(getChild(tree, 0)));
                 check = (check && checkExpr(getChild(tree, 1)));
                 break; 
@@ -492,20 +452,21 @@ bool checkExpr(TreeP tree)
 /* verifie la validite d'une selection */
 bool checkSelection(TreeP selection)
 {
+    /* TODO */
     return TRUE;
 }
 
 
 
 /* retourne le nom du type d'une expression correcte ou NIL */
-char* getType(TreeP expr)
+ClasseP getType(TreeP expr)
 {
-    char* type;
+    ClasseP type = NIL(Classe);
 
     if(expr != NIL(Tree))
     {
-        char* typeG;
-        char* typeD;
+        ClasseP typeG;
+        ClasseP typeD;
 
         switch (expr->op)
         {
@@ -514,18 +475,22 @@ char* getType(TreeP expr)
                 break;
 
             case Classname :
-                type = expr->u.str;
+                type = getClassePointer(expr->u.str);
                 break;
 
             case Chaine :
+                type = getClassePointer("Integer");
+                break;
+
             case Cste :
+                type = getClassePointer("String");
                 break;
         
             case ADD :
                 /* TODO : verif avec le trucs unaires */
             case SUB :
             case MUL :
-            case DIV :    
+            case DIV :            
             case EQ :
             case NE :
             case SUP :
@@ -533,78 +498,121 @@ char* getType(TreeP expr)
             case INF :
             case INFE :
 
-                check = (check && checkExpr(getChild(expr, 0)));
-                check = (check && checkExpr(getChild(expr, 1)));
-
                 typeG = getType(getChild(expr, 0));
                 typeD = getType(getChild(expr, 1));
 
-                if(!(strcmp(typeG, "Integer") == 0) || (!strcmp(typeD, "Integer") == 0))
+                if(typeG != NIL(Classe) && typeD != NIL(Classe))
                 {
-                    check = FALSE;             
+                    if((strcmp(typeG->nom, typeD->nom) == 0) && (strcmp(typeG->nom, "Integer") == 0))
+                    {
+                        type = typeG;           
+                    }
+                    else
+                    {
+                        type = NIL(Classe);
+                    }
+                }
+                else
+                {
+                    type = NIL(Classe);
                 }
                 
                 break;
 
             case USUB :
                 /* TODO unaires*/
-                check = (check && checkExpr(getChild(expr, 2))); 
+                type = getType(getChild(expr, 1));; 
                 break;
 
-            case CONCAT :
-
-                check = (check && checkExpr(getChild(expr, 0)));
-                check = (check && checkExpr(getChild(expr, 1)));
+            case CONCAT : 
 
                 typeG = getType(getChild(expr, 0));
                 typeD = getType(getChild(expr, 1));
 
-                if(!(strcmp(typeG, "String") == 0) || (!strcmp(typeD, "String") == 0))
+                if(typeG != NIL(Classe) && typeD != NIL(Classe))
                 {
-                    check = FALSE;             
+                    if((strcmp(typeG->nom, typeD->nom) == 0) && (strcmp(typeG->nom, "String") == 0))
+                    {
+                        type = typeG;           
+                    }
+                    else
+                    {
+                        type = NIL(Classe);
+                    }
+                }
+                else
+                {
+                    type = NIL(Classe);
                 }
 
                 break;
 
             case ECAST :
 
-                check = (check && checkExpr(getChild(expr, 0)));
-                check = (check && checkExpr(getChild(expr, 1)));
+                typeG = getType(getChild(expr, 0));
+                typeD = getType(getChild(expr, 1));
 
-                
+                if(typeG != NIL(Classe) && typeD != NIL(Classe))
+                {
+                    if((strcmp(typeG->nom, typeD->nom) == 0))
+                    {
+                        type = typeG;           
+                    }
+                    else
+                    {
+                        type = NIL(Classe);
+                    }
+                }
+                else
+                {
+                    type = NIL(Classe);
+                }
+
                 break;
 
             case EINST :
 
-                check = (check && checkExpr(getChild(expr, 0)));
-                check = (check && checkExpr(getChild(expr, 1)));
+                type = getType(getChild(expr, 0));
                 break;
 
             case SELEXPR :      
 
-                check = (check && checkSelection(expr));
+                if(expr->nbChildren == 2)
+                {
+                    type = getType(getChild(expr, 1));
+                }
+                else
+                {
+                    type = getType(getChild(expr, 0));
+                }
                 break;
 
             case EENVOI :
 
-                check = (check && checkExpr(getChild(expr, 0)));
-                check = (check && checkExpr(getChild(expr, 1)));
+                typeG = getType(getChild(expr, 0));
+                
+                if(typeG != NIL(Classe))
+                {
+                    MethodeP methode = getMethodePointer(typeG, getChild(getChild(expr, 1), 0)->u.str);
+                    if(methode != NIL(Methode))
+                    {
+                        type = methode->typeDeRetour;
+                    }
+                    else
+                    {
+                        type = NIL(Classe);
+                    }
+                }
+                else
+                {
+                    type = NIL(Classe);
+                }
 
                 break;
 
-            case YLEXPR : 
-                check = (check && checkExpr(getChild(expr, 0)));
-                check = (check && checkExpr(getChild(expr, 1)));
-                break; 
-
-            case METHOD :
-                check = (check && checkExpr(getChild(expr, 0)));
-                check = (check && checkExpr(getChild(expr, 1)));
-                break; 
-
             default :
-                fprintf(stderr, "Erreur etiquette dans checkExpr\n");
-                check = FALSE;
+                fprintf(stderr, "Erreur etiquette dans getType\n");
+                type = NIL(Classe);
                 break;
         }
     }
@@ -614,11 +622,332 @@ char* getType(TreeP expr)
 
 
 /* retourne le nom du type d'un id */
-char* getTypeId(char* nom)
+ClasseP getTypeId(char* nom)
 {
-    /* TODO */
+    if(env != NIL(Scope))
+    {
+        VarDeclP tmp = env->env;
+        while(tmp != NIL(VarDecl))
+        {
+            if(strcmp(nom, tmp->nom) == 0)
+            {
+                return tmp->type;
+            }
+            tmp = tmp->next;
+        }
+    }
+    return NIL(Classe);
 }  
 
+
+/* renvoie une methode a partir d'un nom */
+MethodeP getMethodePointer(ClasseP classe, char* nom)
+{
+    LMethodeP tmp = classe->lmethodes;
+    while(tmp != NIL(LMethode))
+    {
+        if(strcmp(tmp->methode->nom,nom)==0)
+        {
+            return tmp->methode;
+        }
+        else
+        {
+            tmp = tmp->next;
+        }
+    }
+    if(classe->superClasse != NIL(Classe))
+    {
+        return getMethodePointer(classe->superClasse, nom);
+    }
+    else
+    {
+        return NIL(Methode);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+bool checkArguments(ParamP larg1, ParamP larg2)
+{
+    bool retour = TRUE;
+    while(larg1 != NIL(Param) && larg2 != NIL(Param))
+    {
+        if(larg1->type != NIL(Classe) && larg2->type != NIL(Classe) && strcmp(larg1->type->nom, larg2->type->nom) == 0)
+        {
+            larg1 = larg1->next;
+            larg2 = larg2->next;
+        }
+        else
+        {
+            retour = FALSE;
+        }
+    }
+    if(larg1 != NIL(Param) || larg2 != NIL(Param)) retour = FALSE;
+    return retour;
+}
+
+/*Renvoie true si pas de probleme d'override*/
+bool checkOverrideMethode(ClasseP classe, char* nom, ParamP larg, bool isOverride)
+{
+    if(classe != NIL(Classe))
+    {
+        LMethodeP tmpMethodes = classe->lmethodes;
+        while(tmpMethodes != NIL(LMethode))
+        {
+            if(strcmp(tmpMethodes->methode->nom,nom) == 0 )
+            {
+                if(checkArguments(tmpMethodes->methode->lparametres,larg))
+                {
+                    if(!isOverride)
+                    {
+                        printf("| Erreur Override | Rajouter un override dans la fonction %s de ",nom );
+                    }
+                    return TRUE;
+                }
+                else
+                {
+                    if(!isOverride)
+                    {
+                        printf("surcharge \n");
+                    }
+                    else
+                    {
+                        printf("| Erreur Override | Les paramètres de la méthode %s sont différents dans la classe %s et ",nom,classe->nom);                      
+                    }
+                    return FALSE;
+                }
+            }
+            tmpMethodes = tmpMethodes->next;
+        }
+        if(classe->superClasse != NIL(Classe))
+        {
+            return checkOverrideMethode(classe->superClasse, nom, larg, isOverride);
+        }
+        else
+        {
+            if(isOverride)
+            {
+                printf("| Erreur Override | La méthode %s n'a pas été trouvée dans les Super Classes de ", nom);
+                return FALSE;
+            }
+            return FALSE;
+        }
+    }
+    else
+    {
+        return FALSE;
+    }
+    
+}
+
+bool checkOverrideLClasse(LClasseP lclasse)
+{
+    bool b = TRUE;
+    LClasseP tmpClasses = lclasse;
+    while(tmpClasses != NIL(LClasse))
+    {
+            LMethodeP tmpMethodes = tmpClasses->classe->lmethodes;
+            while(tmpMethodes != NIL(LMethode))
+            {
+                if(tmpMethodes->methode->override && !checkOverrideMethode(tmpClasses->classe->superClasse, tmpMethodes->methode->nom, tmpMethodes->methode->lparametres,tmpMethodes->methode->override))
+                {
+                    if(tmpClasses->classe->superClasse == NIL(Classe)) printf("| Erreur Override | La classe mère n'existe pas alors qu'il y a un override dans ");
+                    printf("la classe %s \n\n", tmpClasses->classe->nom);
+                    b =  FALSE;
+                }
+                if(!tmpMethodes->methode->override && checkOverrideMethode(tmpClasses->classe->superClasse, tmpMethodes->methode->nom, tmpMethodes->methode->lparametres,tmpMethodes->methode->override))
+                {
+                    printf("la classe %s \n\n", tmpClasses->classe->nom);
+                    b = FALSE;
+                }
+                tmpMethodes = tmpMethodes->next;
+            }
+            tmpClasses = tmpClasses->next;
+    }
+    return b;
+}
+
+/*Check s'il y a un doublon dans les classes*/
+bool checkDoublonClasse(LClasseP lclasse)
+{
+    if(lclasse != NIL(LClasse))
+    {
+        LClasseP tmpClasses = lclasse;
+        LClasseP tmp= tmpClasses;
+        tmpClasses = tmpClasses->next;
+        while(tmpClasses != NIL(LClasse))
+        {
+           if(strcmp(tmpClasses->classe->nom,tmp->classe->nom)==0)     
+           {
+                printf("Doublon de classe concernant la classe de nom %s\n", tmp->classe->nom);
+                return FALSE;
+           }
+           tmpClasses = tmpClasses->next;
+        }
+        return checkDoublonClasse(tmpClasses);
+    }
+    else
+    {
+        return TRUE;
+    }
+}
+
+/*Check s'il y a une boucle dans l'héritage des classes*/
+bool checkBoucleHeritage(LClasseP lclasse)
+{
+    LClasseP tmpClasses = lclasse;
+    while(tmpClasses != NIL(LClasse))
+    {
+        ClasseP tmpSuper= tmpClasses->classe->superClasse;
+        while(tmpSuper != NIL(Classe))
+        {
+            if(strcmp(tmpClasses->classe->nom, tmpSuper->nom) == 0)
+            {
+                printf("Erreur, Boucle d'héritage concernant la classe %s\n", tmpClasses->classe->nom);
+                return FALSE;
+            }
+            tmpSuper = tmpSuper->superClasse;
+        }
+        tmpClasses = tmpClasses->next;
+    }
+    return TRUE;
+}
+
+/*devrait marche, à tester avec les blocs*/
+bool checkCast(ClasseP classe, char* nom)
+{
+    if(strcmp(classe->nom,nom)==0)
+    {
+        return TRUE;
+    }
+    else
+    {
+        if(classe->superClasse != NULL)
+        {
+            return checkCast(classe->superClasse,nom);
+        }
+        else
+        {
+            return FALSE;
+        }
+    }
+}
+
+/*Fonction utile pour un envoi : on regarde si la méthode existe dans la classe de l'objet*/
+bool checkMethodes(ClasseP classe, char* nom)
+{
+    LMethodeP tmp = classe->lmethodes;
+    while(tmp != NIL(LMethode))
+    {
+        if(strcmp(tmp->methode->nom,nom)==0)
+        {
+            return TRUE;
+        }
+        else
+        {
+            tmp = tmp->next;
+        }
+    }
+    if(classe->superClasse != NIL(Classe))
+    {
+        return checkMethodes(classe->superClasse, nom);
+    }
+    else
+    {
+        return FALSE;
+    }
+
+    /* TODO : ajouter la verif des parametres */
+}
+
+bool checkTypeAff(VarDeclP var, TreeP expr)
+{
+    ClasseP tmp = getType(expr);
+    if(tmp != NIL(Classe))
+    {
+        return (var != NIL(VarDecl) && strcmp(var->type->nom, tmp->nom)==0);
+    }
+
+    return FALSE;
+}
+
+bool checkLArg(VarDeclP lvar)
+{
+    bool retour = TRUE;
+    VarDeclP temp = lvar;
+    while(temp != NIL(VarDecl)) {
+        if(temp->exprOpt != NIL(Tree)) {
+            retour = checkTypeAff(temp,temp->exprOpt);
+        }
+        temp = temp->next;
+    }
+    return retour;
+}
 
 /*
 *

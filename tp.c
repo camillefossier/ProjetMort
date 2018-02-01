@@ -107,7 +107,7 @@ void setError(int code) {
      * Si vous executez le rpogramme sous le debuggeur vous aurez donc la main
      * et pourrez examiner la pile d'execution.
      */
-    /*  abort(); */
+    abort(); 
   }
 }
 
@@ -735,8 +735,20 @@ void makeClassesPrimitives()
   * methode print
   * methode println
   */
+  MethodeP print = NEW(1, Methode);
+  toString->override = FALSE;
+  toString->nom = "print";
+  toString->typeDeRetour = string;
+  toString->bloc = NIL(Tree);
 
-  string->lmethodes = NIL(LMethode);
+  MethodeP println = NEW(1, Methode);
+  toString->override = FALSE;
+  toString->nom = "println";
+  toString->typeDeRetour = string;
+  toString->bloc = NIL(Tree);
+
+  string->lmethodes = addMethode(print, string->lmethodes);
+  string->lmethodes = addMethode(println, string->lmethodes);
 
   addClasse(integer);
   addClasse(string);
@@ -814,7 +826,10 @@ void verifContextProg(TreeP arbreLClasse, TreeP main)
 
 void verifContextMain(TreeP main)
 {
-    /*TODO*/
+    if(checkBlocMain(main))
+        printf("Main OK !\n");
+    else
+        printf("Main incorrect !\n");
 }
 
 
@@ -904,7 +919,7 @@ void compile(TreeP arbreLClasse, TreeP main)
     }
 
     /* stockerEnv(main, TRUE); */
-    verifContextProg(arbreLClasse,main);
+    verifContextProg(arbreLClasse, main);
 }
 
 
