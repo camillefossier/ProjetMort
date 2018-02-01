@@ -11,6 +11,9 @@ extern ObjetP lobjet;
 extern ScopeP env;
 
 
+extern int yylineno;
+
+
 /*METHODES UTILES POUR LES VERIFICATIONS CONTEXTUELLES : YASSINE AMRAOUI
 Yassine AMRAOUI : j'ai cree ces methodes qui servent à l'analyse contextuelle
 Et cf. les TODO apres les methodes qui sont des idees de verifications supplementaires
@@ -263,6 +266,7 @@ bool checkBlocMain(TreeP bloc)
         switch(bloc->op)
         {
             case YCONT :
+                /* TODO : faire un par un l'ajout dans l'env */
               tmp = makeLParam(getChild(bloc, 0), i);
               if(tmp != NIL(VarDecl))
                 addEnv(tmp);
@@ -282,7 +286,7 @@ bool checkBlocMain(TreeP bloc)
               break;
 
             case EAFF :
-              check = (check && checkBlocMain(getChild(bloc, 1)));
+              check = (check && checkBlocMain(getChild(bloc, 0)));
               check = (check && checkExpr(getChild(bloc, 1)));
               break;
 
@@ -291,7 +295,6 @@ bool checkBlocMain(TreeP bloc)
               break;
 
             case Id :
-             printf("checkBlocMain Id\n" );
               check = (check && checkPortee(env->env, bloc->u.str));  
               break;  
 
@@ -304,6 +307,7 @@ bool checkBlocMain(TreeP bloc)
 
             default :
               fprintf(stderr, "Erreur etiquette dans checkBlocMain\n");
+              fprintf(stderr, "\t-> etiquette %d inconnu\n", bloc->op);
               check = FALSE;
               break;
         }
@@ -330,7 +334,6 @@ bool checkExpr(TreeP tree)
         switch (tree->op)
         {
             case Id :
-            printf("checkExpr Id\n");
                 nom = tree->u.str;
                 check = (check && checkPortee(env->env, nom));
                 break;
@@ -366,11 +369,15 @@ bool checkExpr(TreeP tree)
                 {
                     if(!(strcmp(typeG->nom, "Integer") == 0) || (!strcmp(typeD->nom, "Integer") == 0))
                     {
+                        fprintf(stderr, "Erreur verification d'une expression [op arithmetique]\n");
+                        /* fprintf(stderr, "erreur ligne : %d\n", yylineno); */
                         check = FALSE;             
                     }
                 }
                 else
                 {
+                    fprintf(stderr, "Erreur verification d'une expression [op arithmetique]\n");
+                    /* fprintf(stderr, "erreur ligne : %d\n", yylineno); */
                     check = FALSE;
                 }
                 
@@ -393,11 +400,15 @@ bool checkExpr(TreeP tree)
                 {
                     if(!(strcmp(typeG->nom, "String") == 0) || (!strcmp(typeD->nom, "String") == 0))
                     {
+                        fprintf(stderr, "Erreur verification d'une expression [concatenation]\n");
+                        /* fprintf(stderr, "erreur ligne : %d\n", yylineno); */
                         check = FALSE;             
                     }
                 }
                 else
                 {
+                    fprintf(stderr, "Erreur verification d'une expression [concatenation]\n");
+                    /* fprintf(stderr, "erreur ligne : %d\n", yylineno); */
                     check = FALSE;
                 }
                 
@@ -440,6 +451,7 @@ bool checkExpr(TreeP tree)
 
             default :
                 fprintf(stderr, "Erreur etiquette dans checkExpr\n");
+                fprintf(stderr, "\t-> etiquette %d inconnu\n", tree->op);
                 check = FALSE;
                 break;
         }
@@ -479,11 +491,11 @@ ClasseP getType(TreeP expr)
                 break;
 
             case Chaine :
-                type = getClassePointer("Integer");
+                type = getClassePointer("String");
                 break;
 
             case Cste :
-                type = getClassePointer("String");
+                type = getClassePointer("Integer");
                 break;
         
             case ADD :
@@ -612,6 +624,7 @@ ClasseP getType(TreeP expr)
 
             default :
                 fprintf(stderr, "Erreur etiquette dans getType\n");
+                fprintf(stderr, "\t-> etiquette %d inconnu\n", expr->op);
                 type = NIL(Classe);
                 break;
         }
@@ -893,6 +906,8 @@ bool checkCast(ClasseP classe, char* nom)
         }
         else
         {
+            fprintf(stderr, "Erreur verification d'un cast\n");
+            fprintf(stderr, "erreur ligne : %d\n", yylineno);
             return FALSE;
         }
     }
@@ -901,26 +916,31 @@ bool checkCast(ClasseP classe, char* nom)
 /*Fonction utile pour un envoi : on regarde si la méthode existe dans la classe de l'objet*/
 bool checkMethodes(ClasseP classe, char* nom)
 {
+    bool check = FALSE;
     LMethodeP tmp = classe->lmethodes;
     while(tmp != NIL(LMethode))
     {
-        if(strcmp(tmp->methode->nom,nom)==0)
+        if(strcmp(tmp->methode->nom, nom) == 0)
         {
-            return TRUE;
+            check = TRUE;
+            break;
         }
-        else
-        {
-            tmp = tmp->next;
-        }
+        tmp = tmp->next;
     }
-    if(classe->superClasse != NIL(Classe))
+
+    if(classe->superClasse != NIL(Classe) && check == FALSE)
     {
-        return checkMethodes(classe->superClasse, nom);
+        check = checkMethodes(classe->superClasse, nom);
     }
-    else
+
+    if(check == FALSE)
     {
-        return FALSE;
+        fprintf(stderr, "Erreur verification methode\n");
+        fprintf(stderr, "\t-> %s n'est pas une methode de %s\n", nom, classe->nom);
+        /* fprintf(stderr, "erreur ligne : %d\n", yylineno); */
     }
+        
+    return check;
 
     /* TODO : ajouter la verif des parametres */
 }
@@ -933,6 +953,8 @@ bool checkTypeAff(VarDeclP var, TreeP expr)
         return (var != NIL(VarDecl) && strcmp(var->type->nom, tmp->nom)==0);
     }
 
+    fprintf(stderr, "Erreur verification affectation\n");
+    /* fprintf(stderr, "erreur ligne : %d\n", yylineno); */
     return FALSE;
 }
 
@@ -942,251 +964,9 @@ bool checkLArg(VarDeclP lvar)
     VarDeclP temp = lvar;
     while(temp != NIL(VarDecl)) {
         if(temp->exprOpt != NIL(Tree)) {
-            retour = checkTypeAff(temp,temp->exprOpt);
+            retour = (retour && checkTypeAff(temp,temp->exprOpt));
         }
         temp = temp->next;
     }
     return retour;
 }
-
-/*
-*
-Pour descendre environnement d'une hauteur  TODO : update environnement (ajouter des lvar)
-*/
-/*void transmetEnv(TreeP tree)
-{
-    int i;
-    for(i=0; i<tree->nbChildren ; i++)
-    {
-        getChild(tree,i)->u.lvar = tree->u.lvar;    
-    }
-}*/
-
-
-/*
-*Verifie si le nom est bien attribue a une classe defini*
-**/
-
-/*bool checkClassDefine(LClasseP lenv_classe, char* nom)
-{
-    if(nom != NULL)
-    {
-        ClasseP env_classe = lenv_classe->classe;
-        while(env_classe != NIL(Classe))
-        {
-            if(strcmp(env_classe->nom, nom)==0)
-            {
-                return TRUE;
-            }
-        env_classe = lenv_classe->next->classe;
-        }
-    }
-   
-    fprintf(stderr, "Erreur checkClassDefine pour la classe : %s\n",nom);
-    return FALSE;
-}*/
-
-
-/*
-*Verifie qu'une expression**
-*/
-/*
-char *checkExpr(TreeP tree, ClasseP classes, VarDeclP env)
-{
-    if(tree != NIL(Tree))
-    {
-        char *type;
-        char *typeD;
-        switch (tree->op)
-        {
-            case Id :
-                type = tree->u.str;
-                if(checkPortee(env, type))
-                {
-                    while(env != NIL(VarDecl))
-                    {
-                        if(strcmp(type, env->name) == 0)
-                        {*
-                            *return env->type->type->nom;**
-                        }
-                        env = env->next;
-                    }
-                }
-                fprintf(stderr, "ERREUR checkExpr id : %s\n", type);
-                return NULL;
-            case Classname :
-                type = tree->u.str;
-                if(checkClassDefine(classes, type))
-                    return type;
-                fprintf(stderr, "ERREUR checkExpr Classname : %s\n", type);
-                return NULL;
-            case Chaine :
-                return "String";
-            case Cste :
-                return "Integer";
-            case INTC :
-                return "Integer";
-            case STRINGC :
-                return "String";
-            case VOIDC :    
-                return "Void";
-            case ADD :
-            case SUB :
-            case MUL :
-            case DIV :    
-            case EQ :
-            case NE :
-            case SUP :
-            case SUPE :
-            case INF :
-            case INFE :
-                type = checkExpr(getChild(tree, 0), classes, env);
-                typeD = checkExpr(getChild(tree, 1), classes, env);
-                if(strcmp(type, "Integer") == 0
-                    && strcmp(type, typeD) == 0 )
-                {
-                    return "Integer";              
-                }
-                
-                fprintf(stderr, "ERREUR getType operation arithmetique : %s ou %s \n",type,typeD);
-                return NULL;
-            case CONCAT :
-                type = checkExpr(getChild(tree, 0), classes, env);
-                typeD = checkExpr(getChild(tree, 1), classes, env);
-                if(strcmp(type, "String") == 0
-                    && strcmp(type, typeD) == 0 )
-                {
-                    return "String";                    
-                }
-                
-                fprintf(stderr, "ERREUR getType concat : %s ou %s \n",type,typeD);
-                return NULL;
-            case ECAST :
-                 TODO 
-                break;
-            case EINST :
-                type = checkExpr(getChild(tree, 0), classes, env);
-                if(checkClassDefine(classes, type))
-                {
-                    return type;
-                }
-                fprintf(stderr, "ERREUR getType new Type : %s\n",type);
-                return NULL;
-            case SELEXPR :                          
-            case EENVOI :
-                return checkExpr(getChild(tree, 1), classes, env);
-            case YLEXPR : 
-            case METHOD :
-                return checkExpr(getChild(tree, 0), classes, env);       
-            default :
-                fprintf(stderr, "Erreur dans getType");
-                return NULL;
-        }
-    }
-    return NULL;
-}
-*/
-
-/*
-bool checkTypeAff(VarDeclP var, char* nom, ExpressionP expr)
-{
-
-}
-
-
-bool checkLArg(LAttributP larg)
-{
-
-}
-
-
-bool checkAff(char* id, TreeP expr, ClasseP lclasse, VarDeclP env)
-{
-    return (strcmp(id,checkExpr(expr,lclasse,env))==0);
-}
-
-
-bool checkListeInstr(TreeP tree, ClasseP lclasse, VarDeclP env)
-{
-    if(tree != NIL(Tree))
-    {
-        switch(tree->op)
-        {
-            case LINSTR :
-                return (checkInstr(getChild(tree,0)) && checkListeInstr(getChild(tree,1)));
-            default :
-                return (checkInstr(tree,lclasse,env));
-        }
-    }
-    return FALSE;
-}
-
-bool checkInstr(TreeP tree, ClasseP lclasse, VarDeclP env)
-{
-    if(tree->op !=  NIL(TreeP))
-    {
-        switch (tree->op)
-        {
-            case YEXPR :
-                if(checkExpr(tree,lclasse,env)==NULL) 
-                {
-                    fprintf(stderr, "Erreur dans checkInstr YEXPR\n");
-                    return FALSE;
-                }
-                return TRUE ;
-            case EAFF :
-                if(checkAff(getId(getChild(tree,0),env),tree,lclasse,env)==NULL) 
-                {
-                    fprintf(stderr, "Erreur dans checkInstr EAFF\n");
-                    return FALSE;
-                }
-                return TRUE ;
-            case YITE :
-                if(checkExpr(getChild(tree,0),lclasse,env) != NULL && checkListeInstr(getChild(tree,1),lclasse,env) && checkListeInstr(getChild(tree,2),lclasse,env))
-                {
-                    return TRUE;
-                }
-                fprintf(stderr, "Erreur dans checkInstr YITE\n");
-                return FALSE;
-            case YCONT :
-                if(TODO checkDeclChamp() && checkInstr(getChild(tree,1),lclasse,env))
-                {
-                    return TRUE;
-                }
-                fprintf(stderr, "Erreur dans checkInstr YCONT\n");
-                return FALSE;
-            case LINSTR :
-                if(checkListeInstr(tree,lclasse,env))
-                {
-                    return TRUE;
-                }
-                fprintf(stderr, "Erreur dans checkInstr LINSTR\n");
-                return FALSE;
-            default :
-                fprintf(stderr, "Erreur dans checkInstr\n");
-                return FALSE;
-        }
-    }
-    else
-    {
-        return TRUE;
-    }
-}
-
-char *getId(TreeP tree, VarDeclP env)
-{
-    char *type = tree->u.str;
-    if(checkPortee(env, type))
-    {
-        while(env != NIL(VarDecl))
-        {
-              if(strcmp(type, env->name) == 0)
-            {
-                return env->attr->type->nom;
-            }
-            env = env->next;
-        }
-    }
-    return NULL;
-}
-*/

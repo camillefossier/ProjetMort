@@ -577,6 +577,7 @@ void addEnv(VarDeclP var)
     int i = 0;
     if(var != NIL(VarDecl))
     {
+        setEnvironnementType(var);
         VarDeclP current = var;
         while (TRUE) { 
             i++;
@@ -813,7 +814,18 @@ void initClasse(TreeP arbreLClasse)
 
         arbreCourant = getChild(arbreCourant, 1);
     }
-    
+}
+
+
+/* set le type des variables */
+void setEnvironnementType(VarDeclP var)               
+{
+    VarDeclP tmp = var;
+    while(tmp != NIL(VarDecl))
+    {
+        tmp->type = getClassePointer(tmp->type->nom);
+        tmp = tmp->next;
+    }
 }
 
 
@@ -918,7 +930,6 @@ void compile(TreeP arbreLClasse, TreeP main)
         stockerClasse(arbreLClasse, TRUE);
     }
 
-    /* stockerEnv(main, TRUE); */
     verifContextProg(arbreLClasse, main);
 }
 

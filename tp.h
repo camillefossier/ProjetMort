@@ -193,6 +193,7 @@ void addConstructeur(TreeP blocOpt, ClasseP classe);
 
 void makeClassesPrimitives();
 void initClasse(TreeP arbreLClasse);
+void setEnvironnementType(VarDeclP var);
 void stockerClasse(TreeP arbreLClasse, bool verbose);
 void stockerEnv(TreeP arbre, bool verbose);
 void initEnv();
