@@ -793,18 +793,13 @@ void initClasse(TreeP arbreLClasse)
                 bufferClasse->superClasse = getClassePointer(getChild(arbreExtendOpt, 0)->u.str); 
         
             TreeP arbreLParam = getChild(arbreClasse, 1);
-
-            printf("premier : \n");
-            LParamP lparam = makeLParam(arbreLParam,i);           
-
-            bufferClasse->lparametres = lparam;
+   
+            bufferClasse->lparametres = makeLParam(arbreLParam,i);
             TreeP arbreBlocObj = getChild(arbreClasse, 4); 
 
             LChampP lchamps = makeChampsBlocObj(arbreBlocObj);
             LMethodeP lmethodes = makeMethodeBlocObj(arbreBlocObj);
             bufferClasse->lchamps = lchamps; 
-            printf("abab\n");
-            printVarDecl(bufferClasse->lchamps);
 
             if(arbreLParam != NIL(Tree))
             {
@@ -827,6 +822,7 @@ void initClasse(TreeP arbreLClasse)
 	            	bufferClasse->lchamps = addVarDecl(tmpListe,bufferClasse->lchamps);	
 	            }        
             }
+
 
             bufferClasse->lmethodes = lmethodes;
 
