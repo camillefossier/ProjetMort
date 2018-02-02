@@ -65,7 +65,7 @@ LParam: Param ',' LParam 													{ $$ = makeTree(YLPARAM, 2, $1, $3); }
 ;
 
  
-Param: VAR Id ':' Classname ValVar 											{ $$ = makeLeafLVar(YPARAM, makeVarDecl($2, $4, $5)); }
+Param: VAR Id ':' Classname ValVar 											{ $$ = makeLeafLVar(VYPARAM, makeVarDecl($2, $4, $5)); }
 | Id ':' Classname ValVar 													{ $$ = makeLeafLVar(YPARAM, makeVarDecl($1, $3, $4)); }
 ;
 

@@ -234,13 +234,13 @@ bool checkClassDefine(char* nom)
 /*
 *Verifie la portee d'une variable nom*
 */
-bool checkPortee(VarDeclP lvar, char* nom)
+bool checkPortee(LVarDeclP lvar, char* nom)
 {
     if(nom != NULL)
     {
-        while(lvar != NIL(VarDecl))
+        while(lvar != NIL(LVarDecl))
         {
-            if(strcmp(lvar->nom, nom)==0)
+            if(strcmp(lvar->var->nom, nom)==0)
             {
                 return TRUE;
             }
@@ -261,15 +261,15 @@ bool checkBlocMain(TreeP bloc)
 
     if(bloc != NIL(Tree))
     {
-        VarDeclP tmp = NIL(VarDecl);
+        LVarDeclP tmp = NIL(LVarDecl);
 
         switch(bloc->op)
         {
             case YCONT :
                 /* TODO : faire un par un l'ajout dans l'env */
               tmp = makeLParam(getChild(bloc, 0), i);
-              if(tmp != NIL(VarDecl))
-                addEnv(tmp);
+              if(tmp != NIL(LVarDecl))
+            addEnv(tmp);
               check = (check && checkBlocMain(getChild(bloc, 1)));
               removeEnv(*i);
               break;
@@ -639,12 +639,12 @@ ClasseP getTypeId(char* nom)
 {
     if(env != NIL(Scope))
     {
-        VarDeclP tmp = env->env;
-        while(tmp != NIL(VarDecl))
+        LVarDeclP tmp = env->env;
+        while(tmp != NIL(LVarDecl))
         {
-            if(strcmp(nom, tmp->nom) == 0)
+            if(strcmp(nom, tmp->var->nom) == 0)
             {
-                return tmp->type;
+                return tmp->var->type;
             }
             tmp = tmp->next;
         }
@@ -745,12 +745,12 @@ MethodeP getMethodePointer(ClasseP classe, char* nom)
 
 
 
-bool checkArguments(ParamP larg1, ParamP larg2)
+bool checkArguments(LParamP larg1, LParamP larg2)
 {
     bool retour = TRUE;
-    while(larg1 != NIL(Param) && larg2 != NIL(Param))
+    while(larg1 != NIL(LParam) && larg2 != NIL(LParam))
     {
-        if(larg1->type != NIL(Classe) && larg2->type != NIL(Classe) && strcmp(larg1->type->nom, larg2->type->nom) == 0)
+        if(larg1->var->type != NIL(Classe) && larg2->var->type != NIL(Classe) && strcmp(larg1->var->type->nom, larg2->var->type->nom) == 0)
         {
             larg1 = larg1->next;
             larg2 = larg2->next;
@@ -760,12 +760,12 @@ bool checkArguments(ParamP larg1, ParamP larg2)
             retour = FALSE;
         }
     }
-    if(larg1 != NIL(Param) || larg2 != NIL(Param)) retour = FALSE;
+    if(larg1 != NIL(LParam) || larg2 != NIL(LParam)) retour = FALSE;
     return retour;
 }
 
 /*Renvoie true si pas de probleme d'override*/
-bool checkOverrideMethode(ClasseP classe, char* nom, ParamP larg, bool isOverride)
+bool checkOverrideMethode(ClasseP classe, char* nom, LParamP larg, bool isOverride)
 {
     if(classe != NIL(Classe))
     {
@@ -958,13 +958,13 @@ bool checkTypeAff(VarDeclP var, TreeP expr)
     return FALSE;
 }
 
-bool checkLArg(VarDeclP lvar)
+bool checkLArg(LVarDeclP lvar)
 {
     bool retour = TRUE;
-    VarDeclP temp = lvar;
-    while(temp != NIL(VarDecl)) {
-        if(temp->exprOpt != NIL(Tree)) {
-            retour = (retour && checkTypeAff(temp,temp->exprOpt));
+    LVarDeclP temp = lvar;
+    while(temp != NIL(LVarDecl)) {
+        if(temp->var->exprOpt != NIL(Tree)) {
+            retour = (retour && checkTypeAff(temp->var,temp->var->exprOpt));
         }
         temp = temp->next;
     }

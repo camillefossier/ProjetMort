@@ -717,7 +717,7 @@ void codeDeclChamp(TreeP tree)		        /*DeclChamp: VAR Id ':' TypeC ValVar ';'
     fprintf(output, "BIENVENUE DANS LE DeclChamp.\n");
 
  
-    fprintf(output,"--Var %s : ", tree->u.lvar->nom);
+    fprintf(output,"--Var %s : ", tree->u.var->nom);
         /*codeExpr(getChild(tree, 1));  correspond au typeC*/
 
    /* fprintf(output, "%s", getChild(tree, 1)->u.str);*/    /*comment gérer le type d'une expression en terme de gén de code ?*/
