@@ -84,7 +84,7 @@ typedef struct _LVarDecl
 {
     struct _varDecl *var;
     struct _LVarDecl *next;
-}LVarDecl, *LVarDeclP,LParam, LChamp, *LParamP, *LChampP;
+}LVarDecl, *LVarDeclP, LParam, LChamp, *LParamP, *LChampP;
 
 /* utile pour le check de portee */
 typedef struct _Scope {
@@ -137,11 +137,10 @@ typedef struct _Methode
 {
 	bool override;
 	char *nom;
-  int nbLocales;                                              /* TODO le mettre dans les fonctions */
+  int nbLocales;                                              /* TODO : le mettre dans les fonctions */
 	struct _LVarDecl *lparametres;
   struct _Classe *typeDeRetour;
   struct _Tree *bloc;
-  /* struct _Classe *classeAppartenance; */                   /* TODO Ca foire pour un objet :/ */
 } Methode, *MethodeP;
 
 
@@ -164,7 +163,6 @@ typedef union
 /*------------------protype------------------*/
 
 void setError(int code);
-/* void yyerror(char *ignore); */
 
 TreeP makeTree(short op, int nbChildren, ...);
 TreeP makeNode(int nbChildren, short op);
@@ -185,26 +183,22 @@ LVarDeclP makeLParam(TreeP arbreLParam, int *i);
 LVarDeclP makeLParamIsVar(TreeP arbreLParam);
 LChampP makeChampsBlocObj(TreeP blocObj);
 LMethodeP makeMethodeBlocObj(TreeP blocObj);
-LVarDeclP makeVarBloc(TreeP bloc, int *i);
 
 ClasseP getClassePointer(char *nom);
 ObjetP getObjetPointer(char *nom);
+MethodeP getMethodePointer(ClasseP classe, char* nom);
 
 void addChamp(VarDeclP lchamps, ParamP champ);
 LVarDeclP addLParamVar(LVarDeclP lchamps, TreeP arbreLParam);
 void addClasse(ClasseP classe);
 void addObjet(ObjetP objet);
-void addEnv(LVarDeclP var);
-void removeEnv(int n);
 LVarDeclP addVarDecl(LVarDeclP var, LVarDeclP liste);
 LMethodeP addMethode(MethodeP methode, LMethodeP liste);
 void addConstructeur(TreeP blocOpt, ClasseP classe);
 
 void makeClassesPrimitives();
 void initClasse(TreeP arbreLClasse);
-void setEnvironnementType(LVarDeclP var);
 void stockerClasse(TreeP arbreLClasse, bool verbose);
-void stockerEnv(TreeP arbre, bool verbose);
 void initEnv();
 
 void compile(TreeP arbreLClasse, TreeP main);
@@ -218,9 +212,9 @@ void printLMethode(LMethodeP lmethode);
 void printScope();
 void afficherProgramme(TreeP tree, bool verbose);
 
-void verifContextProg(TreeP arbreLClasse, TreeP main);
-void verifContextMain(TreeP main);
-void verifContextLClasse(TreeP arbreLClasse);
+bool verifContextProg(TreeP arbreLClasse, TreeP main);
+bool verifContextMain(TreeP main);
+bool verifContextLClasse(TreeP arbreLClasse);
 
 
 /*------------------protype verif.c------------------*/
@@ -237,7 +231,13 @@ bool checkSelection(TreeP selection);
 
 ClasseP getType(TreeP expr);
 ClasseP getTypeId(char* nom);
-MethodeP getMethodePointer(ClasseP classe, char* nom);
+
+bool setEnvironnementType(LVarDeclP var);
+bool checkBlocClasse(TreeP tree);
+
+LVarDeclP envHerite(ClasseP classeMere);
+bool addEnv(LVarDeclP var);
+void removeEnv(int n);
 
 
 bool checkArguments(LParamP larg1, LParamP larg2);
