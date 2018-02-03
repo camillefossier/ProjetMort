@@ -267,7 +267,7 @@ bool checkExpr(TreeP tree, ClasseP classe)
 
                 check = checkExpr(getChild(tree, 0), classe) && check;
                 check = checkExpr(getChild(tree, 1), classe) && check;
-                check = checkCast(getClassePointer(getChild(tree, 1)->u.str), getChild(tree, 0)->u.str) && check; 
+                check = checkCast(getClassePointer(getChild(tree, 1)->u.str), getChild(tree, 0)->u.str, classe) && check; 
                 break;
 
             case EINST :
@@ -616,7 +616,7 @@ bool checkBlocClasse(TreeP tree, ClasseP classe)
                 if(extends != NIL(Tree))
                 {
                     superClasse = getClassePointer(getChild(extends, 0)->u.str);
-                    if(superClasse != NIL(Classe))
+                    if(superClasse != NIL(Classe) && superClasse->constructeur != NIL(Methode))
                     {
                         tmp = NIL(LVarDecl);
                         tmp = envHerite(superClasse);
@@ -1063,24 +1063,29 @@ bool checkBoucleHeritage(LClasseP lclasse)
 }
 
 /*devrait marche, à tester avec les blocs*/
-bool checkCast(ClasseP classe, char* nom)
+bool checkCast(ClasseP classeCast, char* nom, ClasseP classe)
 {
-    if(classe != NIL(Classe))
+    if(classeCast != NIL(Classe))
     {
-        if(strcmp(classe->nom, nom) == 0)
+        if(strcmp(nom, "this") == 0 && classe != NIL(Classe))
+        {
+            nom = classe->nom;
+        }
+
+        if(strcmp(classeCast->nom, nom) == 0)
         {
             return TRUE;
         }
         else
         {
-            if(classe->superClasse != NULL)
+            if(classeCast->superClasse != NULL)
             {
-                return checkCast(classe->superClasse,nom);
+                return checkCast(classeCast->superClasse, nom, classe);
             }
             else
             {
                 fprintf(stderr, "Erreur verification d'un cast :\n");
-                fprintf(stderr, "\t> %s ne peut pas etre cast en %s\n\n", classe->nom, nom);
+                fprintf(stderr, "\t> %s ne peut pas etre cast en %s\n\n", classeCast->nom, nom);
                 nbErreur++;
                 /* fprintf(stderr, "erreur ligne : %d\n", yylineno); */
                 return FALSE;

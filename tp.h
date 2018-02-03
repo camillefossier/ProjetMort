@@ -237,7 +237,7 @@ bool checkOverrideMethode(ClasseP classe, char* nom, LParamP larg, bool isOverri
 bool checkOverrideLClasse(LClasseP lclasse);
 bool checkDoublonClasse(LClasseP lclasse);
 bool checkBoucleHeritage(LClasseP lclasse);
-bool checkCast(ClasseP classe, char* nom);
+bool checkCast(ClasseP classeCast, char* nom, ClasseP classe);
 bool checkMethodes(ClasseP classe, char* nom);
 
 
