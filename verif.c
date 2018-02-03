@@ -54,11 +54,18 @@ bool checkPortee(LVarDeclP lvar, char* nom)
             }
             lvar= lvar->next;
         }
+
+        fprintf(stderr, "Erreur checkPortee :\n");
+        fprintf(stderr, "\t> la variable %s est indefini\n\n", nom);
+        nbErreur++;
+
+        return FALSE;
     }
 
     fprintf(stderr, "Erreur checkPortee :\n");
-    fprintf(stderr, "\t> la variable %s est indefini\n\n", nom);
+    fprintf(stderr, "\t> la variable est indefini (nom = NIL)\n\n");
     nbErreur++;
+
     return FALSE;
 }
 
@@ -78,7 +85,6 @@ bool checkBlocMain(TreeP bloc, ClasseP classe)
         switch(bloc->op)
         {
             case YCONT :
-              /* TODO : faire un par un l'ajout dans l'env */
               tmp = makeLParam(getChild(bloc, 0), i);
 
               if(tmp != NIL(LVarDecl))
@@ -149,7 +155,9 @@ bool checkExpr(TreeP tree, ClasseP classe)
         {
             case Id :
                 nom = tree->u.str;
-                check = checkPortee(env->env, nom) && check;
+                /* TODO : verifier OK ou KO */
+                if(strcmp(nom, "this") != 0 && strcmp(nom, "super") && strcmp(nom, "result"))
+                    check = checkPortee(env->env, nom) && check;
                 break;
 
             case Classname :
@@ -315,6 +323,9 @@ ClasseP getType(TreeP expr, ClasseP classe)
         ClasseP typeG;
         ClasseP typeD;
 
+        char *nom;
+        LVarDeclP tmp = NIL(LVarDecl);
+
         switch (expr->op)
         {
             case Id :
@@ -439,7 +450,37 @@ ClasseP getType(TreeP expr, ClasseP classe)
 
                 if(expr->nbChildren == 2)
                 {
-                    type = getType(getChild(expr, 1), classe);
+                    typeG = getType(getChild(expr, 0), classe);
+                    if(typeG != NIL(Classe))
+                    {
+                        nom = getChild(expr, 1)->u.str;
+                        tmp = typeG->lchamps;
+                        if(tmp != NIL(LVarDecl))
+                        {
+                            while(tmp != NIL(LVarDecl))
+                            {
+                                if(strcmp(tmp->var->nom, nom) == 0)
+                                {
+                                    type = tmp->var->type;
+                                    break;
+                                }
+
+                                tmp = tmp->next;
+                            }
+                        }
+                        else
+                        {
+                            fprintf(stderr, "Erreur de selection dans getType :\n");
+                            fprintf(stderr, "\t> la liste de champs de la classe %s est NIL\n\n", typeG->nom);
+                            type = NIL(Classe);
+                        }
+                    }
+                    else
+                    {
+                        fprintf(stderr, "Erreur de selection dans getType :\n");
+                        fprintf(stderr, "\t> la classe est indifini\n\n");
+                        type = NIL(Classe);
+                    }
                 }
                 else
                 {
@@ -567,10 +608,8 @@ bool checkBlocClasse(TreeP tree, ClasseP classe)
             case YCLASS :
                 classe = getClassePointer(getChild(tree, 0)->u.str);
 
-                /* TODO : faire un par un l'ajout dans l'env */
-                /* TODO : ajouter ici la verification des affectations des parametres de la classe 
-                * de preference un par un, en ajoutant la variables dans l'env si c'est bon
-                * verifier egalement le nom, pour ne pas avoir deux fois la meme variable dans le meme bloc
+                /* TODO : 
+                * verifier le nom, pour ne pas avoir deux fois la meme variable dans le meme bloc
                 */
 
                 tmp = classe->lparametres;
@@ -598,10 +637,8 @@ bool checkBlocClasse(TreeP tree, ClasseP classe)
 
                 /* TODO : constructeur */
 
-                /* TODO : faire un par un l'ajout dans l'env */
-                /* TODO : ajouter ici la verification des affectations des champs de la classe 
-                * de preference un par un, en ajoutant la variables dans l'env si c'est bon
-                * verifier egalement le nom, pour ne pas avoir deux fois la meme variable dans le meme bloc
+                /* TODO : 
+                * verifier le nom, pour ne pas avoir deux fois la meme variable dans le meme bloc
                 */
 
                 tmp = classe->lchamps;
@@ -616,10 +653,8 @@ bool checkBlocClasse(TreeP tree, ClasseP classe)
             case YOBJ :
                 classe = getClassePointer(getChild(tree, 0)->u.str);
 
-                /* TODO : faire un par un l'ajout dans l'env */
-                /* TODO : ajouter ici la verification des affectations des champs de l'objet 
-                * de preference un par un, en ajoutant la variables dans l'env si c'est bon
-                * verifier egalement le nom, pour ne pas avoir deux fois la meme variable dans le meme bloc
+                /* TODO : 
+                * verifier le nom, pour ne pas avoir deux fois la meme variable dans le meme bloc
                 */
 
                 tmp = classe->lchamps;
@@ -642,7 +677,6 @@ bool checkBlocClasse(TreeP tree, ClasseP classe)
 
                 /* TODO : mettre dans cette partie la verification d'une declaration d'une methode 
                 * reste encore a mettre : override correct (attention entre classe et objet), nom correct (pas de surcharge) 
-                * verification des affectations dans les parametres de la methode
                 */
 
                 tmp = makeLParam(getChild(tree, 2), i);
@@ -660,7 +694,6 @@ bool checkBlocClasse(TreeP tree, ClasseP classe)
 
                 /* TODO : mettre dans cette partie la verification d'une declaration d'une methode 
                 * reste encore a mettre : override correct (attention entre classe et objet), nom correct (pas de surcharge) 
-                * verification des affectations dans les parametres de la methode
                 */
                 tmp = makeLParam(getChild(tree, 2), i);
                 if(tmp != NIL(LVarDecl))

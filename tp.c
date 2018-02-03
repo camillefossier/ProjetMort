@@ -778,7 +778,7 @@ bool verifContextProg(TreeP arbreLClasse, TreeP main)
     check = verifContextMain(main) && check;
 
     if(nbErreur > 0)
-        fprintf(stderr, "\nVotre programme a %d erreur(s)\n", nbErreur);
+        fprintf(stderr, "Votre programme a %d erreur(s)\n\n", nbErreur);
 
     return check;
 }
