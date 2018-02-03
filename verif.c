@@ -612,11 +612,6 @@ bool checkBlocClasse(TreeP tree, ClasseP classe)
                 * verifier le nom, pour ne pas avoir deux fois la meme variable dans le meme bloc
                 */
 
-                tmp = classe->lparametres;
-
-                if(tmp != NIL(LVarDecl))
-                    check = addEnv(tmp, classe) && check;
-
                 TreeP extends = getChild(tree, 2);
                 if(extends != NIL(Tree))
                 {
@@ -635,7 +630,18 @@ bool checkBlocClasse(TreeP tree, ClasseP classe)
                     }
                 }
 
-                /* TODO : constructeur */
+
+                tmp = classe->lparametres;
+
+                if(tmp != NIL(LVarDecl))
+                    check = addEnv(tmp, classe) && check;
+            
+                TreeP constructeur = getChild(tree, 3);
+                check = checkBlocMain(constructeur, classe) && check;
+
+                int tailleLParam = getTailleListeVarDecl(tmp);
+                removeEnv(tailleLParam);
+    
 
                 /* TODO : 
                 * verifier le nom, pour ne pas avoir deux fois la meme variable dans le meme bloc
@@ -839,7 +845,22 @@ bool checkAff(VarDeclP var, TreeP expr, ClasseP classe)
 }
 
 
+/* retourne la taille d'une lsite de varDecl */
+int getTailleListeVarDecl(LVarDeclP liste)
+{
+    int i = 0;
+    if(liste != NIL(LVarDecl))
+    {
+        LVarDeclP tmp = liste;
+        while(tmp != NIL(LVarDecl))
+        {
+            i++;
+            tmp = tmp->next;
+        }
+    }
 
+    return i;
+}
 
 
 

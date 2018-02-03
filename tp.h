@@ -230,7 +230,7 @@ bool addVarEnv(VarDeclP var, ClasseP classe);
 void removeEnv(int n);
 
 bool checkAff(VarDeclP var, TreeP expr, ClasseP classe);
-
+int getTailleListeVarDecl(LVarDeclP liste);
 
 bool checkArguments(LParamP larg1, LParamP larg2);
 bool checkOverrideMethode(ClasseP classe, char* nom, LParamP larg, bool isOverride);
