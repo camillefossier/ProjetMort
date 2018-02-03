@@ -815,7 +815,7 @@ bool verifContextProg(TreeP arbreLClasse, TreeP main)
     if(nbErreur > 0)
         fprintf(stderr, "Votre programme a %d erreur(s)\n\n", nbErreur);
     else
-        printf("C'est good\n\n");
+        printf("\nC'est good\n\n");
 
     return check;
 }
