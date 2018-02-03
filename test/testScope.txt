@@ -1,0 +1,19 @@
+class Point() is {
+
+var x : Integer;
+def getX() : Integer := this.x
+
+}
+
+class Other() is {
+var x : Integer;
+def meth() : Integer is {
+var p : Point;
+is
+{
+	this.x := p.x ;
+}
+}
+}
+{
+}
