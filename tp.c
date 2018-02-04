@@ -341,7 +341,6 @@ MethodeP makeMethode(TreeP declMethode)
 LVarDeclP makeLParam(TreeP arbreLParam, int *i)
 {
   LParamP lparam = NIL(LVarDecl);
-
   if(arbreLParam != NIL(Tree))
   {
 
@@ -564,7 +563,7 @@ void addConstructeur(TreeP blocOpt, ClasseP classe)
       MethodeP constr = NEW(1, Methode);
       constr->override = FALSE;
       constr->nom = classe->nom;
-      constr->lparametres = classe->lparametres;    /* TODO : OK OU KO */
+      constr->lparametres = classe->lparametres;
       constr->typeDeRetour = classe;
       constr->bloc = blocOpt;
       
@@ -773,7 +772,7 @@ void initEnv()
 bool verifContextProg(TreeP arbreLClasse, TreeP main)
 {
     bool check = TRUE;
-
+    check = checkBoucleHeritage(lclasse);
     check = verifContextLClasse(arbreLClasse) && check;
     check = verifContextMain(main) && check;
 
@@ -799,9 +798,7 @@ bool verifContextMain(TreeP main)
 bool verifContextLClasse(TreeP arbreLClasse)
 {
     bool check = TRUE;
-
-    /* check = checkBoucleHeritage(lclasse) && check;
-    check = checkDoublonClasse(lclasse) && check; */
+    check = checkDoublonClasse(lclasse) && check; 
 
     check = checkBlocClasse(arbreLClasse, NIL(Classe)) && check;
 

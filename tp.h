@@ -232,13 +232,13 @@ void removeEnv(int n);
 bool checkAff(VarDeclP var, TreeP expr, ClasseP classe);
 int getTailleListeVarDecl(LVarDeclP liste);
 
-bool checkArguments(LParamP larg1, LParamP larg2);
+bool checkArguments(LParamP larg, LParamP largbis);
 bool checkOverrideMethode(ClasseP classe, char* nom, LParamP larg, bool isOverride);
 bool checkOverrideLClasse(LClasseP lclasse);
 bool checkDoublonClasse(LClasseP lclasse);
 bool checkBoucleHeritage(LClasseP lclasse);
 bool checkCast(ClasseP classeCast, char* nom, ClasseP classe);
-bool checkMethodes(ClasseP classe, char* nom);
+bool checkMethodes(ClasseP classe, char* nom, TreeP lparam);
 
 
 

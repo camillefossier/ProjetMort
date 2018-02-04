@@ -282,9 +282,9 @@ bool checkExpr(TreeP tree, ClasseP classe)
                 break;
 
             case EENVOI :
-
+                
                 check = checkExpr(getChild(tree, 0), classe) && check;
-                check = checkMethodes(getType(getChild(tree, 0), classe), getChild(getChild(tree, 1), 0)->u.str) && check;
+                check = checkMethodes(getType(getChild(tree, 0), classe), getChild(getChild(tree, 1), 0)->u.str,getChild(getChild(tree, 1), 1) ) && check;
                 break;
 
             case YLEXPR : 
@@ -910,12 +910,16 @@ int getTailleListeVarDecl(LVarDeclP liste)
 
 
 
-bool checkArguments(LParamP larg1, LParamP larg2)
+bool checkArguments(LParamP larg, LParamP largbis)
 {
     bool retour = TRUE;
+    LParamP larg1 = larg;
+    LParamP larg2 = largbis;
+    printf("hey\n");
     while(larg1 != NIL(LParam) && larg2 != NIL(LParam))
     {
-        if(larg1->var->type != NIL(Classe) && larg2->var->type != NIL(Classe) && strcmp(larg1->var->type->nom, larg2->var->type->nom) == 0)
+        if(larg1->var != NIL(VarDecl) && larg2->var != NIL(VarDecl) && larg1->var->type != NIL(Classe) && larg2->var->type != NIL(Classe) 
+            && strcmp(larg1->var->type->nom, larg2->var->type->nom) == 0)
         {
             larg1 = larg1->next;
             larg2 = larg2->next;
@@ -1020,19 +1024,19 @@ bool checkDoublonClasse(LClasseP lclasse)
     if(lclasse != NIL(LClasse))
     {
         LClasseP tmpClasses = lclasse;
-        LClasseP tmp= tmpClasses;
+        LClasseP tmp= lclasse;
         tmpClasses = tmpClasses->next;
         while(tmpClasses != NIL(LClasse))
         {
            if(strcmp(tmpClasses->classe->nom,tmp->classe->nom)==0)     
            {
-                printf("Doublon de classe concernant la classe de nom %s\n", tmp->classe->nom);
+                printf("Doublon de classe concernant la classe de nom : \n\t > %s\n\n", tmp->classe->nom);
                 nbErreur++;
                 return FALSE;
            }
            tmpClasses = tmpClasses->next;
         }
-        return checkDoublonClasse(tmpClasses);
+        return checkDoublonClasse(lclasse->next);
     }
     else
     {
@@ -1051,9 +1055,10 @@ bool checkBoucleHeritage(LClasseP lclasse)
         {
             if(strcmp(tmpClasses->classe->nom, tmpSuper->nom) == 0)
             {
-                printf("Erreur, Boucle d'héritage concernant la classe %s\n", tmpClasses->classe->nom);
+                printf("Erreur boucle d'héritage :\n\t> boucle infini concernant %s\n\n", tmpClasses->classe->nom);
                 nbErreur++;
-                return FALSE;
+                fprintf(stderr, "Pour poursuivre la compilation, résoudre cette erreur\n");
+                abort();
             }
             tmpSuper = tmpSuper->superClasse;
         }
@@ -1103,7 +1108,7 @@ bool checkCast(ClasseP classeCast, char* nom, ClasseP classe)
 }
 
 /*Fonction utile pour un envoi : on regarde si la méthode existe dans la classe de l'objet*/
-bool checkMethodes(ClasseP classe, char* nom)
+bool checkMethodes(ClasseP classe, char* nom, TreeP lparam)
 {
     bool check = FALSE;
 
@@ -1114,16 +1119,50 @@ bool checkMethodes(ClasseP classe, char* nom)
         {
             if(strcmp(tmp->methode->nom, nom) == 0)
             {
-                check = TRUE;
+                TreeP tmplparam = lparam;
+                LParamP methLParam = tmp->methode->lparametres;
+                bool compatible = TRUE;
+                while(tmplparam != NIL(Tree) && tmplparam->op == YLEXPR && methLParam != NIL(LParam))
+                {
+                    if(methLParam->var->exprOpt != NIL(Tree))
+                    {
+                        if(strcmp(getType(getChild(tmplparam,0),NIL(Classe))->nom, methLParam->var->type->nom)==0)
+                        {
+                            methLParam= methLParam->next;
+                            tmplparam =  getChild(tmplparam,1);
+                        }
+                        else
+                        {
+                            methLParam= methLParam->next;
+                        }
+                    }
+                    else
+                    {
+                        if(strcmp(getType(getChild(tmplparam,0),NIL(Classe))->nom, methLParam->var->type->nom)!=0)
+                        {
+                            compatible = FALSE;
+                        }
+                        methLParam= methLParam->next;
+                        tmplparam =  getChild(tmplparam,1);
+                    }
+                    
+                }
+                if(methLParam != NIL(LParam) && methLParam->var->exprOpt == NIL(Tree) && getType(tmplparam, NIL(Classe))!= methLParam->var->type)
+                {
+                    compatible = FALSE;
+                }
+                
+                if(compatible) check = TRUE;
                 break;
             }
             tmp = tmp->next;
         }
 
-        if(classe->superClasse != NIL(Classe) && check == FALSE)
+        if(!check && classe->superClasse != NIL(Classe))
         {
-            check = checkMethodes(classe->superClasse, nom);
+            check = checkMethodes(classe->superClasse, nom, lparam);
         }
+        
 
         if(check == FALSE)
         {
@@ -1132,7 +1171,6 @@ bool checkMethodes(ClasseP classe, char* nom)
             nbErreur++;
             /* fprintf(stderr, "erreur ligne : %d\n", yylineno); */
         }
-
         /* TODO : ajouter la verif des parametres */
     }
     else

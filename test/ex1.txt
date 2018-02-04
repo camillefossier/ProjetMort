@@ -147,6 +147,7 @@ class PointColore(x: Integer := 0, y:Integer:= 0,
   }
 }
 
+
 class PointNoir(xc: Integer, yc:Integer)
       extends PointColore(xc, yc, CouleurFactory.noir())
       /* pas de corps de constructeur pour cette classe */
@@ -155,6 +156,7 @@ is {
   override def colore() : Integer := 1
   override def couleur() : Couleur := CouleurFactory.noir()
 }
+
 
 
 class DefaultPoint() /* Parentheses obligatoires */
