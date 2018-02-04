@@ -155,10 +155,8 @@ ClasseP getTypeMethode(char* nom, ClasseP classe)
 		LMethodeP tmpLMethodes = classe->lmethodes;
 		while(tmpLMethodes != NIL(LMethode))
 		{
-			printf("comparaison : %s et %s\n", nom, tmpLMethodes->methode->nom);
 			if(strcmp(nom, tmpLMethodes->methode->nom)==0)
 			{
-				printf("retour : %s\n",tmpLMethodes->methode->typeDeRetour->nom);
 				return tmpLMethodes->methode->typeDeRetour;
 			}
 			tmpLMethodes = tmpLMethodes->next;
@@ -348,13 +346,12 @@ bool checkExpr(TreeP tree, ClasseP classe)
                 check = checkExpr(getChild(tree, 0), classe) && check;
                 if(getChild(tree, 0) != NIL(Tree) && getChild(tree, 0)->op == Id && strcmp(getChild(tree, 0)->u.str,"result") == 0)
                 {
-                	printf("il y a un result : classe %s\n\n", classe->nom);
                 	check = checkMethodes(getTypeMethode(getChild(getChild(tree, 1), 0)->u.str,classe)
                 		, getChild(getChild(tree, 1), 0)->u.str,getChild(getChild(tree, 1), 1) ) && check;
                 }
                 else
                 {
-                	check = checkMethodes(getType(getChild(tree, 0), classe), getChild(getChild(tree, 1), 0)->u.str,getChild(getChild(tree, 1), 1) ) && check;
+                	check = checkMethodes(getType(getChild(tree, 0), classe), getChild(getChild(tree, 1), 0)->u.str,getChild(getChild(tree, 1), 1)) && check;
                 }
                 
                 break;
@@ -410,7 +407,9 @@ ClasseP getType(TreeP expr, ClasseP classe)
                 if(strcmp(expr->u.str, "this") == 0)
                 {
                     if(classe != NIL(Classe))
+                    {
                         type = classe;
+                    }	
                     else
                     {
                         fprintf(stderr, "Erreur de type :\n");
@@ -426,7 +425,7 @@ ClasseP getType(TreeP expr, ClasseP classe)
                 	else
                 	{
                 		fprintf(stderr, "Erreur de type :\n");
-                        fprintf(stderr, "\t> super est indefini\n\n");
+                        fprintf(stderr, "\t> result est indefini\n\n");
                 	}
                 }
                 else if(strcmp(expr->u.str, "super") == 0)
@@ -446,7 +445,6 @@ ClasseP getType(TreeP expr, ClasseP classe)
                     type = getTypeId(expr->u.str);
                 }
                 break;
-
             case Classname :
                 type = getClassePointer(expr->u.str);
                 break;
@@ -524,20 +522,11 @@ ClasseP getType(TreeP expr, ClasseP classe)
 
             case ECAST :
                 /* retourne le type du cast si le cast est entre deux types existants */
-                /* TODO : verifier le cast ici pour le prob de l'ex1 ? */
                 typeG = getType(getChild(expr, 0), classe);
                 typeD = getType(getChild(expr, 1), classe);
-
-                if(typeG != NIL(Classe) && typeD != NIL(Classe))
+                if(typeG != NIL(Classe) && typeD != NIL(Classe) && checkHeritageClasse(typeD, typeG->nom))
                 {
-                    if((strcmp(typeG->nom, typeD->nom) == 0))
-                    {
-                        type = typeG;           
-                    }
-                    else
-                    {
-                        type = NIL(Classe);
-                    }
+                    type = typeG;           
                 }
                 else
                 {
@@ -551,7 +540,8 @@ ClasseP getType(TreeP expr, ClasseP classe)
                 type = getType(getChild(expr, 0), classe);
                 break;
 
-            case SELEXPR :      
+            case SELEXPR :    
+
                 /* retourne le type de la selection ou de l'id */
                 if(expr->nbChildren == 2) /* cas expr '.' id */
                 {
@@ -599,6 +589,7 @@ ClasseP getType(TreeP expr, ClasseP classe)
 
             case EENVOI :
                 /* retourne le type de la methode */
+
                 typeG = getType(getChild(expr, 0), classe);
                 
                 if(typeG != NIL(Classe))
@@ -626,7 +617,6 @@ ClasseP getType(TreeP expr, ClasseP classe)
                 break;
         }
     }
-
     return type;
 }
 
@@ -1234,10 +1224,11 @@ bool checkCast(ClasseP classeCast, char* nom, ClasseP classe)
 /*Fonction utile pour un envoi : on regarde si la méthode existe dans la classe de l'objet*/
 bool checkMethodes(ClasseP classe, char* nom, TreeP lparam)
 {
+	
     bool check = FALSE;
-
     if(classe != NIL(Classe))
     {
+
         LMethodeP tmp = classe->lmethodes;
         while(tmp != NIL(LMethode))
         {
