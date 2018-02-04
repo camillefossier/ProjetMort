@@ -287,8 +287,8 @@ ClasseP makeObjet(char *nom)
 }
 
 
-/* Creer une methode a partir d'un arbre' */
-MethodeP makeMethode(TreeP declMethode)
+/* Creer une methode a partir d'un arbre */
+MethodeP makeMethode(TreeP declMethode, ClasseP classe)
 {
     int *i = NEW(1, int);
     *i = 0;
@@ -329,6 +329,9 @@ MethodeP makeMethode(TreeP declMethode)
     /* nom de la methode */
     newMethode->nom = getChild(declMethode, 1)->u.str;
 
+    /* classe d'appartenance */
+    newMethode->classeAppartenance = classe;
+
     /* expression optionnelle */
     newMethode->bloc = getChild(declMethode, 4);
 
@@ -336,8 +339,7 @@ MethodeP makeMethode(TreeP declMethode)
 }
 
 
-/* Creer une liste de parametres a partir d'un arbre */
-/* TODO : pour la portee, il faudra ajouter un par un */
+/* retourne une liste de parametres a partir d'un arbre */
 LVarDeclP makeLParam(TreeP arbreLParam, int *i)
 {
   LParamP lparam = NIL(LVarDecl);
@@ -372,7 +374,7 @@ LVarDeclP makeLParam(TreeP arbreLParam, int *i)
 }
 
 
-/* creer une liste des champs d'un objet ou d'une classe */
+/* retourne une liste des champs d'un objet ou d'une classe */
 LChampP makeChampsBlocObj(TreeP blocObj)
 {
     LVarDeclP lChamps = NIL(LVarDecl);
@@ -411,8 +413,8 @@ LChampP makeChampsBlocObj(TreeP blocObj)
 }
 
 
-/* creer une liste des methodes d'une classe ou d'un objet */
-LMethodeP makeMethodeBlocObj(TreeP blocObj)
+/* retourne une liste des methodes d'une classe ou d'un objet */
+LMethodeP makeMethodeBlocObj(TreeP blocObj, ClasseP classe)
 {
     LMethodeP lMethodes = NIL(LMethode);
 
@@ -426,7 +428,7 @@ LMethodeP makeMethodeBlocObj(TreeP blocObj)
 
             if(declChampMethode->op != YDECLC)
             {
-                MethodeP tmp = makeMethode(declChampMethode);
+                MethodeP tmp = makeMethode(declChampMethode, classe);
                 lMethodes = addMethode(tmp, lMethodes);
             }
 
@@ -436,7 +438,7 @@ LMethodeP makeMethodeBlocObj(TreeP blocObj)
 
         if(arbreChampMethode->op != YDECLC)
         {
-            MethodeP tmp = makeMethode(arbreChampMethode);
+            MethodeP tmp = makeMethode(arbreChampMethode, classe);
             lMethodes = addMethode(tmp, lMethodes);
         }
     }
@@ -565,6 +567,7 @@ void addConstructeur(TreeP blocOpt, ClasseP classe)
       constr->nom = classe->nom;
       constr->lparametres = classe->lparametres;
       constr->typeDeRetour = classe;
+      constr->classeAppartenance = classe;
       constr->bloc = blocOpt;
       
       classe->constructeur = constr;
@@ -575,7 +578,7 @@ void addConstructeur(TreeP blocOpt, ClasseP classe)
 /*--------------------------STOCKAGE DES CLASSES ET DES OBJETS---------------------------*/
 
 
-/*Creation des types primitifs Integer, String et Void*/
+/* Creation des types primitifs Integer, String et Void */
 void makeClassesPrimitives()
 {
   ClasseP integer = makeClasse("Integer");
@@ -599,6 +602,7 @@ void makeClassesPrimitives()
   toString->override = FALSE;
   toString->nom = "toString";
   toString->typeDeRetour = string;
+  toString->classeAppartenance = integer;
   toString->bloc = NIL(Tree);
 
   integer->lmethodes = addMethode(toString, integer->lmethodes);
@@ -618,16 +622,20 @@ void makeClassesPrimitives()
   /*Constructeur du type String*/
   addConstructeur(exprOpt, string);
 
+  /*methode print*/
   MethodeP print = NEW(1, Methode);
   print->override = FALSE;
   print->nom = "print";
-  print->typeDeRetour = voidC;
+  print->typeDeRetour = string;
+  print->classeAppartenance = string;
   print->bloc = NIL(Tree);
 
+  /*methode println*/
   MethodeP println = NEW(1, Methode);
   println->override = FALSE;
   println->nom = "println";
-  println->typeDeRetour = voidC;
+  println->typeDeRetour = string;
+  println->classeAppartenance = string;
   println->bloc = NIL(Tree);
 
   string->lmethodes = addMethode(print, string->lmethodes);
@@ -636,8 +644,10 @@ void makeClassesPrimitives()
   string->lchamps = NIL(LVarDecl);
 
   addClasse(integer);
+  /* permet de mettre a jour le type du parametre, pour qu'il pointe vers la structure ajouter dans lclasse */ 
   setEnvironnementType(paramListeInt, integer);
   addClasse(string);
+  /* idem pour le parametre d'un string */
   setEnvironnementType(paramListeStr, string);
   addClasse(voidC);
 }
@@ -657,21 +667,42 @@ void initClasse(TreeP arbreLClasse)
         TreeP arbreClasse = getChild(arbreCourant, 0);
         if(arbreClasse->op == YCLASS)
         { 
+            /* recupere le pointeur vers la classe correspondante stocke dans lclasse */ 
             bufferClasse = getClassePointer(getChild(arbreClasse, 0)->u.str); 
 
+            /* met a jour le pointeur de la superClasse vers la classe associe dans lclasse */ 
             TreeP arbreExtendOpt = getChild(getChild(arbreCourant, 0), 2);
             if(arbreExtendOpt != NIL(Tree))
-                bufferClasse->superClasse = getClassePointer(getChild(arbreExtendOpt, 0)->u.str); 
-        
-            TreeP arbreLParam = getChild(arbreClasse, 1);
-   
-            bufferClasse->lparametres = makeLParam(arbreLParam,i);
-            TreeP arbreBlocObj = getChild(arbreClasse, 4); 
+            {
+                ClasseP tmp = getClassePointer(getChild(arbreExtendOpt, 0)->u.str);
+                bufferClasse->superClasse = tmp;
 
+                /* TODO : regrouper checkBlocClasse et init classe ? */
+                /* cette verif est faite dans checkBlocClasse */
+                /*
+                if(tmp != NIL(Classe))
+                {
+                    bufferClasse->superClasse = tmp;
+                }
+                else
+                {
+                    fprintf(stderr, "Erreur d'extends\n");
+                    fprintf(stderr, "\t> la classe %s n'existe pas\n\n", getChild(arbreExtendOpt, 0)->u.str);
+                    nbErreur++;
+                }
+                */
+            }
+        
+            /* stockage des parametres de la classe */
+            TreeP arbreLParam = getChild(arbreClasse, 1);
+            bufferClasse->lparametres = makeLParam(arbreLParam,i);
+
+            /* stockage des champs de la classe */
+            TreeP arbreBlocObj = getChild(arbreClasse, 4); 
             LChampP lchamps = makeChampsBlocObj(arbreBlocObj);
-            LMethodeP lmethodes = makeMethodeBlocObj(arbreBlocObj);
             bufferClasse->lchamps = lchamps; 
 
+            /* ajoute les champs statiques declares par le constructeur */
             if(arbreLParam != NIL(Tree))
             {
             	while(arbreLParam->op == YLPARAM)
@@ -694,26 +725,26 @@ void initClasse(TreeP arbreLClasse)
 	            }        
             }
 
-
+            /* stockage des methodes de la classe */
+            LMethodeP lmethodes = makeMethodeBlocObj(arbreBlocObj, bufferClasse);
             bufferClasse->lmethodes = lmethodes;
-
-            /* TODO 
-            * Verifier cette partie pour le constructeur
-            */
-
+            
+            /* creation du constructeur de la classe */
             TreeP arbreBlocOpt = getChild(arbreClasse, 3);
             addConstructeur(arbreBlocOpt, bufferClasse);
         }
         else
         {
+            /* recupere le pointeur vers l'objet correspondant stocke dans lclasse */ 
             bufferObj = getClassePointer(getChild(arbreClasse, 0)->u.str);
 
+            /* stockage des champs de l'objet */
             TreeP arbreBlocObj = getChild(arbreClasse, 1); 
-
             LChampP lchamps = makeChampsBlocObj(arbreBlocObj);
-            LMethodeP lmethodes = makeMethodeBlocObj(arbreBlocObj);
-
             bufferObj->lchamps = lchamps;
+
+            /* stockage des methodes de la classe */
+            LMethodeP lmethodes = makeMethodeBlocObj(arbreBlocObj, bufferClasse);
             bufferObj->lmethodes = lmethodes;
         }
 
@@ -722,12 +753,15 @@ void initClasse(TreeP arbreLClasse)
 }
 
 
-/* initialise les variables globales lclasse et lobjet */
+/* set la variable globale lclasse */
 void stockerClasse(TreeP arbreLClasse, bool verbose)
 {
     TreeP courant = arbreLClasse;
+
+    /* ajoute les classes primitives */
     makeClassesPrimitives();
 
+    /* initialise la liste lclasse */
     while(courant != NIL(Tree))
     {
         TreeP arbreClasse = getChild(courant, 0);
@@ -745,6 +779,7 @@ void stockerClasse(TreeP arbreLClasse, bool verbose)
         }
     }
     
+    /* met a jour la liste lclasse */
     initClasse(arbreLClasse);
 
     if(verbose)
@@ -778,6 +813,8 @@ bool verifContextProg(TreeP arbreLClasse, TreeP main)
 
     if(nbErreur > 0)
         fprintf(stderr, "Votre programme a %d erreur(s)\n\n", nbErreur);
+    else
+        printf("\nC'est good\n\n");
 
     return check;
 }
@@ -809,17 +846,19 @@ bool verifContextLClasse(TreeP arbreLClasse)
 /*---------------------------C'EST GOOD----------------------------*/
 
 
-/* fonction principale pour le stockage de donnees */
-void compile(TreeP arbreLClasse, TreeP main)
+/* fonction principale : stocke les donnes, fait la verif contextuelle et la generation de code */
+void compile(TreeP arbreLClasse, TreeP main, bool verbose)
 {
     initEnv();
 
     if(arbreLClasse != NIL(Tree))
     {
-        stockerClasse(arbreLClasse, FALSE);
+        stockerClasse(arbreLClasse, verbose);
     }
 
     verifContextProg(arbreLClasse, main); 
+
+    /* genCode($1, $2); */
 }
 
 
@@ -840,7 +879,7 @@ void printVarDecl(LVarDeclP lvar)
 }
 
 
-/* affiche une classe */
+/* affiche une classe ou un objet */
 void printClasse(ClasseP classe)
 {
     if(classe->constructeur != NIL(Methode))
@@ -885,7 +924,7 @@ void printClasse(ClasseP classe)
 }
 
 
-/* affiche une liste de classe */
+/* affiche la liste de classe et d'objet */
 void printLClasse()
 {
     LClasseP tmp = lclasse;
@@ -911,7 +950,11 @@ void printMethode(MethodeP methode)
         if(methode->typeDeRetour != NIL(Classe))
             printf("Type de retour : %s\n", methode->typeDeRetour->nom);
         else
-            fprintf(stderr, "Type de retour : indefini\n");                 
+            fprintf(stderr, "Type de retour : indefini\n"); 
+        if(methode->classeAppartenance != NIL(Classe))
+            printf("Classe d'appartenance : %s\n", methode->classeAppartenance->nom);
+        else
+            printf("Classe d'appertenance : indefini");               
         printf("\n");
     }
 }
