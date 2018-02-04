@@ -220,6 +220,7 @@ bool checkSelection(TreeP selection);
 
 ClasseP getType(TreeP expr, ClasseP classe);
 ClasseP getTypeId(char* nom);
+ClasseP getTypeMethode(char* nom, ClasseP classe);
 
 bool setEnvironnementType(LVarDeclP var, ClasseP classe);
 bool checkBlocClasse(TreeP tree, ClasseP classe);
@@ -239,6 +240,7 @@ bool checkDoublonClasse(LClasseP lclasse);
 bool checkBoucleHeritage(LClasseP lclasse);
 bool checkCast(ClasseP classeCast, char* nom, ClasseP classe);
 bool checkMethodes(ClasseP classe, char* nom, TreeP lparam);
+bool checkHeritageClasse(ClasseP classe, char* nom);
 
 
 

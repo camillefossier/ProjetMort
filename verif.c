@@ -146,6 +146,32 @@ bool checkBlocMain(TreeP bloc, ClasseP classe)
     return check;
 }
 
+ClasseP getTypeMethode(char* nom, ClasseP classe)
+{
+	ClasseP tmpClasse = classe;
+
+	if(tmpClasse != NIL(Classe))
+	{
+		LMethodeP tmpLMethodes = classe->lmethodes;
+		while(tmpLMethodes != NIL(LMethode))
+		{
+			printf("comparaison : %s et %s\n", nom, tmpLMethodes->methode->nom);
+			if(strcmp(nom, tmpLMethodes->methode->nom)==0)
+			{
+				printf("retour : %s\n",tmpLMethodes->methode->typeDeRetour->nom);
+				return tmpLMethodes->methode->typeDeRetour;
+			}
+			tmpLMethodes = tmpLMethodes->next;
+		}
+		return getTypeMethode(nom,classe->superClasse);
+	}
+	else
+	{
+		return NIL(Classe);
+	}
+
+}
+
 
 /* verifie la validite d'une expression */
 /* TODO : ne fait que la portee, faut faire le reste */
@@ -167,7 +193,6 @@ bool checkExpr(TreeP tree, ClasseP classe)
                 nom = tree->u.str;
                 if(strcmp(nom, "this") != 0 && strcmp(nom, "super") != 0 && strcmp(nom, "result") != 0)
                     check = checkPortee(env->env, nom) && check;
-
                 /* TODO : super et result */
                 break;
 
@@ -321,7 +346,17 @@ bool checkExpr(TreeP tree, ClasseP classe)
             case EENVOI :
                 /* verification d'un envoi */
                 check = checkExpr(getChild(tree, 0), classe) && check;
-                check = checkMethodes(getType(getChild(tree, 0), classe), getChild(getChild(tree, 1), 0)->u.str,getChild(getChild(tree, 1), 1) ) && check;
+                if(getChild(tree, 0) != NIL(Tree) && getChild(tree, 0)->op == Id && strcmp(getChild(tree, 0)->u.str,"result") == 0)
+                {
+                	printf("il y a un result : classe %s\n\n", classe->nom);
+                	check = checkMethodes(getTypeMethode(getChild(getChild(tree, 1), 0)->u.str,classe)
+                		, getChild(getChild(tree, 1), 0)->u.str,getChild(getChild(tree, 1), 1) ) && check;
+                }
+                else
+                {
+                	check = checkMethodes(getType(getChild(tree, 0), classe), getChild(getChild(tree, 1), 0)->u.str,getChild(getChild(tree, 1), 1) ) && check;
+                }
+                
                 break;
 
             case YLEXPR :
@@ -381,6 +416,30 @@ ClasseP getType(TreeP expr, ClasseP classe)
                         fprintf(stderr, "Erreur de type :\n");
                         fprintf(stderr, "\t> this est indefini\n\n");
                     }
+                }
+                else if(strcmp(expr->u.str, "result") == 0)
+                {
+                	if(classe != NIL(Classe))
+                	{
+                		type = classe;
+                	}
+                	else
+                	{
+                		fprintf(stderr, "Erreur de type :\n");
+                        fprintf(stderr, "\t> super est indefini\n\n");
+                	}
+                }
+                else if(strcmp(expr->u.str, "super") == 0)
+                {
+                	if(classe != NIL(Classe) && classe->superClasse != NIL(Classe))
+                	{
+                		type = classe->superClasse;
+                	}
+                	else
+                	{
+                		fprintf(stderr, "Erreur de type :\n");
+                        fprintf(stderr, "\t> super est indefini\n\n");
+                	}
                 }
                 else
                 {
@@ -948,22 +1007,32 @@ int getTailleListeVarDecl(LVarDeclP liste)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+bool checkHeritageClasse(ClasseP classe, char* nom)
+{
+	if(classe != NIL(Classe))
+	{
+		if(strcmp(classe->nom,nom)==0)
+	    {
+	        return TRUE; 
+	    }
+	    else
+	    {
+	        if(classe->superClasse != NULL)
+	        {
+	            return checkHeritageClasse(classe->superClasse,nom);
+	        }
+	        else
+	        {
+	            return FALSE;
+	        }
+	    }
+	}
+	else
+	{
+		return FALSE;
+	}
+    
+}
 
 bool checkArguments(LParamP larg, LParamP largbis)
 {
@@ -1181,7 +1250,7 @@ bool checkMethodes(ClasseP classe, char* nom, TreeP lparam)
                 {
                     if(methLParam->var->exprOpt != NIL(Tree))
                     {
-                        if(strcmp(getType(getChild(tmplparam,0),NIL(Classe))->nom, methLParam->var->type->nom)==0)
+                        if(checkHeritageClasse(methLParam->var->type,getType(getChild(tmplparam,0),NIL(Classe))->nom))
                         {
                             methLParam= methLParam->next;
                             tmplparam =  getChild(tmplparam,1);
@@ -1193,7 +1262,7 @@ bool checkMethodes(ClasseP classe, char* nom, TreeP lparam)
                     }
                     else
                     {
-                        if(strcmp(getType(getChild(tmplparam,0),NIL(Classe))->nom, methLParam->var->type->nom)!=0)
+                        if(!checkHeritageClasse(getType(getChild(tmplparam,0),NIL(Classe)),methLParam->var->type->nom))
                         {
                             compatible = FALSE;
                         }
@@ -1202,7 +1271,8 @@ bool checkMethodes(ClasseP classe, char* nom, TreeP lparam)
                     }
                     
                 }
-                if(methLParam != NIL(LParam) && methLParam->var->exprOpt == NIL(Tree) && getType(tmplparam, NIL(Classe))!= methLParam->var->type)
+                if(methLParam != NIL(LParam) && methLParam->var->exprOpt == NIL(Tree) 
+                	&& !checkHeritageClasse(getType(tmplparam,NIL(Classe)),methLParam->var->type->nom))
                 {
                     compatible = FALSE;
                 }
@@ -1222,16 +1292,15 @@ bool checkMethodes(ClasseP classe, char* nom, TreeP lparam)
         if(check == FALSE)
         {
             fprintf(stderr, "Erreur verification methode :\n");
-            fprintf(stderr, "\t> %s n'est pas une methode de %s\n\n", nom, classe->nom);
+            fprintf(stderr, "\t> %s n'est pas une methode de %s ou n'a pas les bon parametres\n\n", nom, classe->nom);
             nbErreur++;
             /* fprintf(stderr, "erreur ligne : %d\n", yylineno); */
         }
-        /* TODO : ajouter la verif des parametres */
-    }
+    } 
     else
     {
         fprintf(stderr, "Erreur verification methode :\n");
-        fprintf(stderr, "\t> le type de l'envoi est indefini\n\n");
+        fprintf(stderr, "\t> le type de l'envoi est indefini pour la methode %s\n\n",nom);
         nbErreur++;
     }
         
@@ -1442,22 +1511,5 @@ Verifier si une méthode est bien definie
     }
 }*/
 /*Verifie l'heritage d'une classe*/
-/*bool checkHeritageClass(ClasseP classe, char* nom)
-{
-    if(strcmp(classe->nom,nom)==0)
-    {
-        return TRUE; 
-    }
-    else
-    {
-        if(classe->mereOpt != NULL)
-        {
-            return checkHeritageClass(classe->mereOpt,nom);
-        }
-        else
-        {
-            return FALSE;
-        }
-    }
-}
+/*
 */
