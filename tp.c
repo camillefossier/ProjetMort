@@ -645,10 +645,10 @@ void makeClassesPrimitives()
 
   addClasse(integer);
   /* permet de mettre a jour le type du parametre, pour qu'il pointe vers la structure ajouter dans lclasse */ 
-  setEnvironnementType(paramListeInt, integer);
+  setEnvironnementType(paramListeInt, integer, NIL(Methode));
   addClasse(string);
   /* idem pour le parametre d'un string */
-  setEnvironnementType(paramListeStr, string);
+  setEnvironnementType(paramListeStr, string, NIL(Methode));
   addClasse(voidC);
 }
 
@@ -677,7 +677,6 @@ void initClasse(TreeP arbreLClasse)
                 ClasseP tmp = getClassePointer(getChild(arbreExtendOpt, 0)->u.str);
                 bufferClasse->superClasse = tmp;
 
-                /* TODO : regrouper checkBlocClasse et init classe ? */
                 /* cette verif est faite dans checkBlocClasse */
                 /*
                 if(tmp != NIL(Classe))
@@ -825,7 +824,7 @@ bool verifContextMain(TreeP main)
 {
     bool check = TRUE;
 
-    check = checkBlocMain(main, NIL(Classe)) && check;
+    check = checkBlocMain(main, NIL(Classe), NIL(Methode)) && check;
 
     return check;
 }
@@ -837,7 +836,7 @@ bool verifContextLClasse(TreeP arbreLClasse)
     bool check = TRUE;
     check = checkDoublonClasse(lclasse) && check; 
 
-    check = checkBlocClasse(arbreLClasse, NIL(Classe)) && check;
+    check = checkBlocClasse(arbreLClasse, NIL(Classe), NIL(Methode)) && check;
 
     return check;
 }

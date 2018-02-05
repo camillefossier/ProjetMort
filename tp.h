@@ -213,25 +213,26 @@ bool checkBoucleHeritage(LClasseP lclasse);
 
 bool checkClassDefine(char* nom);
 bool checkPortee(LVarDeclP lvar, char* nom);
-bool checkBlocMain(TreeP bloc, ClasseP classe);
+bool checkBlocMain(TreeP bloc, ClasseP classe, MethodeP methode);
 
-bool checkExpr(TreeP tree, ClasseP classe);
-bool checkSelection(TreeP selection);
+bool checkExpr(TreeP tree, ClasseP classe, MethodeP methode);
+bool checkSelection(TreeP selection, ClasseP classe, MethodeP methode);
 
-ClasseP getType(TreeP expr, ClasseP classe);
+ClasseP getType(TreeP expr, ClasseP classe, MethodeP methode);
 ClasseP getTypeId(char* nom);
 ClasseP getTypeMethode(char* nom, ClasseP classe);
 
-bool setEnvironnementType(LVarDeclP var, ClasseP classe);
-bool checkBlocClasse(TreeP tree, ClasseP classe);
+bool setEnvironnementType(LVarDeclP var, ClasseP classe, MethodeP methode);
+bool checkBlocClasse(TreeP tree, ClasseP classe, MethodeP methode);
 
 LVarDeclP envHerite(ClasseP classeMere);
-bool addEnv(LVarDeclP var, ClasseP classe);
-bool addVarEnv(VarDeclP var, ClasseP classe);
+bool addEnv(LVarDeclP var, ClasseP classe, int* i);
+bool addVarEnv(VarDeclP var, ClasseP classe, int* i);
 void removeEnv(int n);
 
-bool checkAff(VarDeclP var, TreeP expr, ClasseP classe);
+bool checkAff(VarDeclP var, TreeP expr, ClasseP classe, MethodeP methode);
 int getTailleListeVarDecl(LVarDeclP liste);
+VarDeclP getVarSelection(TreeP Selection, ClasseP classe, MethodeP methode);
 
 bool checkArguments(LParamP larg, LParamP largbis);
 bool checkOverrideMethode(ClasseP classe, char* nom, LParamP larg, bool isOverride);
