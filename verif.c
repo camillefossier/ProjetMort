@@ -123,6 +123,10 @@ bool checkBlocMain(TreeP bloc, ClasseP classe, MethodeP methode)
                 VarDeclP var = getVarSelection(getChild(bloc, 0), classe, methode);
                 if(var != NIL(VarDecl))
                     check = checkAff(var, getChild(bloc, 1), classe, methode) && check;
+                else
+                {
+
+                }
                 break;
 
             case Id :
@@ -397,6 +401,7 @@ bool checkSelection(TreeP selection, ClasseP classe, MethodeP methode)
             check = FALSE;            
         }
     }
+
     else                            /* cas : Expr '.' Id */
     {
         /* verification de l'expression */
@@ -1007,7 +1012,7 @@ bool checkAff(VarDeclP var, TreeP expr, ClasseP classe, MethodeP methode)
         ClasseP tmp = getType(expr, classe, methode);
         if(tmp != NIL(Classe) && var != NIL(VarDecl))
         {
-            if(strcmp(var->type->nom, tmp->nom) != 0)
+            if(strcmp(var->type->nom, tmp->nom) != 0 && !checkHeritageClasse(tmp, var->type->nom))
             {
                 check = FALSE;
                 fprintf(stderr, "Erreur verification affectation\n");
@@ -1103,6 +1108,9 @@ VarDeclP getVarSelection(TreeP selection, ClasseP classe, MethodeP methode)
         }
     }
 
+    fprintf(stderr, "Erreur selection\n");
+    fprintf(stderr, "\t> selection introuvable\n\n");
+    nbErreur++;
     return NIL(VarDecl);    
 }
 
