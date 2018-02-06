@@ -112,7 +112,7 @@ bool checkBlocMain(TreeP bloc, ClasseP classe, MethodeP methode)
 
             case EAFF :
                 /* verification d'une affectation */
-
+                
                 /* verification de la selection */
                 check = checkSelection(getChild(bloc, 0), classe, methode) && check;
 
@@ -120,12 +120,9 @@ bool checkBlocMain(TreeP bloc, ClasseP classe, MethodeP methode)
                 check = checkExpr(getChild(bloc, 1), classe, methode) && check;
 
                 /* verification de l'affectation */
-                if(check)
-                {
-                    VarDeclP var = getVarSelection(getChild(bloc, 0), classe, methode);
-                    if(var != NIL(VarDecl))
-                        check = checkAff(var, getChild(bloc, 1), classe, methode) && check;
-                }
+                VarDeclP var = getVarSelection(getChild(bloc, 0), classe, methode);
+                if(var != NIL(VarDecl))
+                    check = checkAff(var, getChild(bloc, 1), classe, methode) && check;
                 break;
 
             case Id :
@@ -391,6 +388,14 @@ bool checkSelection(TreeP selection, ClasseP classe, MethodeP methode)
     {
         if(strcmp(selection->u.str, "this") != 0 && strcmp(selection->u.str, "super") != 0 && strcmp(selection->u.str, "result") != 0)
             check = checkPortee(env->env, selection->u.str) && check;
+        
+        if(methode == NIL(Methode) && strcmp(selection->u.str, "result")==0)
+        {
+            fprintf(stderr, "Erreur selection\n");
+            fprintf(stderr, "\t> la variable result est interdite dans un constructeur\n\n");
+            nbErreur++;
+            check = FALSE;            
+        }
     }
     else                            /* cas : Expr '.' Id */
     {
@@ -464,11 +469,10 @@ ClasseP getType(TreeP expr, ClasseP classe, MethodeP methode)
                 }
                 else if(strcmp(expr->u.str, "result") == 0)
                 {
-                    typeG = getTypeId(expr->u.str);
-                    if(typeG != NIL(Classe))
-                	{
-                		type = typeG;
-                	}
+                    if(methode != NIL(Methode) && methode->typeDeRetour != NIL(Classe))
+                    {
+                        type = methode->typeDeRetour;
+                    }
                 	else
                 	{
                 		fprintf(stderr, "Erreur de type :\n");
@@ -786,8 +790,9 @@ bool checkBlocClasse(TreeP tree, ClasseP classe, MethodeP methode)
            
                 /* verification du constructeur de la classe */ 
                 TreeP constructeur = getChild(tree, 3);
-                check = checkBlocMain(constructeur, classe, methode) && check;
+                check = checkBlocMain(constructeur, classe, NIL(Methode)) && check;
 
+                /* TODO : regler prob ici */
                 int tailleLParam = getTailleListeVarDecl(tmp);
                 removeEnv(tailleLParam);
 
@@ -839,16 +844,6 @@ bool checkBlocClasse(TreeP tree, ClasseP classe, MethodeP methode)
 
                 /* met a jour la variable methode */
                 methode = getMethodePointer(classe, getChild(tree, 1)->u.str);
-
-                /* ajoute result dans l'env */
-                if(methode != NIL(Methode) && methode->typeDeRetour != NIL(Classe) && strcmp(methode->typeDeRetour->nom, "Void"))
-                {
-                    VarDeclP result = makeVarDecl("result", methode->typeDeRetour->nom, NIL(Tree));
-                    tmp = NEW(1, LVarDecl);
-                    tmp->var = result;
-                    tmp->next = NIL(LVarDecl);
-                    addEnv(tmp, classe, i);
-                }
 
                 /* ajoute dans l'env les parametres de la methode */
                 tmp = makeLParam(getChild(tree, 2), i);
@@ -1060,14 +1055,31 @@ VarDeclP getVarSelection(TreeP selection, ClasseP classe, MethodeP methode)
         LVarDeclP liste = env->env;
         char* nom = selection->u.str;
 
-        while(liste != NIL(LVarDecl))
+        if(strcmp(nom, "result") != 0)
         {
-            if(strcmp(liste->var->nom, nom) == 0)
+            while(liste != NIL(LVarDecl))
             {
-                return liste->var;
-            }
+                if(strcmp(liste->var->nom, nom) == 0)
+                {
+                    return liste->var;
+                }
 
-            liste = liste->next;
+                liste = liste->next;
+            }
+        }
+        else /* result */
+        {
+            if(methode != NIL(Methode) && methode->typeDeRetour != NIL(Classe) && strcmp(methode->typeDeRetour->nom, "Void") != 0)
+            {
+                VarDeclP result = makeVarDecl("result", methode->typeDeRetour->nom, NIL(Tree));
+                return result;
+            }
+            else
+            {
+                fprintf(stderr, "Erreur selection\n");
+                fprintf(stderr, "\t> usage incorrect de result\n\n");
+                nbErreur++;
+            }
         }
     }
     else
