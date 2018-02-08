@@ -571,6 +571,7 @@ void addConstructeur(TreeP blocOpt, ClasseP classe)
       constr->bloc = blocOpt;
       
       classe->constructeur = constr;
+      classe->lmethodes = addMethode(constr,classe->lmethodes);
   }
 }
 
@@ -837,6 +838,7 @@ bool verifContextLClasse(TreeP arbreLClasse)
     check = checkDoublonClasse(lclasse) && check; 
 
     check = checkBlocClasse(arbreLClasse, NIL(Classe), NIL(Methode)) && check;
+    check = checkOverrideLClasse(lclasse) && check;
 
     return check;
 }

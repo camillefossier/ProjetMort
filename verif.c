@@ -343,6 +343,12 @@ bool checkExpr(TreeP tree, ClasseP classe, MethodeP methode)
 
                 /* TODO : verifier le nombre/type d'argument du constructeur */
                 check = checkExpr(getChild(tree, 1), classe, methode) && check;
+                ClasseP tmp = getType(getChild(tree, 0), classe, methode);
+                if(tmp !=NIL(Classe))
+                {
+                    check = checkMethodes(tmp, tmp->nom, getChild(tree, 1)) && check;
+                }
+                
                 break;
 
             case SELEXPR :      
@@ -432,7 +438,14 @@ bool checkSelection(TreeP selection, ClasseP classe, MethodeP methode)
             {
                 check = FALSE;
                 fprintf(stderr, "Erreur selection\n");
-                fprintf(stderr, "\t> les champs de %s ne sont pas visibles dans %s\n\n", tmp->nom, classe->nom);
+                if(classe != NIL(Classe))
+                {
+                    fprintf(stderr, "\t> les champs de %s ne sont pas visibles dans %s\n\n", tmp->nom, classe->nom);
+                }
+                else
+                {
+                    fprintf(stderr, "\t> les champs de %s ne sont pas visibles dans le main\n\n", tmp->nom);
+                }
                 nbErreur++;
             }
         }
@@ -1173,7 +1186,6 @@ bool checkArguments(LParamP larg, LParamP largbis)
     bool retour = TRUE;
     LParamP larg1 = larg;
     LParamP larg2 = largbis;
-    printf("hey\n");
     while(larg1 != NIL(LParam) && larg2 != NIL(LParam))
     {
         if(larg1->var != NIL(VarDecl) && larg2->var != NIL(VarDecl) && larg1->var->type != NIL(Classe) && larg2->var->type != NIL(Classe) 
@@ -1368,11 +1380,10 @@ bool checkCast(ClasseP classeCast, char* nom, ClasseP classe)
 /*Fonction utile pour un envoi : on regarde si la méthode existe dans la classe de l'objet*/
 bool checkMethodes(ClasseP classe, char* nom, TreeP lparam)
 {
-	
+	printf("\n\n\nnouvelle checkMeSthode : %s\n\n", nom);
     bool check = FALSE;
     if(classe != NIL(Classe))
     {
-
         LMethodeP tmp = classe->lmethodes;
         while(tmp != NIL(LMethode))
         {
@@ -1381,18 +1392,136 @@ bool checkMethodes(ClasseP classe, char* nom, TreeP lparam)
                 TreeP tmplparam = lparam;
                 LParamP methLParam = tmp->methode->lparametres;
                 bool compatible = TRUE;
-                while(tmplparam != NIL(Tree) && tmplparam->op == YLEXPR && methLParam != NIL(LParam))
+                while(compatible && methLParam != NIL(LParam) && methLParam->var->exprOpt == NIL(Tree))
+                {
+                    if(tmplparam != NIL(Tree))
+                    {
+                        if(tmplparam->op == YLEXPR)
+                        {
+                            if(checkHeritageClasse(methLParam->var->type, getType(getChild(tmplparam, 0), NIL(Classe), NIL(Methode))->nom))
+                            {
+                                printf("pas défini mais même type\n");
+                                printf("methode réelle :%s\n",methLParam->var->nom);
+                                printf("methode appel :%s\n",getType(getChild(tmplparam, 0), NIL(Classe), NIL(Methode))->nom);
+                                methLParam = methLParam->next;
+                                tmplparam = getChild(tmplparam,1);
+                            }
+                            else
+                            {
+                                compatible = FALSE;
+                            }
+                        }
+                        else
+                        {
+                            if(checkHeritageClasse(methLParam->var->type, getType(tmplparam, NIL(Classe), NIL(Methode))->nom))
+                            {
+                                printf("pas défini mais même type\n");
+                                printf("methode réelle :%s\n",methLParam->var->nom);
+                                printf("methode appel :%s\n",getType(tmplparam, NIL(Classe), NIL(Methode))->nom);
+                                methLParam = methLParam->next;
+                                tmplparam = NIL(Tree);
+                            }
+                            else
+                            {
+                                compatible = FALSE;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        compatible = FALSE;
+                    }
+                }
+
+                while(compatible && tmplparam != NIL(Tree))
+                {
+                    if(methLParam == NIL(LParam))
+                    {
+                        compatible = FALSE;
+                    }
+                    else 
+                    {
+                        if(tmplparam->op == YLEXPR)
+                        {
+                            if(checkHeritageClasse(methLParam->var->type, getType(getChild(tmplparam, 0), NIL(Classe), NIL(Methode))->nom))
+                            {
+                                printf("pas défini mais même type\n");
+                                printf("methode réelle :%s\n",methLParam->var->nom);
+                                printf("methode appel :%s\n",getType(getChild(tmplparam, 0), NIL(Classe), NIL(Methode))->nom);
+                                methLParam = methLParam->next;
+                                tmplparam = getChild(tmplparam,1);
+                            }
+                            else
+                            {
+                                methLParam = methLParam->next;
+                            }
+                        }
+                        else
+                        {
+                            if(checkHeritageClasse(methLParam->var->type, getType(tmplparam, NIL(Classe), NIL(Methode))->nom))
+                            {
+                                printf("pas défini mais même type\n");
+                                printf("methode réelle :%s\n",methLParam->var->nom);
+                                printf("methode appel :%s\n",getType(tmplparam, NIL(Classe), NIL(Methode))->nom);
+                                methLParam = methLParam->next;
+                                tmplparam = NIL(Tree);
+                            }
+                            else
+                            {
+                                methLParam = methLParam->next;
+                            }
+                        }
+                    }
+                }
+
+                
+                /*if(compatible && tmplparam != NIL(Tree) && tmplparam->op == YLEXPR && methLParam != NIL(LParam))
+                {
+                    printf("il y a des param défini déjà défini\n");
+                }   
+                else if(compatible)
+                {
+                    if(tmplparam != NIL(Tree) && tmplparam->op == YLEXPR)
+                    {
+                        if(tmplparam->op == YLEXPR)
+                        {
+
+                        }
+                        else
+                        {
+
+                        }
+                        printf("il reste des trucs écris mais rien de demandé\n");
+                    }
+                    else
+                    {
+                        if(tmplparam != NIL(Tree) && tmplparam->op != YLEXPR)printf("il ya un soucis LA\n");
+                        printf("il reste un dernier truc écrit\n");
+                    }
+                }
+                else
+                {
+                    compatible = FALSE;
+                    printf("il doit y avoir un soucis ou c'est pas compatible\n");
+                }*/
+                /*while(tmplparam != NIL(Tree) && tmplparam->op == YLEXPR && methLParam != NIL(LParam))
                 {
                     if(methLParam->var->exprOpt != NIL(Tree))
                     {
                         if(checkHeritageClasse(methLParam->var->type, getType(getChild(tmplparam, 0), NIL(Classe), NIL(Methode))->nom))
                         {
-                            methLParam= methLParam->next;
-                            tmplparam =  getChild(tmplparam,1);
+                            printf("var mais même type\n");
+                            printf("methode réelle :%s\n",methLParam->var->nom);
+                            printf("methode appel :%s\n",getType(getChild(tmplparam, 0), NIL(Classe), NIL(Methode))->nom);
+                            methLParam = methLParam->next;
+                            tmplparam = getChild(tmplparam,1);
                         }
                         else
                         {
+                            printf("var mais pas même type\n");
+                            printf("methode réelle :%s\n",methLParam->var->nom);
                             methLParam= methLParam->next;
+
                         }
                     }
                     else
@@ -1400,17 +1529,69 @@ bool checkMethodes(ClasseP classe, char* nom, TreeP lparam)
                         if(!checkHeritageClasse(getType(getChild(tmplparam, 0), NIL(Classe), NIL(Methode)), methLParam->var->type->nom))
                         {
                             compatible = FALSE;
+                            break;
                         }
+                        printf("pas var et compatible = : %d\n",compatible );
+                        printf("methode réelle :%s\n",methLParam->var->nom);
+                        printf("methode appel :%s\n",getType(getChild(tmplparam, 0), NIL(Classe), NIL(Methode))->nom);
                         methLParam= methLParam->next;
                         tmplparam =  getChild(tmplparam,1);
-                    }
-                    
+                        
+                    }  
                 }
-                if(methLParam != NIL(LParam) && methLParam->var->exprOpt == NIL(Tree) 
-                	&& !checkHeritageClasse(getType(tmplparam, NIL(Classe), NIL(Methode)), methLParam->var->type->nom))
+                if(tmplparam != NIL(Tree) && methLParam != NIL(LParam) && tmplparam->op != YLEXPR)
+                {
+                    printf("passe là\n");
+                    while(methLParam != NIL(LParam) && methLParam->var->exprOpt != NIL(Tree))
+                    {
+                        if(checkHeritageClasse(methLParam->var->type, getType(tmplparam, NIL(Classe), NIL(Methode))->nom))
+                        {
+                             printf("var mais même type\n");
+                             printf("methode réelle :%s\n",methLParam->var->nom);
+                             printf("methode appel :%s\n",getType(tmplparam, NIL(Classe), NIL(Methode))->nom);
+                             methLParam = methLParam->next;
+                             tmplparam = NIL(Tree);         
+                        }
+                        else
+                        {
+                            printf("var mais pas même type\n");
+                            printf("methode réelle :%s\n",methLParam->var->nom);
+                            methLParam= methLParam->next;
+                        }
+                    }
+                    if(tmplparam == NIL(Tree))
+                    {
+                        if(methLParam != NIL(LParam))
+                        {
+                            compatible=FALSE;
+                        }                   
+                    }
+                    else
+                    {
+                        if(methLParam != NIL(LParam))
+                        {
+                            if(!checkHeritageClasse(methLParam->var->type, getType(tmplparam, NIL(Classe), NIL(Methode))->nom))
+                                compatible=FALSE;
+                        }
+                        else
+                        {
+                            compatible=FALSE;
+                        }
+                    }
+                }
+                else
                 {
                     compatible = FALSE;
-                }
+                }*/
+                
+                /*if((lparam != NIL(Tree) && lparam->op == YLEXPR) 
+                    ||(methLParam != NIL(LParam) && methLParam->var->exprOpt == NIL(Tree) 
+                    && methLParam->var->type != NIL(Classe) 
+                    &&!checkHeritageClasse(getType(tmplparam, NIL(Classe), NIL(Methode)), methLParam->var->type->nom)))
+                {
+                
+                    compatible = FALSE;
+                }*/
                 
                 if(compatible) check = TRUE;
                 break;
