@@ -1,0 +1,19 @@
+class Point(xc: Integer, yc: Integer, test: Integer := 1) is {
+  var x: Integer;
+  var y : Integer := 5;
+
+  def getx(xc: Integer, var yc: Integer := 1, var test: Integer := 1) : Integer := this.x
+  def gety(var xc: Integer := 1, yc: Integer, var test: Integer := 1) : Integer := this.y
+}
+
+class Pointbis(var xc: Integer := 1, yc: Integer, var test: Integer := 1) is {
+  var x: Integer;
+  var y : Integer := 5;
+
+  def getx(xc: Integer, var yc: Integer := 1, var test: Integer := 1) : Integer := this.x
+  def gety(var xc: Integer := 1, yc: Integer, var test: Integer := 1) : Integer := this.y
+}
+
+{ 
+
+}

@@ -233,6 +233,7 @@ void removeEnv(int n);
 bool checkAff(VarDeclP var, TreeP expr, ClasseP classe, MethodeP methode);
 int getTailleListeVarDecl(LVarDeclP liste);
 VarDeclP getVarSelection(TreeP Selection, ClasseP classe, MethodeP methode);
+bool verifLParam(LVarDeclP lparam);
 
 bool checkArguments(LParamP larg, LParamP largbis);
 bool checkOverrideMethode(ClasseP classe, char* nom, LParamP larg, bool isOverride);
