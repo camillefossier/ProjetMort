@@ -1,0 +1,33 @@
+class Point(var xc: Integer ,zc: Integer, yc: Integer:= 0, nom: String:= "nouveau point") { } is 
+{
+   def getx(verbose : Integer) : Integer := this.x
+}
+
+class PointBis(var xc: Integer ,zc: Integer) extends Point(xc,zc) {}is 
+{
+  
+}
+class Test(var point : PointBis) {} is
+{
+  
+}
+{ 
+  /*sans erreur*/
+  var p1: Point := new Point(0,1,"premier");
+  var p2: Point := new Point(0,1,2,"deuxieme");
+  var p3: Point := new Point(0,1);  
+  var p4: Point := new Point(0,1,2);   
+  var p11: Test := new Test(new PointBis(2,3));
+  var p12: Test := new Test(new Point(2,3));
+
+  /*avec erreur*/
+  var p5: Point := new Point();
+  var p6: Point := new Point(0);  
+  var p7: Point := new Point("erreur ici", "erreur là");  
+  var p8: Point := new Point(0,1,2,3);  
+  var p9: Point := new Point(0,1,"erreur ici", 2);  
+  var p10: Point := new Point(0,1,2,"nom",3);   
+
+is
+  p1.getx(1);
+}

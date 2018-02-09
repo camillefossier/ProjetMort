@@ -236,7 +236,8 @@ VarDeclP getVarSelection(TreeP Selection, ClasseP classe, MethodeP methode);
 bool verifLParam(LVarDeclP lparam);
 
 bool checkArguments(LParamP larg, LParamP largbis);
-bool checkOverrideMethode(ClasseP classe, char* nom, LParamP larg, bool isOverride);
+bool CheckArgumentOverride(LParamP nvlarg, LParamP larg);
+bool checkOverrideMethode(ClasseP classe, char* nom, LParamP larg, bool isOverride, ClasseP typeDeRetour);
 bool checkOverrideLClasse(LClasseP lclasse);
 bool checkDoublonClasse(LClasseP lclasse);
 bool checkBoucleHeritage(LClasseP lclasse);

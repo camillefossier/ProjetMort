@@ -1177,8 +1177,30 @@ bool checkArguments(LParamP larg, LParamP largbis)
     return retour;
 }
 
+/*Renvoie faux si les argument sont mal redefinis dans un override*/
+bool CheckArgumentOverride(LParamP nvlarg, LParamP larg)
+{
+    LParamP anc = larg;
+    LParamP nv = nvlarg;
+
+    while(anc != NIL(LParam) && nv != NIL(LParam))
+    {
+        if(strcmp(anc->var->nom,nv->var->nom)==0 && anc->var->type == nv->var->type)
+        {
+            return !(anc->var->exprOpt == NIL(Tree) && nv->var->exprOpt == NIL(Tree));
+        }
+        else
+        {
+            return FALSE;
+        }
+        anc = anc->next;
+        nv = nv->next;
+    }
+    return (anc == NIL(LParam ) && nv == NIL(LParam));
+}
+
 /*Renvoie true si pas de probleme d'override*/
-bool checkOverrideMethode(ClasseP classe, char* nom, LParamP larg, bool isOverride)
+bool checkOverrideMethode(ClasseP classe, char* nom, LParamP larg, bool isOverride, ClasseP typeDeRetour)
 {
     if(classe != NIL(Classe))
     {
@@ -1187,35 +1209,39 @@ bool checkOverrideMethode(ClasseP classe, char* nom, LParamP larg, bool isOverri
         {
             if(strcmp(tmpMethodes->methode->nom,nom) == 0 )
             {
-                if(checkArguments(tmpMethodes->methode->lparametres,larg))
+                if(!isOverride)
                 {
-                    if(!isOverride)
-                    {
-                        printf("| Erreur Override | Rajouter un override dans la fonction %s de ",nom );
-                        nbErreur++;
-                    }
-                    return TRUE;
+                    printf("| Erreur Override | Rajouter un override dans la fonction %s de ",nom );
+                    nbErreur++;
+                    return FALSE;
                 }
                 else
                 {
-                    if(!isOverride)
+                    bool b = TRUE;
+                    if(tmpMethodes->methode->typeDeRetour != typeDeRetour)
                     {
-                        printf("surcharge \n");
-                        nbErreur++;
+                        printf("| Erreur Override | Le type de retour de la méthode %s sont différents dans la classe %s et ",nom,classe->nom);
+                        nbErreur++; 
+                        b = FALSE;
                     }
                     else
                     {
-                        printf("| Erreur Override | Les paramètres de la méthode %s sont différents dans la classe %s et ",nom,classe->nom);
-                        nbErreur++;                      
+                        LParamP tmp = larg;
+                        b = CheckArgumentOverride(tmp,tmpMethodes->methode->lparametres);
+                        if(!b)
+                        {
+                            printf("| Erreur Override | Erreur dans les paramètres de la méthode %s dans la classe %s et ",nom,classe->nom);
+                            nbErreur++; 
+                        }
                     }
-                    return FALSE;
+                    return b;
                 }
             }
             tmpMethodes = tmpMethodes->next;
         }
         if(classe->superClasse != NIL(Classe))
         {
-            return checkOverrideMethode(classe->superClasse, nom, larg, isOverride);
+            return checkOverrideMethode(classe->superClasse, nom, larg, isOverride, typeDeRetour);
         }
         else
         {
@@ -1244,13 +1270,13 @@ bool checkOverrideLClasse(LClasseP lclasse)
             LMethodeP tmpMethodes = tmpClasses->classe->lmethodes;
             while(tmpMethodes != NIL(LMethode))
             {
-                if(tmpMethodes->methode->override && !checkOverrideMethode(tmpClasses->classe->superClasse, tmpMethodes->methode->nom, tmpMethodes->methode->lparametres,tmpMethodes->methode->override))
+                if(tmpMethodes->methode->override && !checkOverrideMethode(tmpClasses->classe->superClasse, tmpMethodes->methode->nom, tmpMethodes->methode->lparametres,tmpMethodes->methode->override, tmpMethodes->methode->typeDeRetour))
                 {
                     if(tmpClasses->classe->superClasse == NIL(Classe)) printf("| Erreur Override | La classe mère n'existe pas alors qu'il y a un override dans ");
                     printf("la classe %s \n\n", tmpClasses->classe->nom);
                     b =  FALSE;
                 }
-                if(!tmpMethodes->methode->override && checkOverrideMethode(tmpClasses->classe->superClasse, tmpMethodes->methode->nom, tmpMethodes->methode->lparametres,tmpMethodes->methode->override))
+                if(!tmpMethodes->methode->override && checkOverrideMethode(tmpClasses->classe->superClasse, tmpMethodes->methode->nom, tmpMethodes->methode->lparametres,tmpMethodes->methode->override, tmpMethodes->methode->typeDeRetour))
                 {
                     printf("la classe %s \n\n", tmpClasses->classe->nom);
                     b = FALSE;
@@ -1354,7 +1380,6 @@ bool checkCast(ClasseP classeCast, char* nom, ClasseP classe)
 /*Fonction utile pour un envoi : on regarde si la méthode existe dans la classe de l'objet*/
 bool checkMethodes(ClasseP classe, char* nom, TreeP lparam)
 {
-	printf("\n\n\nnouvelle checkMeSthode : %s\n\n", nom);
     bool check = FALSE;
     if(classe != NIL(Classe))
     {
@@ -1372,11 +1397,8 @@ bool checkMethodes(ClasseP classe, char* nom, TreeP lparam)
                     {
                         if(tmplparam->op == YLEXPR)
                         {
-                            if(checkHeritageClasse(methLParam->var->type, getType(getChild(tmplparam, 0), NIL(Classe), NIL(Methode))->nom))
+                            if(checkHeritageClasse(getType(getChild(tmplparam, 0), NIL(Classe), NIL(Methode)), methLParam->var->type->nom))
                             {
-                                printf("pas défini mais même type\n");
-                                printf("methode réelle :%s\n",methLParam->var->nom);
-                                printf("methode appel :%s\n",getType(getChild(tmplparam, 0), NIL(Classe), NIL(Methode))->nom);
                                 methLParam = methLParam->next;
                                 tmplparam = getChild(tmplparam,1);
                             }
@@ -1387,11 +1409,8 @@ bool checkMethodes(ClasseP classe, char* nom, TreeP lparam)
                         }
                         else
                         {
-                            if(checkHeritageClasse(methLParam->var->type, getType(tmplparam, NIL(Classe), NIL(Methode))->nom))
+                            if(checkHeritageClasse(getType(tmplparam, NIL(Classe), NIL(Methode)), methLParam->var->type->nom))
                             {
-                                printf("pas défini mais même type\n");
-                                printf("methode réelle :%s\n",methLParam->var->nom);
-                                printf("methode appel :%s\n",getType(tmplparam, NIL(Classe), NIL(Methode))->nom);
                                 methLParam = methLParam->next;
                                 tmplparam = NIL(Tree);
                             }
@@ -1417,11 +1436,8 @@ bool checkMethodes(ClasseP classe, char* nom, TreeP lparam)
                     {
                         if(tmplparam->op == YLEXPR)
                         {
-                            if(checkHeritageClasse(methLParam->var->type, getType(getChild(tmplparam, 0), NIL(Classe), NIL(Methode))->nom))
+                            if(getType(getChild(tmplparam, 0), NIL(Classe), NIL(Methode)) != NIL(Classe) && checkHeritageClasse(getType(getChild(tmplparam, 0), NIL(Classe), NIL(Methode)), methLParam->var->type->nom))
                             {
-                                printf("pas défini mais même type\n");
-                                printf("methode réelle :%s\n",methLParam->var->nom);
-                                printf("methode appel :%s\n",getType(getChild(tmplparam, 0), NIL(Classe), NIL(Methode))->nom);
                                 methLParam = methLParam->next;
                                 tmplparam = getChild(tmplparam,1);
                             }
@@ -1432,11 +1448,8 @@ bool checkMethodes(ClasseP classe, char* nom, TreeP lparam)
                         }
                         else
                         {
-                            if(checkHeritageClasse(methLParam->var->type, getType(tmplparam, NIL(Classe), NIL(Methode))->nom))
+                            if(getType(tmplparam, NIL(Classe), NIL(Methode)) != NIL(Classe) && checkHeritageClasse(getType(tmplparam, NIL(Classe), NIL(Methode)), methLParam->var->type->nom))
                             {
-                                printf("pas défini mais même type\n");
-                                printf("methode réelle :%s\n",methLParam->var->nom);
-                                printf("methode appel :%s\n",getType(tmplparam, NIL(Classe), NIL(Methode))->nom);
                                 methLParam = methLParam->next;
                                 tmplparam = NIL(Tree);
                             }
