@@ -78,6 +78,7 @@ typedef struct _varDecl {
   char *nom;
   struct _Classe *type;
   struct _Tree *exprOpt;
+  bool *isDefini;
 } Param, Champ, VarDecl, *ParamP, *ChampP, *VarDeclP;
 
 typedef struct _LVarDecl
@@ -170,7 +171,7 @@ VarDeclP makeVarDecl(char *nom, char *type, TreeP exprOpt);
 ClasseP makeClasse(char* nom);
 ClasseP makeObjet(char *nom);
 MethodeP makeMethode(TreeP declMethode, ClasseP classe);
-LVarDeclP makeLParam(TreeP arbreLParam, int *i);
+LVarDeclP makeLParam(TreeP arbreLParam);
 LVarDeclP makeLParamIsVar(TreeP arbreLParam);
 LChampP makeChampsBlocObj(TreeP blocObj);
 LMethodeP makeMethodeBlocObj(TreeP blocObj, ClasseP classe);
@@ -212,25 +213,25 @@ bool checkDoublonClasse(LClasseP lclasse);
 bool checkBoucleHeritage(LClasseP lclasse);
 
 bool checkClassDefine(char* nom);
-bool checkPortee(LVarDeclP lvar, char* nom);
-bool checkBlocMain(TreeP bloc, ClasseP classe, MethodeP methode);
+bool checkPortee(LVarDeclP lvar, char* nom, int* i);
+bool checkBlocMain(TreeP bloc, ClasseP classe, MethodeP methode, int* i);
 
-bool checkExpr(TreeP tree, ClasseP classe, MethodeP methode);
-bool checkSelection(TreeP selection, ClasseP classe, MethodeP methode);
+bool checkExpr(TreeP tree, ClasseP classe, MethodeP methode, int* i);
+bool checkSelection(TreeP selection, ClasseP classe, MethodeP methode, int* i);
 
 ClasseP getType(TreeP expr, ClasseP classe, MethodeP methode);
 ClasseP getTypeId(char* nom);
 ClasseP getTypeMethode(char* nom, ClasseP classe);
 
-bool setEnvironnementType(LVarDeclP var, ClasseP classe, MethodeP methode);
-bool checkBlocClasse(TreeP tree, ClasseP classe, MethodeP methode);
+bool setEnvironnementType(LVarDeclP var, ClasseP classe, MethodeP methode, int* i);
+bool checkBlocClasse(TreeP tree, ClasseP classe, MethodeP methode, int* i);
 
 LVarDeclP envHerite(ClasseP classeMere);
 bool addEnv(LVarDeclP var, ClasseP classe, int* i);
 bool addVarEnv(VarDeclP var, ClasseP classe, int* i);
-void removeEnv(int n);
+void removeEnv(int n, int* i);
 
-bool checkAff(VarDeclP var, TreeP expr, ClasseP classe, MethodeP methode);
+bool checkAff(VarDeclP var, TreeP expr, ClasseP classe, MethodeP methode, int* i);
 int getTailleListeVarDecl(LVarDeclP liste);
 VarDeclP getVarSelection(TreeP Selection, ClasseP classe, MethodeP methode);
 bool verifLParam(LVarDeclP lparam);

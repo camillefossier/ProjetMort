@@ -225,6 +225,9 @@ VarDeclP makeVarDecl(char *nom, char *type, TreeP exprOpt)
         newVar->type = classeType;
     }
 
+    newVar->isDefini = NEW(1, bool);
+    *(newVar->isDefini) = FALSE;
+
     return newVar;
 }
 
@@ -290,13 +293,11 @@ ClasseP makeObjet(char *nom)
 /* Creer une methode a partir d'un arbre */
 MethodeP makeMethode(TreeP declMethode, ClasseP classe)
 {
-    int *i = NEW(1, int);
-    *i = 0;
     MethodeP newMethode = NEW(1, Methode);
 
     /* liste de parametres */
     TreeP arbreParamMeth = getChild(declMethode, 2);
-    LParamP lparametres = makeLParam(arbreParamMeth, i);
+    LParamP lparametres = makeLParam(arbreParamMeth);
     newMethode->lparametres = lparametres;
 
     /* pointeur vers le type de retour */
@@ -340,7 +341,7 @@ MethodeP makeMethode(TreeP declMethode, ClasseP classe)
 
 
 /* retourne une liste de parametres a partir d'un arbre */
-LVarDeclP makeLParam(TreeP arbreLParam, int *i)
+LVarDeclP makeLParam(TreeP arbreLParam)
 {
   LParamP lparam = NIL(LVarDecl);
   if(arbreLParam != NIL(Tree))
@@ -348,8 +349,8 @@ LVarDeclP makeLParam(TreeP arbreLParam, int *i)
 
       while(arbreLParam->op == YLPARAM || arbreLParam->op == LDECLC)
       {
-          *i = *i + 1; 
           ParamP tmp = getChild(arbreLParam, 0)->u.var;
+          *(tmp->isDefini) = TRUE;
 
           LParamP tmpListe = NEW(1, LParam);
           tmpListe->var = tmp;
@@ -359,10 +360,10 @@ LVarDeclP makeLParam(TreeP arbreLParam, int *i)
 
           arbreLParam = getChild(arbreLParam, 1);
       }
-
-      *i = *i + 1;           
+          
       ParamP tmp = arbreLParam->u.var;
-
+      *(tmp->isDefini) = TRUE;
+      
       LParamP tmpListe = NEW(1,LParam);
       tmpListe->var = tmp;
       tmpListe->next = NIL(LParam);
@@ -644,13 +645,18 @@ void makeClassesPrimitives()
   string->superClasse = NIL(Classe);
   string->lchamps = NIL(LVarDecl);
 
+  int* i = NEW(1, int);
+  *i = 0;
+
   addClasse(integer);
   /* permet de mettre a jour le type du parametre, pour qu'il pointe vers la structure ajouter dans lclasse */ 
-  setEnvironnementType(paramListeInt, integer, NIL(Methode));
+  setEnvironnementType(paramListeInt, integer, NIL(Methode), i);
   addClasse(string);
   /* idem pour le parametre d'un string */
-  setEnvironnementType(paramListeStr, string, NIL(Methode));
+  setEnvironnementType(paramListeStr, string, NIL(Methode), i);
   addClasse(voidC);
+
+  free(i);
 }
 
 
@@ -660,8 +666,6 @@ void initClasse(TreeP arbreLClasse)
     ClasseP bufferClasse = NIL(Classe);
     ClasseP bufferObj = NIL(Classe);
     TreeP arbreCourant = arbreLClasse;
-    int *i = NEW(1, int);
-    *i = 0;
 
     while(arbreCourant != NIL(Tree))
     {
@@ -677,25 +681,11 @@ void initClasse(TreeP arbreLClasse)
             {
                 ClasseP tmp = getClassePointer(getChild(arbreExtendOpt, 0)->u.str);
                 bufferClasse->superClasse = tmp;
-
-                /* cette verif est faite dans checkBlocClasse */
-                /*
-                if(tmp != NIL(Classe))
-                {
-                    bufferClasse->superClasse = tmp;
-                }
-                else
-                {
-                    fprintf(stderr, "Erreur d'extends\n");
-                    fprintf(stderr, "\t> la classe %s n'existe pas\n\n", getChild(arbreExtendOpt, 0)->u.str);
-                    nbErreur++;
-                }
-                */
             }
         
             /* stockage des parametres de la classe */
             TreeP arbreLParam = getChild(arbreClasse, 1);
-            bufferClasse->lparametres = makeLParam(arbreLParam,i);
+            bufferClasse->lparametres = makeLParam(arbreLParam);
 
             /* stockage des champs de la classe */
             TreeP arbreBlocObj = getChild(arbreClasse, 4); 
@@ -709,12 +699,12 @@ void initClasse(TreeP arbreLClasse)
 	            {
 	            	if(getChild(arbreLParam,0)->op == VYPARAM)
 	            	{
-	            		LParamP tmpListe = NEW(1,LParam);
-	            		tmpListe->var = getChild(arbreLParam,0)->u.var;
+	            		LParamP tmpListe = NEW(1, LParam);
+	            		tmpListe->var = getChild(arbreLParam, 0)->u.var;
 	            		tmpListe->next = NIL(LParam);
 	            		bufferClasse->lchamps = addVarDecl(tmpListe, bufferClasse->lchamps);	
 	            	}
-	            	arbreLParam = getChild(arbreLParam,1);
+	            	arbreLParam = getChild(arbreLParam, 1);
 	            }
 	            if(arbreLParam->op == VYPARAM)
 	            {
@@ -822,11 +812,14 @@ bool verifContextProg(TreeP arbreLClasse, TreeP main)
 
 /* verification contextuelle du main */
 bool verifContextMain(TreeP main)
-{
+{   
+    int* i = NEW(1, int);
+    *i = 0;
     bool check = TRUE;
 
-    check = checkBlocMain(main, NIL(Classe), NIL(Methode)) && check;
+    check = checkBlocMain(main, NIL(Classe), NIL(Methode), i) && check;
 
+    free(i);
     return check;
 }
 
@@ -834,12 +827,15 @@ bool verifContextMain(TreeP main)
 /* verification contextuelle des classes et des objets */
 bool verifContextLClasse(TreeP arbreLClasse)
 {
+    int* i = NEW(1, int);
+    *i = 0;
     bool check = TRUE;
     check = checkDoublonClasse(lclasse) && check; 
 
-    check = checkBlocClasse(arbreLClasse, NIL(Classe), NIL(Methode)) && check;
+    check = checkBlocClasse(arbreLClasse, NIL(Classe), NIL(Methode), i) && check;
     check = checkOverrideLClasse(lclasse) && check;
 
+    free(i);
     return check;
 }
 
