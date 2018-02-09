@@ -345,13 +345,8 @@ bool checkExpr(TreeP tree, ClasseP classe, MethodeP methode, int* i)
 
             case EENVOI :
                 /* verification d'un envoi */
-<<<<<<< HEAD
                 check = checkExpr(getChild(tree, 0), classe, methode, i) && check;
-                check = checkMethodes(getType(getChild(tree, 0), classe, methode), getChild(getChild(tree, 1), 0)->u.str, getChild(getChild(tree, 1), 1)) && check;
-=======
-                check = checkExpr(getChild(tree, 0), classe, methode) && check;
                 check = checkMethodes(getType(getChild(tree, 0), classe, methode), getChild(getChild(tree, 1), 0)->u.str, getChild(getChild(tree, 1), 1), classe, methode) && check;
->>>>>>> e3f1be76c3869f4d56a8d18db135ac8bee2f2f2e
                 break;
 
             case YLEXPR :
@@ -595,18 +590,15 @@ ClasseP getType(TreeP expr, ClasseP classe, MethodeP methode)
 
                         /* on cherche l'attribut dans la classe et on retourne son type */ 
                         tmp = typeG->lchamps;
-                        if(tmp != NIL(LVarDecl))
+                        while(tmp != NIL(LVarDecl))
                         {
-                            while(tmp != NIL(LVarDecl))
+                            if(strcmp(tmp->var->nom, nom) == 0)
                             {
-                                if(strcmp(tmp->var->nom, nom) == 0)
-                                {
-                                    type = tmp->var->type;
-                                    break;
-                                }
-
-                                tmp = tmp->next;
+                                type = tmp->var->type;
+                                break;
                             }
+
+                            tmp = tmp->next;
                         }
                     }
                 }
@@ -759,7 +751,8 @@ bool checkBlocClasse(TreeP tree, ClasseP classe, MethodeP methode, int* i)
            
                 /* verification du constructeur de la classe */ 
                 TreeP constructeur = getChild(tree, 3);
-                check = checkBlocMain(constructeur, classe, NIL(Methode), i) && check;
+                MethodeP constr = getMethodePointer(classe, classe->nom);
+                check = checkBlocMain(constructeur, classe, constr, i) && check;
 
                 /* retire les parametres de la classe de l'env */
                 int tailleLParam = getTailleListeVarDecl(tmp);
@@ -1015,7 +1008,7 @@ bool checkAff(VarDeclP var, TreeP expr, ClasseP classe, MethodeP methode, int* i
                 {
                     if(*(op->isDefini))
                     {
-                        tmp = getTypeId(op->nom);
+                        tmp = getType(expr, classe, methode);
                         if(tmp != NIL(Classe) && var != NIL(VarDecl))
                         {
                             if(strcmp(var->type->nom, tmp->nom) != 0 && !checkHeritageClasse(tmp, var->type->nom))
@@ -1189,29 +1182,6 @@ bool verifLParam(LVarDeclP lparam)
 
     return TRUE;
 } 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

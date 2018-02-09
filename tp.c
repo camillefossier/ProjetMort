@@ -363,7 +363,7 @@ LVarDeclP makeLParam(TreeP arbreLParam)
           
       ParamP tmp = arbreLParam->u.var;
       *(tmp->isDefini) = TRUE;
-      
+
       LParamP tmpListe = NEW(1,LParam);
       tmpListe->var = tmp;
       tmpListe->next = NIL(LParam);

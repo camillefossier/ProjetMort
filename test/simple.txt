@@ -8,8 +8,8 @@ class Point(xc: Integer, yc: Integer) {
   var y : Integer := 5;
   var z: Integer;
   var w: Integer := this.y + 1;  /* OK : valeur de y deja definie */
-  var w2: Integer := this.w+1;   /* va etre ecrasee dans le constructeur */
-  var w3: Integer := this.w2+1;  /* mais a servi a initialiser w3  */
+  var w2: Integer := this.w + 1;   /* va etre ecrasee dans le constructeur */
+  var w3: Integer := this.w2 + 1;  /* mais a servi a initialiser w3  */
   var name: String := "?";
 
 
