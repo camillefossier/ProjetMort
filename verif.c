@@ -336,7 +336,7 @@ bool checkExpr(TreeP tree, ClasseP classe, MethodeP methode)
                 /* verification de l'allocation */
                 ClasseP tmp = getType(getChild(tree, 0), classe, methode);
                 if(tmp != NIL(Classe))
-                    check = checkMethodes(tmp, tmp->nom, getChild(tree, 1)) && check;
+                    check = checkMethodes(tmp, tmp->nom, getChild(tree, 1), classe, methode) && check;
                 break;
 
             case SELEXPR :      
@@ -347,7 +347,7 @@ bool checkExpr(TreeP tree, ClasseP classe, MethodeP methode)
             case EENVOI :
                 /* verification d'un envoi */
                 check = checkExpr(getChild(tree, 0), classe, methode) && check;
-                check = checkMethodes(getType(getChild(tree, 0), classe, methode), getChild(getChild(tree, 1), 0)->u.str, getChild(getChild(tree, 1), 1)) && check;
+                check = checkMethodes(getType(getChild(tree, 0), classe, methode), getChild(getChild(tree, 1), 0)->u.str, getChild(getChild(tree, 1), 1), classe, methode) && check;
                 break;
 
             case YLEXPR :
@@ -1378,7 +1378,7 @@ bool checkCast(ClasseP classeCast, char* nom, ClasseP classe)
 }
 
 /*Fonction utile pour un envoi : on regarde si la méthode existe dans la classe de l'objet*/
-bool checkMethodes(ClasseP classe, char* nom, TreeP lparam)
+bool checkMethodes(ClasseP classe, char* nom, TreeP lparam, ClasseP dansclasse, MethodeP dansmethode)
 {
     bool check = FALSE;
     if(classe != NIL(Classe))
@@ -1397,7 +1397,7 @@ bool checkMethodes(ClasseP classe, char* nom, TreeP lparam)
                     {
                         if(tmplparam->op == YLEXPR)
                         {
-                            if(checkHeritageClasse(getType(getChild(tmplparam, 0), NIL(Classe), NIL(Methode)), methLParam->var->type->nom))
+                            if(checkHeritageClasse(getType(getChild(tmplparam, 0),dansclasse, dansmethode), methLParam->var->type->nom))
                             {
                                 methLParam = methLParam->next;
                                 tmplparam = getChild(tmplparam,1);
@@ -1409,7 +1409,7 @@ bool checkMethodes(ClasseP classe, char* nom, TreeP lparam)
                         }
                         else
                         {
-                            if(checkHeritageClasse(getType(tmplparam, NIL(Classe), NIL(Methode)), methLParam->var->type->nom))
+                            if(checkHeritageClasse(getType(tmplparam,dansclasse, dansmethode), methLParam->var->type->nom))
                             {
                                 methLParam = methLParam->next;
                                 tmplparam = NIL(Tree);
@@ -1436,7 +1436,7 @@ bool checkMethodes(ClasseP classe, char* nom, TreeP lparam)
                     {
                         if(tmplparam->op == YLEXPR)
                         {
-                            if(getType(getChild(tmplparam, 0), NIL(Classe), NIL(Methode)) != NIL(Classe) && checkHeritageClasse(getType(getChild(tmplparam, 0), NIL(Classe), NIL(Methode)), methLParam->var->type->nom))
+                            if(checkHeritageClasse(getType(getChild(tmplparam, 0),dansclasse, dansmethode), methLParam->var->type->nom))
                             {
                                 methLParam = methLParam->next;
                                 tmplparam = getChild(tmplparam,1);
@@ -1448,7 +1448,7 @@ bool checkMethodes(ClasseP classe, char* nom, TreeP lparam)
                         }
                         else
                         {
-                            if(getType(tmplparam, NIL(Classe), NIL(Methode)) != NIL(Classe) && checkHeritageClasse(getType(tmplparam, NIL(Classe), NIL(Methode)), methLParam->var->type->nom))
+                            if(checkHeritageClasse(getType(tmplparam,dansclasse, dansmethode), methLParam->var->type->nom))
                             {
                                 methLParam = methLParam->next;
                                 tmplparam = NIL(Tree);
@@ -1468,7 +1468,7 @@ bool checkMethodes(ClasseP classe, char* nom, TreeP lparam)
 
         if(!check && classe->superClasse != NIL(Classe))
         {
-            check = checkMethodes(classe->superClasse, nom, lparam);
+            check = checkMethodes(classe->superClasse, nom, lparam, dansclasse,dansmethode);
         }
         
 
