@@ -1,6 +1,6 @@
 class Point(xc: Integer, yc: Integer) {
      this.x:= xc; this.z := this.y; /* OK: valeur de y deja definie */
-     this.w2 := -25;
+     this.w2 := -25; 
   } is {
   var x: Integer;
   /* var y := yc; */         /* erreur contextuelle: yc inconnu */
@@ -8,8 +8,8 @@ class Point(xc: Integer, yc: Integer) {
   var y : Integer := 5;
   var z: Integer;
   var w: Integer := this.y + 1;  /* OK : valeur de y deja definie */
-  var w2: Integer := this.w+1;   /* va etre ecrasee dans le constructeur */
-  var w3: Integer := this.w2+1;  /* mais a servi a initialiser w3  */
+  var w2: Integer := this.w + 1;   /* va etre ecrasee dans le constructeur */
+  var w3: Integer := this.w2 + 1;  /* mais a servi a initialiser w3  */
   var name: String := "?";
 
 
@@ -38,5 +38,5 @@ class Point(xc: Integer, yc: Integer) {
   is
   p2.setName("glop");
   p1.printAll();
-  p2.printAll();
+  p2.printAll(); 
 }
