@@ -1,7 +1,0 @@
-class Point(var xc: Integer ,zc: Integer, yc: Integer:= 0, nom: String:= "nouveau point") { } is 
-{
-    var x: Integer;
-    var y : Integer := x;
-    def getx(verbose : Integer) : Integer := this.x
-}
-{}

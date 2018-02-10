@@ -362,7 +362,6 @@ bool checkExpr(TreeP tree, ClasseP classe, MethodeP methode, int* i)
                 break;
         }
     }
-
     return check;
 }
 
@@ -1126,6 +1125,7 @@ bool verifLParam(LVarDeclP lparam)
     return TRUE;
 } 
 
+<<<<<<< HEAD
 
 /* verifie qu'une expression est bien defini */
 bool verifVarDeclDefinition(TreeP expr, ClasseP classe, MethodeP methode)
@@ -1212,6 +1212,9 @@ bool verifVarDeclDefinition(TreeP expr, ClasseP classe, MethodeP methode)
 
 
 
+=======
+/*renvoie true si une classe hérite bien d'une autre classe (nom)*/
+>>>>>>> 2df42a8f2f56b0ffa53741c5771aee32f3e4f018
 bool checkHeritageClasse(ClasseP classe, char* nom)
 {
 	if(classe != NIL(Classe))
@@ -1238,6 +1241,7 @@ bool checkHeritageClasse(ClasseP classe, char* nom)
 	}
 }
 
+/*check si deux listes d'arguments sont semblables*/
 bool checkArguments(LParamP larg, LParamP largbis)
 {
     bool retour = TRUE;
@@ -1344,6 +1348,7 @@ bool checkOverrideMethode(ClasseP classe, char* nom, LParamP larg, bool isOverri
     
 }
 
+/*check tous les overrides de la liste des classes*/
 bool checkOverrideLClasse(LClasseP lclasse)
 {
     bool b = TRUE;
