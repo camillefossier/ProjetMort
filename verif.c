@@ -363,7 +363,6 @@ bool checkExpr(TreeP tree, ClasseP classe, MethodeP methode)
                 break;
         }
     }
-
     return check;
 }
 
@@ -1104,31 +1103,7 @@ bool verifLParam(LVarDeclP lparam)
     return TRUE;
 } 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/*renvoie true si une classe hérite bien d'une autre classe (nom)*/
 bool checkHeritageClasse(ClasseP classe, char* nom)
 {
 	if(classe != NIL(Classe))
@@ -1155,6 +1130,7 @@ bool checkHeritageClasse(ClasseP classe, char* nom)
 	}
 }
 
+/*check si deux listes d'arguments sont semblables*/
 bool checkArguments(LParamP larg, LParamP largbis)
 {
     bool retour = TRUE;
@@ -1261,6 +1237,7 @@ bool checkOverrideMethode(ClasseP classe, char* nom, LParamP larg, bool isOverri
     
 }
 
+/*check tous les overrides de la liste des classes*/
 bool checkOverrideLClasse(LClasseP lclasse)
 {
     bool b = TRUE;
@@ -1489,210 +1466,3 @@ bool checkMethodes(ClasseP classe, char* nom, TreeP lparam, ClasseP dansclasse, 
         
     return check;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*METHODES UTILES POUR LES VERIFICATIONS CONTEXTUELLES : YASSINE AMRAOUI
-Yassine AMRAOUI : j'ai cree ces methodes qui servent à l'analyse contextuelle
-Et cf. les TODO apres les methodes qui sont des idees de verifications supplementaires
-Recuperation de la classe (ClasseP) portant le nom passe en parametre*/
-/**ClasseP getClasse(ClasseP lclasse, char *nom)
-{
-    if(nom!= NULL) {
-        ClasseP buffer = lclasse;
-        while(buffer!=NULL)
-        {
-            if(strcmp(nom, buffer->nom)==0) return buffer;
-            buffer=buffer->next;
-        }
-        printf("\nClasse %s non existante...", nom);
-        setError(CONTEXT_ERROR);
-    }
-    return NIL(Classe);
-}*/
-
-/*Renvoie true si pas de probleme d'override*/
-/*bool checkOverrideMethode(ClasseP classe, char* nom)
-{
-    if(classe != NIL(Classe))
-    {
-        LMethodeP tmpMethodes = classe->lmethodes;
-        while(tmpMethodes != NIL(LMethode))
-        {
-            if(strcmp(tmpMethodes->methode->nom,nom) == 0 )
-            {
-                return TRUE;
-            }
-            tmpMethodes = tmpMethodes->next;
-        }
-        if(classe->superClasse != NIL(Classe))
-        {
-            return checkOverrideMethode(classe->superClasse, nom);
-        }
-        else
-        {
-            return FALSE;
-        }
-    }
-    return FALSE;
-}
-bool checkOverrideLClasse(LClasseP lclasse)
-{ 
-    LClasseP tmpClasses = lclasse;
-    while(tmpClasses != NIL(LClasse))
-    {
-        LMethodeP tmpMethodes = lclasse->classe->lmethodes;
-        while(tmpMethodes != NIL(LMethode))
-        {
-            if(tmpMethodes->methode ==  NIL(Methode)) printf("fzebfzeufeybfeyb\n");
-            printf("override : %d de %s de la classe%s\n", tmpMethodes->methode->override, tmpMethodes->methode->nom,lclasse->classe->nom);
-            if(tmpMethodes->methode->override)
-            {
-                if(!checkOverrideMethode(lclasse->classe->superClasse, tmpMethodes->methode->nom))
-                {
-                    return FALSE;
-                }
-                
-            }
-            printf("next\n");
-            tmpMethodes = tmpMethodes->next;
-        } 
-        lclasse = lclasse->next;
-    }
-    return TRUE;
-}*/
-    /*if(lclasse != NULL) 
-    {
-        bool booleen = checkOverride(lclasse->next); */
-        /*Appel recursif pour parcourir l'ensemble de la liste
-        Maintenant, on check les override classe par classe (depuis la fin de lclasse par recursivite)
-        Si la classe n'a pas de classe mere, override interdit : on va checker*/
-
-       /* if(lclasse->classe->mereOpt == NULL) {
-            MethodeP lmethodestemp = lclasse->classe->lmethodes; 
-            while(lmethodestemp != NULL) {
-                if(lmethodestemp->methode->override) {printf("\nErreur Override : la classe %s n'a pas de classe mere\n",lclasse->classe->nom); retour = FALSE;}
-                lmethodestemp = lmethodestemp->next;
-            }
-        }
-        
-        else {
-            MethodeP lmethodestemp = lclasse->classe->lmethodes;
-            while(lmethodestemp != NULL) {
-                if(lmethodestemp->methode->override && !checkSuper(lclasse->classe->mereOpt, lmethodestemp)) {printf("Erreur Override : la methode %s de la classe %s n'est pas presente dans la classe mere %s\n", lmethodestemp->methode, lclasse->classe->nom, lclasse->classe->mereOpt->nom); retour = FALSE;}
-                lmethodestemp = lmethodestemp->next;
-            }
-        }
-        return retour;  
-    }
-    return TRUE;   
-}*/
-/*Renvoie true si la methode passe en parametre est trouvee dans la classe mere*/
-/*bool checkSuper(ClasseP lclasse, MethodeP lmethode) { 
-    if(lclasse != NULL) {
-        bool retour = checkSuper(lclasse->mereOpt, lmethode);  *//*Appel recursif pour parcourir l'ensemble de la liste    
-        *//*if(checkMethodeInClasse(lmethode, lclasse)) return TRUE;    
-        else return retour;
-    }
-    return FALSE;
-}*/
-/*Renvoie true si la méthode passée en paramètre est dans la classe*/
-/*bool checkMethodeInClasse(MethodeP lmethode, ClasseP lclasse) { 
-    bool retour = FALSE;
-    MethodeP methodebuffer = lclasse->lmethodes->methode;
-    
-    while(methodebuffer != NULL) {
-        if(strcmp(lmethode->methode->nom, methodebuffer->nom) == 0) {
-            if(lmethode->typeDeRetour != NULL && methodebuffer->typeDeRetour != NULL && strcmp(lmethode->typeDeRetour, methodebuffer->typeDeRetour) == 0) {
-                if(checkArguments(lmethode->args, methodebuffer->args)) retour = TRUE;
-            }
-            else if(lmethode->typeDeRetour == NULL && methodebuffer->typeDeRetour == NULL) {
-                if(checkArguments(lmethode->larg, methodebuffer->larg)) retour = TRUE;
-            }
-        }
-        methodebuffer = methodebuffer->next;
-    }
-    return retour;
-}*/
-    /*
-Renvoie true si même arguments*/
-
-
-
-
-
-/*bool checkArguments(LParamP larg1, LPAram larg2) {
-    bool retour = TRUE;
-    while(arg1 != NULL && arg2 != NULL) {
-        if(arg1->attibut->type != NULL && arg2->attribut->type != NULL && strcmp(arg1->attribut->type, arg2->attribut->type) != 0) retour = FALSE;
-        arg1 = arg1->next;
-        arg2 = arg2->next;
-    }
-    if(arg1 != NULL || arg2 != NULL) retour = FALSE;
-    return retour;
-}    */
-/*
-TODO : methodes permettant d'update les listes : par exemple, completer l'attribut mereOpt, les types
-TODO : methode permettant de verifier s'il existe plusieurs classes avec le même nom
-TODO : methode permettant de voir si un Id est dans l'environnement
-*/
-/*Yassine AMRAOUI : ce que j'ai ameliore et ajoute
-Verifier si une méthode est bien definie
-*/
-/*bool checkMethodes(ClasseP classe, char* nom)
-{
-    while(classe->lmethodes != NULL)
-    {
-        if(strcmp(classe->lmethodes->methode->nom,nom)==0)
-        {
-            return TRUE;
-        }
-        else
-        {
-            classe->lmethodes = classe->lmethodes->next;
-        }
-    }
-    if(classe->mereOpt != NULL)
-    {
-        return checkMethodes(classe->mereOpt, nom);
-    }
-    else
-    {
-        return FALSE;
-    }
-}*/
-/*Verifie l'heritage d'une classe*/
-/*
-*/
