@@ -85,6 +85,7 @@ bool checkBlocMain(TreeP bloc, ClasseP classe, MethodeP methode, int* i)
     if(bloc != NIL(Tree))
     {
         LVarDeclP tmp = NIL(LVarDecl);
+        ClasseP type = NIL(Classe);
 
         switch(bloc->op)
         {
@@ -109,8 +110,21 @@ bool checkBlocMain(TreeP bloc, ClasseP classe, MethodeP methode, int* i)
 
             case YITE :
                 /* verification d'un if then else */
-                /* TODO : l'expression doit etre un bool */
-                check = checkExpr(getChild(bloc, 0), classe, methode, i) && check;  
+                check = checkExpr(getChild(bloc, 0), classe, methode, i) && check;
+
+                /* verifie que l'expr soit un booleen */
+                type = getType(getChild(bloc, 0), classe, methode);
+                if(type != NIL(Classe))
+                {
+                    if(strcmp(type->nom, "Integer") != 0)
+                    {
+                        fprintf(stderr, "Erreur If Then Else :\n");
+                        fprintf(stderr, "\t> l'expression ne represente pas un booleen\n\n");
+                        nbErreur++;
+                        check = FALSE;
+                    }
+                }
+
                 check = checkBlocMain(getChild(bloc, 1), classe, methode, i) && check;
                 check = checkBlocMain(getChild(bloc, 2), classe, methode, i) && check;
                 break;
@@ -135,7 +149,7 @@ bool checkBlocMain(TreeP bloc, ClasseP classe, MethodeP methode, int* i)
                 break;
 
             case YRETURN :
-                /* TODO : result doit etre defini ou non avant de faire un return ? */
+                /* on considere qu'on retourne forcement la variable result, qu'elle soit definie ou non */
                 break;
 
             default :
@@ -1125,7 +1139,6 @@ bool verifLParam(LVarDeclP lparam)
     return TRUE;
 } 
 
-<<<<<<< HEAD
 
 /* verifie qu'une expression est bien defini */
 bool verifVarDeclDefinition(TreeP expr, ClasseP classe, MethodeP methode)
@@ -1209,12 +1222,7 @@ bool verifVarDeclDefinition(TreeP expr, ClasseP classe, MethodeP methode)
 }
 
 
-
-
-
-=======
 /*renvoie true si une classe hérite bien d'une autre classe (nom)*/
->>>>>>> 2df42a8f2f56b0ffa53741c5771aee32f3e4f018
 bool checkHeritageClasse(ClasseP classe, char* nom)
 {
 	if(classe != NIL(Classe))
