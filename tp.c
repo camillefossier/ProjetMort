@@ -346,7 +346,6 @@ LVarDeclP makeLParam(TreeP arbreLParam)
   LParamP lparam = NIL(LVarDecl);
   if(arbreLParam != NIL(Tree))
   {
-
       while(arbreLParam->op == YLPARAM || arbreLParam->op == LDECLC)
       {
           ParamP tmp = getChild(arbreLParam, 0)->u.var;
@@ -464,6 +463,7 @@ ClasseP getClassePointer(char *nom)
 
     cur = cur->next;
   }
+
   return NIL(Classe);
 }
 
@@ -522,28 +522,32 @@ void addClasse(ClasseP classe)
 }
 
 
-/*  ajoute dans une liste une variable var */
+/*  ajoute dans une liste dans une liste de variables var */
 LVarDeclP addVarDecl(LVarDeclP var, LVarDeclP liste)
 {
+    LVarDeclP newListe = NIL(LVarDecl); 
+
     if(var != NIL(LVarDecl))
     {
         if(liste != NIL(LVarDecl))
         {
-            LVarDeclP tmp = liste;
+            LVarDeclP tmp = var;
 
             while(tmp->next != NIL(LVarDecl))
             {
                 tmp = tmp->next;
             }
-            tmp->next = var;
+            tmp->next = liste;
+
+            newListe = tmp;
         }
         else
         {
-            liste = var;
+            newListe = var;
         }
     }
 
-    return liste;
+    return newListe;
 }
 
 
@@ -588,6 +592,13 @@ void makeClassesPrimitives()
   ClasseP voidC = makeClasse("Void"); 
 
   TreeP exprOpt = NIL(Tree);
+
+  /*Initialisation de Void*/
+  ChampP  champVoid = makeVarDecl("void", "Void", exprOpt);
+  LChampP champListeVoid = NEW(1, LChamp);
+  champListeVoid->var = champVoid;
+  champListeVoid->next = NIL(LChamp);
+  voidC->lchamps = champListeVoid;
 
   /*Initialisation d'Integer*/
   ParamP paramInt = makeVarDecl("val", "Integer", exprOpt);
@@ -831,7 +842,6 @@ bool verifContextLClasse(TreeP arbreLClasse)
     *i = 0;
     bool check = TRUE;
     check = checkDoublonClasse(lclasse) && check; 
-
     check = checkBlocClasse(arbreLClasse, NIL(Classe), NIL(Methode), i) && check;
     check = checkOverrideLClasse(lclasse) && check;
 
@@ -905,7 +915,7 @@ void printClasse(ClasseP classe)
         printLMethode(classe->lmethodes);
         printf("\n");
     }
-    else
+    else if(strcmp(classe->nom, "Void") != 0)
     {
         printf("#####################################\n");
         printf("Objet : %s\n", classe->nom);
@@ -917,7 +927,32 @@ void printClasse(ClasseP classe)
         printLMethode(classe->lmethodes);
         printf("\n");
     }
-    
+    else
+    {
+        printf("#####################################\n");
+        printf("Classe : %s\n", classe->nom);
+        if(classe->superClasse != NIL(Classe))
+        {
+            printf("\nSuperClasse : %s\n", classe->superClasse->nom);
+        }
+        else
+        {
+            printf("\nSuperClasse : NIL\n");
+        }
+        printf("\n");
+        printf("Parametres :\n");
+        printVarDecl(classe->lparametres); 
+        printf("\n");
+        printf("Constructeur :\n");
+        printMethode(classe->constructeur); 
+        printf("\n");
+        printf("Champs :\n");
+        printVarDecl(classe->lchamps);
+        printf("\n");
+        printf("Methodes :\n\n");
+        printLMethode(classe->lmethodes);
+        printf("\n");
+    }
 }
 
 

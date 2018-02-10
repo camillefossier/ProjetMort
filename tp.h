@@ -235,6 +235,7 @@ bool checkAff(VarDeclP var, TreeP expr, ClasseP classe, MethodeP methode, int* i
 int getTailleListeVarDecl(LVarDeclP liste);
 VarDeclP getVarSelection(TreeP Selection, ClasseP classe, MethodeP methode);
 bool verifLParam(LVarDeclP lparam);
+bool verifVarDeclDefinition(TreeP expr, ClasseP classe, MethodeP methode);
 
 bool checkArguments(LParamP larg, LParamP largbis);
 bool CheckArgumentOverride(LParamP nvlarg, LParamP larg);

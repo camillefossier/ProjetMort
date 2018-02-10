@@ -385,7 +385,6 @@ bool checkSelection(TreeP selection, ClasseP classe, MethodeP methode, int* i)
             check = FALSE;            
         }
     }
-
     else                            /* cas : Expr '.' Id */
     {
         /* verification de l'expression */
@@ -435,6 +434,12 @@ bool checkSelection(TreeP selection, ClasseP classe, MethodeP methode, int* i)
                     }
                     nbErreur++;
                 }
+            }
+            else
+            {
+                fprintf(stderr, "Erreur selection\n");
+                fprintf(stderr, "\t> l'expression n'a pas de type defini\n\n");
+                nbErreur++;
             }
         }
     }
@@ -506,7 +511,23 @@ ClasseP getType(TreeP expr, ClasseP classe, MethodeP methode)
                 break;
 
             case Classname :
-                type = getClassePointer(expr->u.str);
+                typeG = getClassePointer(expr->u.str);
+                if(typeG != NIL(Classe) && typeG->constructeur != NIL(Methode))
+                {
+                    type = typeG;
+                }
+                else if(typeG != NIL(Classe) && typeG->constructeur == NIL(Methode))
+                {
+                    fprintf(stderr, "Erreur de type :s\n");
+                    fprintf(stderr, "\t> un objet ne peut pas etre utilise comme type\n\n");
+                    nbErreur++;
+                }
+                else
+                {
+                    fprintf(stderr, "Erreur de type :s\n");
+                    fprintf(stderr, "\t> la classe %s n'existe pas\n\n", expr->u.str);
+                    nbErreur++;
+                }
                 break;
 
             case Chaine :
@@ -805,8 +826,12 @@ bool checkBlocClasse(TreeP tree, ClasseP classe, MethodeP methode, int* i)
                 /* verifie le type de retour de la methode */
                 check = checkClassDefine(getChild(tree, 3)->u.str) && check;
 
-                /* verifie l'expression associee a la methode */
-                check = checkExpr(getChild(tree, 4), classe, methode, i) && check;
+                /* verifie l'affectation associee a la methode */
+                if(check)
+                {
+                    VarDeclP result = makeVarDecl("result", methode->typeDeRetour->nom, NIL(Tree));
+                    check = checkAff(result, getChild(tree, 4), classe, methode, i) && check;
+                }
 
                 /* met a jour l'env */
                 removeEnv(*i, i);
@@ -871,7 +896,7 @@ bool addEnv(LVarDeclP var, ClasseP classe, int* i)
         LVarDeclP tmp = var;
         while(tmp != NIL(LVarDecl))
         {
-            check = addVarEnv(tmp->var, classe, i) & check;
+            check = addVarEnv(tmp->var, classe, i) && check;
             tmp = tmp->next;
         }
     }
@@ -956,114 +981,32 @@ void removeEnv(int n, int *i)
 bool checkAff(VarDeclP var, TreeP expr, ClasseP classe, MethodeP methode, int* i)
 {
     bool check = checkExpr(expr, classe, methode, i);
+    check = verifVarDeclDefinition(expr, classe, methode) && check;
 
     if(check)
     {
-        VarDeclP op = NIL(VarDecl);
-        ClasseP tmp = NIL(Classe);
-
-        switch(expr->op)
+        ClasseP tmp = getType(expr, classe, methode);
+        
+        if(tmp != NIL(Classe) && var != NIL(VarDecl))
         {
-            case Id :
-                op = getVarSelection(expr, classe, methode);
-                if(op != NIL(VarDecl))
-                {
-                    if(*(op->isDefini))
-                    {
-                        tmp = getTypeId(op->nom);
-                        if(tmp != NIL(Classe) && var != NIL(VarDecl))
-                        {
-                            if(strcmp(var->type->nom, tmp->nom) != 0 && !checkHeritageClasse(tmp, var->type->nom))
-                            {
-                                check = FALSE;
-                                fprintf(stderr, "Erreur verification affectation\n");
-                                fprintf(stderr, "\t> impossible d'affecter un %s a un %s\n\n", var->type->nom, tmp->nom);
-                                nbErreur++;
-                            }
-                            else
-                            {
-                                *(var->isDefini) = TRUE;
-                            }
-                        }
-                        else
-                        {
-                            check = FALSE;
-                            fprintf(stderr, "Erreur verification affectation\n");
-                            fprintf(stderr, "\t> affectation impossible\n\n");
-                            nbErreur++;
-                        }
-                    }
-                    else
-                    {
-                        fprintf(stderr, "Erreur verification affectation\n");
-                        fprintf(stderr, "\t> la variable %s est indefini\n\n", op->nom);
-                        nbErreur++;
-                    }
-                }
-                break;
-
-            case SELEXPR :
-                op = getVarSelection(expr, classe, methode);
-                if(op != NIL(VarDecl))
-                {
-                    if(*(op->isDefini))
-                    {
-                        tmp = getType(expr, classe, methode);
-                        if(tmp != NIL(Classe) && var != NIL(VarDecl))
-                        {
-                            if(strcmp(var->type->nom, tmp->nom) != 0 && !checkHeritageClasse(tmp, var->type->nom))
-                            {
-                                check = FALSE;
-                                fprintf(stderr, "Erreur verification affectation\n");
-                                fprintf(stderr, "\t> impossible d'affecter un %s a un %s\n\n", var->type->nom, tmp->nom);
-                                nbErreur++;
-                            }
-                            else
-                            {
-                                *(var->isDefini) = TRUE;
-                            }
-                        }
-                        else
-                        {
-                            check = FALSE;
-                            fprintf(stderr, "Erreur verification affectation\n");
-                            fprintf(stderr, "\t> affectation impossible\n\n");
-                            nbErreur++;
-                        }
-                    }
-                    else
-                    {
-                        fprintf(stderr, "Erreur verification affectation\n");
-                        fprintf(stderr, "\t> la variable %s est indefini\n\n", op->nom);
-                        nbErreur++;
-                    }
-                }
-                break;
-
-            default :
-                tmp = getType(expr, classe, methode);
-                if(tmp != NIL(Classe) && var != NIL(VarDecl))
-                {
-                    if(strcmp(var->type->nom, tmp->nom) != 0 && !checkHeritageClasse(tmp, var->type->nom))
-                    {
-                        check = FALSE;
-                        fprintf(stderr, "Erreur verification affectation\n");
-                        fprintf(stderr, "\t> impossible d'affecter un %s a un %s\n\n", var->type->nom, tmp->nom);
-                        nbErreur++;
-                    }
-                    else
-                    {
-                        *(var->isDefini) = TRUE;
-                    }
-                }
-                else
-                {
-                    check = FALSE;
-                    fprintf(stderr, "Erreur verification affectation\n");
-                    fprintf(stderr, "\t> affectation impossible\n\n");
-                    nbErreur++;
-                }
-                break;
+            if(strcmp(var->type->nom, tmp->nom) != 0 && !checkHeritageClasse(tmp, var->type->nom))
+            {
+                check = FALSE;
+                fprintf(stderr, "Erreur verification affectation\n");
+                fprintf(stderr, "\t> impossible d'affecter un %s a un %s\n\n", var->type->nom, tmp->nom);
+                nbErreur++;
+            }
+            else
+            {
+                *(var->isDefini) = TRUE;
+            }
+        }
+        else
+        {
+            check = FALSE;
+            fprintf(stderr, "Erreur verification affectation\n");
+            fprintf(stderr, "\t> affectation impossible\n\n");
+            nbErreur++;
         }
     }
     
@@ -1182,6 +1125,90 @@ bool verifLParam(LVarDeclP lparam)
 
     return TRUE;
 } 
+
+
+/* verifie qu'une expression est bien defini */
+bool verifVarDeclDefinition(TreeP expr, ClasseP classe, MethodeP methode)
+{
+    bool check = TRUE;
+
+    if(expr != NIL(Tree))
+    {
+        VarDeclP op = NIL(VarDecl);
+        switch(expr->op)
+        {
+            case Id :
+                op = getVarSelection(expr, classe, methode);
+                if(op != NIL(VarDecl))
+                {
+                    if(*(op->isDefini))
+                    {
+                        check = TRUE;
+                    }
+                    else
+                    {
+                        check = FALSE;
+                        fprintf(stderr, "Erreur de definition\n");
+                        fprintf(stderr, "\t> la variable %s est indefini\n\n", op->nom);
+                        nbErreur++;
+                    }
+                }
+                break;
+
+            case SELEXPR :
+                op = getVarSelection(expr, classe, methode);
+                if(op != NIL(VarDecl))
+                {
+                    if(*(op->isDefini))
+                    {
+                        check = TRUE;
+                    }
+                    else
+                    {
+                        check = FALSE;
+                        fprintf(stderr, "Erreur de definition\n");
+                        fprintf(stderr, "\t> la variable %s est indefini\n\n", op->nom);
+                        nbErreur++;
+                    }
+                }
+                break;
+
+            case Classname :    
+            case Chaine :
+            case Cste : 
+            case ECAST :
+            case EINST :
+                check = TRUE;
+                break;    
+
+            case ADD :
+            case USUB :
+            case SUB :
+            case MUL :
+            case DIV :            
+            case EQ :
+            case NE :
+            case SUP :
+            case SUPE :
+            case INF :
+            case INFE :
+            case CONCAT :
+                check = verifVarDeclDefinition(getChild(expr, 0), classe, methode) && check;
+                check = verifVarDeclDefinition(getChild(expr, 1), classe, methode) && check;
+                break;
+
+            default :
+                fprintf(stderr, "Erreur etiquette dans verifVarDeclDefinition :\n");
+                fprintf(stderr, "\t> etiquette %d inconnu\n\n", expr->op);
+                check = FALSE;
+                break;
+        }
+    }
+
+    return check;
+}
+
+
 
 
 
