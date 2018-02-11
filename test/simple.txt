@@ -15,9 +15,9 @@ class Point(xc: Integer, yc: Integer) {
 
   def getx() : Integer := this.x
   def gety() : Integer := this.y
-  def getz() : Integer is { result := this.z; if 1 then 1; else 2; }
+  def getz() : Integer is { result := this.z; }
 
-  def setName(s: String) is { this.name := s; if "string" then 1; else 1; }
+  def setName(s: String) is { this.name := s; }
 
   def print() is { this.name.println(); }
 

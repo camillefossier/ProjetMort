@@ -37,8 +37,7 @@ LClasseP lclasse = NIL(LClasse);
 
 ScopeP env = NIL(Scope);
 int nbErreur = 0;
-
-
+int* i = NIL(int);
 
 int main(int argc, char **argv) {
   int fi;
@@ -409,6 +408,8 @@ LChampP makeChampsBlocObj(TreeP blocObj)
         }
     }
 
+    lChamps = dansLeBonOrdre(lChamps);
+
     return lChamps;
 }
 
@@ -445,6 +446,39 @@ LMethodeP makeMethodeBlocObj(TreeP blocObj, ClasseP classe)
 
     return lMethodes;
 }
+
+
+/*  fct qui inverse l'ordre d'une liste : utile a cause de la grammaire sur la declaration des champs */
+LVarDeclP dansLeBonOrdre(LVarDeclP liste)
+{
+    LVarDeclP bonOrdre = NIL(LVarDecl);
+
+    if(liste != NIL(LVarDecl))
+    {
+        LVarDeclP tmpListe = liste;
+        while(tmpListe != NIL(LVarDecl))
+        {
+            LVarDeclP tmp = NEW(1, LVarDecl);
+            tmp->var = tmpListe->var;
+            tmp->next = NIL(LVarDecl);
+
+            if(bonOrdre == NIL(LVarDecl))
+            {
+                bonOrdre = tmp;
+            }
+            else
+            {
+                tmp->next = bonOrdre;
+                bonOrdre = tmp;
+            }
+
+            tmpListe = tmpListe->next;
+        }
+    }
+
+    return bonOrdre;
+}
+
 
 
 /*--------------------------GET POINTEUR---------------------------*/
@@ -493,6 +527,8 @@ MethodeP getMethodePointer(ClasseP classe, char* nom)
     }
 }
 
+
+
 /*--------------------------ADD TO---------------------------*/
 
 
@@ -522,32 +558,28 @@ void addClasse(ClasseP classe)
 }
 
 
-/*  ajoute dans une liste dans une liste de variables var */
+/*  ajoute dans une liste une variable var */
 LVarDeclP addVarDecl(LVarDeclP var, LVarDeclP liste)
 {
-    LVarDeclP newListe = NIL(LVarDecl); 
-
     if(var != NIL(LVarDecl))
     {
         if(liste != NIL(LVarDecl))
         {
-            LVarDeclP tmp = var;
+            LVarDeclP tmp = liste;
 
             while(tmp->next != NIL(LVarDecl))
             {
                 tmp = tmp->next;
             }
-            tmp->next = liste;
-
-            newListe = tmp;
+            tmp->next = var;
         }
         else
         {
-            newListe = var;
+            liste = var;
         }
     }
 
-    return newListe;
+    return liste;
 }
 
 
@@ -656,15 +688,15 @@ void makeClassesPrimitives()
   string->superClasse = NIL(Classe);
   string->lchamps = NIL(LVarDecl);
 
-  int* i = NEW(1, int);
+   i = NEW(1, int);
   *i = 0;
 
   addClasse(integer);
   /* permet de mettre a jour le type du parametre, pour qu'il pointe vers la structure ajouter dans lclasse */ 
-  setEnvironnementType(paramListeInt, integer, NIL(Methode), i);
+  setEnvironnementType(paramListeInt, integer, NIL(Methode));
   addClasse(string);
   /* idem pour le parametre d'un string */
-  setEnvironnementType(paramListeStr, string, NIL(Methode), i);
+  setEnvironnementType(paramListeStr, string, NIL(Methode));
   addClasse(voidC);
 
   free(i);
@@ -807,6 +839,8 @@ void initEnv()
 /* verification contextuelle du programme */
 bool verifContextProg(TreeP arbreLClasse, TreeP main)
 {
+    i = NEW(1, int);
+    *i = 0;
     bool check = TRUE;
     check = checkBoucleHeritage(lclasse);
     check = verifContextLClasse(arbreLClasse) && check;
@@ -817,20 +851,17 @@ bool verifContextProg(TreeP arbreLClasse, TreeP main)
     else
         printf("\nC'est good\n\n");
 
+    free(i);
     return check;
 }
 
 
 /* verification contextuelle du main */
 bool verifContextMain(TreeP main)
-{   
-    int* i = NEW(1, int);
-    *i = 0;
+{ 
     bool check = TRUE;
+    check = checkBlocMain(main, NIL(Classe), NIL(Methode)) && check;
 
-    check = checkBlocMain(main, NIL(Classe), NIL(Methode), i) && check;
-
-    free(i);
     return check;
 }
 
@@ -838,14 +869,11 @@ bool verifContextMain(TreeP main)
 /* verification contextuelle des classes et des objets */
 bool verifContextLClasse(TreeP arbreLClasse)
 {
-    int* i = NEW(1, int);
-    *i = 0;
     bool check = TRUE;
     check = checkDoublonClasse(lclasse) && check; 
-    check = checkBlocClasse(arbreLClasse, NIL(Classe), NIL(Methode), i) && check;
+    check = checkBlocClasse(arbreLClasse, NIL(Classe), NIL(Methode)) && check;
     check = checkOverrideLClasse(lclasse) && check;
 
-    free(i);
     return check;
 }
 

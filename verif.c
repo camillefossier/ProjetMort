@@ -9,6 +9,7 @@ extern void setError(int code);
 extern LClasseP lclasse;
 extern ScopeP env;
 extern int nbErreur;
+extern int* i;
 
 /* extern int yylineno; */
 
@@ -47,7 +48,7 @@ bool checkClassDefine(char* nom)
 
 
 /* Verifie la portee d'une variable */
-bool checkPortee(LVarDeclP lvar, char* nom, int *i)
+bool checkPortee(LVarDeclP lvar, char* nom)
 {
     if(nom != NULL)
     {
@@ -78,7 +79,7 @@ bool checkPortee(LVarDeclP lvar, char* nom, int *i)
 
 
 /* verification contextuelle d'un bloc */
-bool checkBlocMain(TreeP bloc, ClasseP classe, MethodeP methode, int* i)
+bool checkBlocMain(TreeP bloc, ClasseP classe, MethodeP methode)
 {
     bool check = TRUE;
 
@@ -94,23 +95,23 @@ bool checkBlocMain(TreeP bloc, ClasseP classe, MethodeP methode, int* i)
                 tmp = makeLParam(getChild(bloc, 0));
 
                 if(tmp != NIL(LVarDecl))
-                    check = addEnv(tmp, classe, i) && check;
+                    check = addEnv(tmp, classe) && check;
 
-                check = checkBlocMain(getChild(bloc, 1), classe, methode, i) && check;
+                check = checkBlocMain(getChild(bloc, 1), classe, methode) && check;
 
                 /* met a jour l'env */
-                removeEnv(*i, i);
+                removeEnv(*i);
                 break;
             
             case LINSTR :
                 /* verification d'une liste d'instructions */
-                check = checkBlocMain(getChild(bloc, 0), classe, methode, i) && check;
-                check = checkBlocMain(getChild(bloc, 1), classe, methode, i) && check;
+                check = checkBlocMain(getChild(bloc, 0), classe, methode) && check;
+                check = checkBlocMain(getChild(bloc, 1), classe, methode) && check;
                 break;
 
             case YITE :
                 /* verification d'un if then else */
-                check = checkExpr(getChild(bloc, 0), classe, methode, i) && check;
+                check = checkExpr(getChild(bloc, 0), classe, methode) && check;
 
                 /* verifie que l'expr soit un booleen */
                 type = getType(getChild(bloc, 0), classe, methode);
@@ -125,27 +126,27 @@ bool checkBlocMain(TreeP bloc, ClasseP classe, MethodeP methode, int* i)
                     }
                 }
 
-                check = checkBlocMain(getChild(bloc, 1), classe, methode, i) && check;
-                check = checkBlocMain(getChild(bloc, 2), classe, methode, i) && check;
+                check = checkBlocMain(getChild(bloc, 1), classe, methode) && check;
+                check = checkBlocMain(getChild(bloc, 2), classe, methode) && check;
                 break;
 
             case EAFF :
                 /* verification d'une affectation */
                 /* verification de la selection */
-                check = checkSelection(getChild(bloc, 0), classe, methode, i) && check;
+                check = checkSelection(getChild(bloc, 0), classe, methode) && check;
 
                 /* verification de l'expression */
-                check = checkExpr(getChild(bloc, 1), classe, methode, i) && check;
+                check = checkExpr(getChild(bloc, 1), classe, methode) && check;
 
                 /* verification de l'affectation */
                 VarDeclP var = getVarSelection(getChild(bloc, 0), classe, methode);
                 if(var != NIL(VarDecl))
-                    check = checkAff(var, getChild(bloc, 1), classe, methode, i) && check;
+                    check = checkAff(var, getChild(bloc, 1), classe, methode) && check;
                 break;
 
             case YEXPR :
                 /* verification d'une expression */
-                check = checkExpr(getChild(bloc, 0), classe, methode, i) && check;  
+                check = checkExpr(getChild(bloc, 0), classe, methode) && check;  
                 break;
 
             case YRETURN :
@@ -191,7 +192,7 @@ ClasseP getTypeMethode(char* nom, ClasseP classe)
 
 
 /* verifie la validite d'une expression */
-bool checkExpr(TreeP tree, ClasseP classe, MethodeP methode, int* i)
+bool checkExpr(TreeP tree, ClasseP classe, MethodeP methode)
 {
     bool check = TRUE;
 
@@ -199,8 +200,8 @@ bool checkExpr(TreeP tree, ClasseP classe, MethodeP methode, int* i)
     {
         char* nom;
 
-        ClasseP typeG;
-        ClasseP typeD;
+        ClasseP typeG = NIL(Classe);
+        ClasseP typeD = NIL(Classe);
 
         switch (tree->op)
         {
@@ -208,7 +209,7 @@ bool checkExpr(TreeP tree, ClasseP classe, MethodeP methode, int* i)
                 /* verification de la portee d'une id */
                 nom = tree->u.str;
                 if(strcmp(nom, "this") != 0 && strcmp(nom, "super") != 0 && strcmp(nom, "result") != 0)
-                    check = checkPortee(env->env, nom, i) && check;
+                    check = checkPortee(env->env, nom) && check;
                 break;
 
             case Classname :
@@ -235,8 +236,8 @@ bool checkExpr(TreeP tree, ClasseP classe, MethodeP methode, int* i)
             case INFE :
                 /* verification d'une expression arithmetique */
                 /* verifie que les deux expressions sont correctes */
-                check = checkExpr(getChild(tree, 0), classe, methode, i) && check;
-                check = checkExpr(getChild(tree, 1), classe, methode, i) && check;
+                check = checkExpr(getChild(tree, 0), classe, methode) && check;
+                check = checkExpr(getChild(tree, 1), classe, methode) && check;
 
                 /* verifie que les types des deux expressions sont des Integer */
                 typeG = getType(getChild(tree, 0), classe, methode);
@@ -271,7 +272,7 @@ bool checkExpr(TreeP tree, ClasseP classe, MethodeP methode, int* i)
 
             case USUB :
                 /* verifie l'expression suivant le moins unaire */
-                check = checkExpr(getChild(tree, 1), classe, methode, i) && check; 
+                check = checkExpr(getChild(tree, 1), classe, methode) && check; 
 
                 /* verifie le type de l'expression */
                 typeD = getType(getChild(tree, 1), classe, methode);
@@ -297,8 +298,8 @@ bool checkExpr(TreeP tree, ClasseP classe, MethodeP methode, int* i)
             case CONCAT :
                 /* verification d'une concatenation */
                 /* verifie que les deux expressions sont correctes */
-                check = checkExpr(getChild(tree, 0), classe, methode, i) && check;
-                check = checkExpr(getChild(tree, 1), classe, methode, i) && check;
+                check = checkExpr(getChild(tree, 0), classe, methode) && check;
+                check = checkExpr(getChild(tree, 1), classe, methode) && check;
 
                 /* verifie que les types des expressions sont des String */
                 typeG = getType(getChild(tree, 0), classe, methode);
@@ -333,18 +334,25 @@ bool checkExpr(TreeP tree, ClasseP classe, MethodeP methode, int* i)
 
             case ECAST :
                 /* verification d'un cast */
-                check = checkExpr(getChild(tree, 0), classe, methode, i) && check;
-                check = checkExpr(getChild(tree, 1), classe, methode, i) && check;
-                check = checkCast(getClassePointer(getChild(tree, 1)->u.str), getChild(tree, 0)->u.str, classe) && check; 
+                check = checkExpr(getChild(tree, 0), classe, methode) && check;
+                check = checkExpr(getChild(tree, 1), classe, methode) && check;
+
+                nom = getChild(tree, 1)->u.str;
+                if(strcmp(nom, "this") == 0 && classe != NIL(Classe))
+                    typeD = classe;
+                else
+                    typeD = getTypeId(nom);
+
+                check = checkCast(getClassePointer(getChild(tree, 0)->u.str), typeD, classe) && check; 
                 break;
 
             case EINST :
                 /* verification d'une allocation */
                 /* verification du classname du cast */
-                check = checkExpr(getChild(tree, 0), classe, methode, i) && check;
+                check = checkExpr(getChild(tree, 0), classe, methode) && check;
 
                 /* verification de la liste d'expressions optionnelles */
-                check = checkExpr(getChild(tree, 1), classe, methode, i) && check;
+                check = checkExpr(getChild(tree, 1), classe, methode) && check;
 
                 /* verification de l'allocation */
                 ClasseP tmp = getType(getChild(tree, 0), classe, methode);
@@ -354,19 +362,19 @@ bool checkExpr(TreeP tree, ClasseP classe, MethodeP methode, int* i)
 
             case SELEXPR :      
                 /* verification d'une selection */
-                check = checkSelection(tree, classe, methode, i) && check;
+                check = checkSelection(tree, classe, methode) && check;
                 break;
 
             case EENVOI :
                 /* verification d'un envoi */
-                check = checkExpr(getChild(tree, 0), classe, methode, i) && check;
+                check = checkExpr(getChild(tree, 0), classe, methode) && check;
                 check = checkMethodes(getType(getChild(tree, 0), classe, methode), getChild(getChild(tree, 1), 0)->u.str, getChild(getChild(tree, 1), 1), classe, methode) && check;
                 break;
 
             case YLEXPR :
                 /* verification d'une liste d'expressions */ 
-                check = checkExpr(getChild(tree, 0), classe, methode, i) && check;
-                check = checkExpr(getChild(tree, 1), classe, methode, i) && check;
+                check = checkExpr(getChild(tree, 0), classe, methode) && check;
+                check = checkExpr(getChild(tree, 1), classe, methode) && check;
                 break; 
 
             default :
@@ -381,14 +389,14 @@ bool checkExpr(TreeP tree, ClasseP classe, MethodeP methode, int* i)
 
 
 /* verifie la validite d'une selection */
-bool checkSelection(TreeP selection, ClasseP classe, MethodeP methode, int* i)
+bool checkSelection(TreeP selection, ClasseP classe, MethodeP methode)
 {
     bool check = TRUE;
 
     if(selection->op == Id)         /* cas : Id */
     {
         if(strcmp(selection->u.str, "this") != 0 && strcmp(selection->u.str, "super") != 0 && strcmp(selection->u.str, "result") != 0)
-            check = checkPortee(env->env, selection->u.str, i) && check;
+            check = checkPortee(env->env, selection->u.str) && check;
         
         if(methode == NIL(Methode) && strcmp(selection->u.str, "result") == 0)
         {
@@ -401,7 +409,7 @@ bool checkSelection(TreeP selection, ClasseP classe, MethodeP methode, int* i)
     else                            /* cas : Expr '.' Id */
     {
         /* verification de l'expression */
-        check = checkExpr(getChild(selection, 0), classe, methode, i) && check;
+        check = checkExpr(getChild(selection, 0), classe, methode) && check;
 
         if(check)
         {
@@ -525,19 +533,13 @@ ClasseP getType(TreeP expr, ClasseP classe, MethodeP methode)
 
             case Classname :
                 typeG = getClassePointer(expr->u.str);
-                if(typeG != NIL(Classe) && typeG->constructeur != NIL(Methode))
+                if(typeG != NIL(Classe))
                 {
                     type = typeG;
                 }
-                else if(typeG != NIL(Classe) && typeG->constructeur == NIL(Methode))
-                {
-                    fprintf(stderr, "Erreur de type :s\n");
-                    fprintf(stderr, "\t> un objet ne peut pas etre utilise comme type\n\n");
-                    nbErreur++;
-                }
                 else
                 {
-                    fprintf(stderr, "Erreur de type :s\n");
+                    fprintf(stderr, "Erreur de type :\n");
                     fprintf(stderr, "\t> la classe %s n'existe pas\n\n", expr->u.str);
                     nbErreur++;
                 }
@@ -608,7 +610,17 @@ ClasseP getType(TreeP expr, ClasseP classe, MethodeP methode)
 
             case EINST :
                 /* retourne le type de l'allocation */
-                type = getType(getChild(expr, 0), classe, methode);
+                typeG = getType(getChild(expr, 0), classe, methode);
+                if(typeG != NIL(Classe) && typeG->constructeur == NIL(Methode))
+                {
+                    fprintf(stderr, "Erreur d'allocation' :\n");
+                    fprintf(stderr, "\t> l'objet %s ne peut pas etre utilise comme type\n\n", typeG->nom);
+                    nbErreur++;
+                }
+                else
+                {
+                    type = typeG;
+                }
                 break;
 
             case SELEXPR :    
@@ -672,13 +684,15 @@ ClasseP getTypeId(char* nom)
 {
     if(env != NIL(Scope))
     {
+        int j = 0;
         LVarDeclP tmp = env->env;
-        while(tmp != NIL(LVarDecl))
+        while(tmp != NIL(LVarDecl) && j < *i)
         {
             if(strcmp(nom, tmp->var->nom) == 0)
             {
                 return tmp->var->type;
             }
+            j++;
             tmp = tmp->next;
         }
     }
@@ -687,7 +701,7 @@ ClasseP getTypeId(char* nom)
 
 
 /* verification du type des variables et des affectation associees */
-bool setEnvironnementType(LVarDeclP var, ClasseP classe, MethodeP methode, int* i)               
+bool setEnvironnementType(LVarDeclP var, ClasseP classe, MethodeP methode)               
 {
     bool check = TRUE;
     LVarDeclP tmp = var;
@@ -704,7 +718,7 @@ bool setEnvironnementType(LVarDeclP var, ClasseP classe, MethodeP methode, int* 
                 /* verifie l'affectation opt */
                 if(tmp->var->exprOpt != NIL(Tree))
                 {
-                    check = checkAff(tmp->var, tmp->var->exprOpt, classe, methode, i);
+                    check = checkAff(tmp->var, tmp->var->exprOpt, classe, methode);
                 }
             }
             else
@@ -731,7 +745,7 @@ bool setEnvironnementType(LVarDeclP var, ClasseP classe, MethodeP methode, int* 
 
 
 /* verification du bloc contenant les classes et les objets */
-bool checkBlocClasse(TreeP tree, ClasseP classe, MethodeP methode, int* i)
+bool checkBlocClasse(TreeP tree, ClasseP classe, MethodeP methode)
 {
     bool check = TRUE;
 
@@ -744,8 +758,8 @@ bool checkBlocClasse(TreeP tree, ClasseP classe, MethodeP methode, int* i)
         {
             case YLCLASS :
                 /* parcours de la liste de classe ou d'objet */
-                check = checkBlocClasse(getChild(tree, 0), classe, methode, i) && check;
-                check = checkBlocClasse(getChild(tree, 1), classe, methode, i) && check;
+                check = checkBlocClasse(getChild(tree, 0), classe, methode) && check;
+                check = checkBlocClasse(getChild(tree, 1), classe, methode) && check;
                 break;
 
             case YCLASS :
@@ -762,7 +776,7 @@ bool checkBlocClasse(TreeP tree, ClasseP classe, MethodeP methode, int* i)
                         tmp = NIL(LVarDecl);
                         /* ajoute dans l'env celui de la super classe */
                         tmp = envHerite(superClasse);
-                        check = addEnv(tmp, classe, i) && check;
+                        check = addEnv(tmp, classe) && check;
                     }
                     else
                     {
@@ -775,28 +789,28 @@ bool checkBlocClasse(TreeP tree, ClasseP classe, MethodeP methode, int* i)
                 /* ajoute les champs de la classe dans l'env */
                 tmp = classe->lchamps;
                 if(tmp != NIL(LVarDecl))
-                    check = addEnv(tmp, classe, i) && check;
+                    check = addEnv(tmp, classe) && check;
 
                 /* ajoute les parametres de la classe dans l'env pour faire la verification du constructeur */
                 tmp = classe->lparametres;
                 check = verifLParam(tmp) && check;
                 if(tmp != NIL(LVarDecl))
-                    check = addEnv(tmp, classe, i) && check;
+                    check = addEnv(tmp, classe) && check;
            
                 /* verification du constructeur de la classe */ 
                 TreeP constructeur = getChild(tree, 3);
                 MethodeP constr = getMethodePointer(classe, classe->nom);
-                check = checkBlocMain(constructeur, classe, constr, i) && check;
+                check = checkBlocMain(constructeur, classe, constr) && check;
 
                 /* retire les parametres de la classe de l'env */
                 int tailleLParam = getTailleListeVarDecl(tmp);
-                removeEnv(tailleLParam, i);
+                removeEnv(tailleLParam);
 
                 /* verifie le blocObj de la classe */
-                check = checkBlocClasse(getChild(tree, 4), classe, methode, i) && check; 
+                check = checkBlocClasse(getChild(tree, 4), classe, methode) && check; 
                 
                 /* reset l'env */
-                removeEnv(env->taille, i);
+                removeEnv(env->taille);
                 break;
 
             case YOBJ :
@@ -806,19 +820,19 @@ bool checkBlocClasse(TreeP tree, ClasseP classe, MethodeP methode, int* i)
                 /* ajoute les champs de l'objet dans l'env */
                 tmp = classe->lchamps;
                 if(tmp != NIL(LVarDecl))
-                    check = addEnv(tmp, classe, i) && check;
+                    check = addEnv(tmp, classe) && check;
 
                 /* verifie le blocObj de l'objet */
-                check = checkBlocClasse(getChild(tree, 1), classe, methode, i) && check; 
+                check = checkBlocClasse(getChild(tree, 1), classe, methode) && check; 
 
                 /* reset l'env */
-                removeEnv(env->taille, i);
+                removeEnv(env->taille);
                 break;
 
             case LDECLMETH :
                 /* verification d'une liste de declarations */
-                check = checkBlocClasse(getChild(tree, 0), classe, methode, i) && check;
-                check = checkBlocClasse(getChild(tree, 1), classe, methode, i) && check;
+                check = checkBlocClasse(getChild(tree, 0), classe, methode) && check;
+                check = checkBlocClasse(getChild(tree, 1), classe, methode) && check;
                 break; 
 
             case YDECLC :
@@ -831,10 +845,13 @@ bool checkBlocClasse(TreeP tree, ClasseP classe, MethodeP methode, int* i)
                 methode = getMethodePointer(classe, getChild(tree, 1)->u.str);
 
                 /* ajoute dans l'env les parametres de la methode */
+                *i = 0;
                 tmp = makeLParam(getChild(tree, 2));
-                check = verifLParam(tmp) && check;
+                /* TODO : verifier une liste de parametres d'une methode override */
+                if(getChild(tree, 0) == NIL(Tree))
+                    check = verifLParam(tmp) && check;
                 if(tmp != NIL(LVarDecl))
-                    check = addEnv(tmp, classe, i) && check;
+                    check = addEnv(tmp, classe) && check;
 
                 /* verifie le type de retour de la methode */
                 check = checkClassDefine(getChild(tree, 3)->u.str) && check;
@@ -843,11 +860,11 @@ bool checkBlocClasse(TreeP tree, ClasseP classe, MethodeP methode, int* i)
                 if(check)
                 {
                     VarDeclP result = makeVarDecl("result", methode->typeDeRetour->nom, NIL(Tree));
-                    check = checkAff(result, getChild(tree, 4), classe, methode, i) && check;
+                    check = checkAff(result, getChild(tree, 4), classe, methode) && check;
                 }
 
                 /* met a jour l'env */
-                removeEnv(*i, i);
+                removeEnv(*i);
                 break;
 
             case DMETHODE :
@@ -860,10 +877,13 @@ bool checkBlocClasse(TreeP tree, ClasseP classe, MethodeP methode, int* i)
                 methode = getMethodePointer(classe, getChild(tree, 1)->u.str);
 
                 /* ajoute dans l'env les parametres de la methode */
+                *i = 0;
                 tmp = makeLParam(getChild(tree, 2));
-                check = verifLParam(tmp) && check;
+                /* TODO : verifier une liste de parametres d'une methode override */
+                if(getChild(tree, 0) == NIL(Tree))
+                    check = verifLParam(tmp) && check;
                 if(tmp != NIL(LVarDecl))
-                    check = addEnv(tmp, classe, i) && check;
+                    check = addEnv(tmp, classe) && check;
 
                 /* verifie le type de retour de la methode */
                 TreeP type = getChild(tree, 3);
@@ -871,10 +891,10 @@ bool checkBlocClasse(TreeP tree, ClasseP classe, MethodeP methode, int* i)
                     check = checkClassDefine(type->u.str) && check;
 
                 /* verifie le bloc associe a la methode */
-                check = checkBlocMain(getChild(tree, 4), classe, methode, i) && check;
+                check = checkBlocMain(getChild(tree, 4), classe, methode) && check;
 
                 /* met a jour l'env */
-                removeEnv(*i, i);
+                removeEnv(*i);
                 break;
 
             default :
@@ -900,7 +920,7 @@ LVarDeclP envHerite(ClasseP classeMere)
 
 
 /* ajoute dans env une liste de variable var */
-bool addEnv(LVarDeclP var, ClasseP classe, int* i)
+bool addEnv(LVarDeclP var, ClasseP classe)
 {
     bool check = TRUE;
     
@@ -909,7 +929,7 @@ bool addEnv(LVarDeclP var, ClasseP classe, int* i)
         LVarDeclP tmp = var;
         while(tmp != NIL(LVarDecl))
         {
-            check = addVarEnv(tmp->var, classe, i) && check;
+            check = addVarEnv(tmp->var, classe) && check;
             tmp = tmp->next;
         }
     }
@@ -919,7 +939,7 @@ bool addEnv(LVarDeclP var, ClasseP classe, int* i)
 
 
 /* ajoute une variable dans env et verifie son affection opt ainsi que son type */
-bool addVarEnv(VarDeclP var, ClasseP classe, int* i)
+bool addVarEnv(VarDeclP var, ClasseP classe)
 {
     bool check = TRUE;
 
@@ -933,7 +953,7 @@ bool addVarEnv(VarDeclP var, ClasseP classe, int* i)
             tmp->var = var;
             tmp->next = NIL(LVarDecl);
 
-            check = setEnvironnementType(tmp, classe, NIL(Methode), i);
+            check = setEnvironnementType(tmp, classe, NIL(Methode));
 
             if(env->env == NIL(LVarDecl))
             {
@@ -965,7 +985,7 @@ bool addVarEnv(VarDeclP var, ClasseP classe, int* i)
 
 
 /* retire n variables de l'env */
-void removeEnv(int n, int *i)
+void removeEnv(int n)
 {
     if(env->taille < n)
     {
@@ -991,9 +1011,9 @@ void removeEnv(int n, int *i)
 
 
 /* verifie une affectation */
-bool checkAff(VarDeclP var, TreeP expr, ClasseP classe, MethodeP methode, int* i)
+bool checkAff(VarDeclP var, TreeP expr, ClasseP classe, MethodeP methode)
 {
-    bool check = checkExpr(expr, classe, methode, i);
+    bool check = checkExpr(expr, classe, methode);
     check = verifVarDeclDefinition(expr, classe, methode) && check;
 
     if(check)
@@ -1054,7 +1074,25 @@ VarDeclP getVarSelection(TreeP selection, ClasseP classe, MethodeP methode)
         LVarDeclP liste = env->env;
         char* nom = selection->u.str;
 
-        if(strcmp(nom, "result") != 0)
+        if(strcmp(nom, "result") == 0)
+        {
+            if(methode != NIL(Methode) && methode->typeDeRetour != NIL(Classe) && strcmp(methode->typeDeRetour->nom, "Void") != 0)
+            {
+                VarDeclP result = makeVarDecl("result", methode->typeDeRetour->nom, NIL(Tree));
+                *result->isDefini = TRUE;
+                return result;
+            }
+        }
+        else if(strcmp(nom, "this") == 0)
+        {
+            if(classe != NIL(Classe))
+            {
+                VarDeclP this = makeVarDecl("this", classe->nom, NIL(Tree));
+                *this->isDefini = TRUE;
+                return this;
+            }
+        }
+        else 
         {
             while(liste != NIL(LVarDecl))
             {
@@ -1065,22 +1103,6 @@ VarDeclP getVarSelection(TreeP selection, ClasseP classe, MethodeP methode)
 
                 liste = liste->next;
             }
-        }
-        else /* result */
-        {
-            if(methode != NIL(Methode) && methode->typeDeRetour != NIL(Classe) && strcmp(methode->typeDeRetour->nom, "Void") != 0)
-            {
-                VarDeclP result = makeVarDecl("result", methode->typeDeRetour->nom, NIL(Tree));
-                return result;
-            }
-            /*
-            else
-            {
-                fprintf(stderr, "Erreur selection\n");
-                fprintf(stderr, "\t> usage incorrect de result\n\n");
-                nbErreur++;
-            }
-            */
         }
     }
     else
@@ -1091,7 +1113,6 @@ VarDeclP getVarSelection(TreeP selection, ClasseP classe, MethodeP methode)
         if(tmp != NIL(Classe))
         {
             LVarDeclP liste = tmp->lchamps;
-
             while(liste != NIL(LVarDecl))
             {
                 if(strcmp(liste->var->nom, nom) == 0)
@@ -1100,6 +1121,23 @@ VarDeclP getVarSelection(TreeP selection, ClasseP classe, MethodeP methode)
                 }
 
                 liste = liste->next;
+            }
+
+            ClasseP heritage = classe->superClasse;
+            while(heritage != NIL(Classe))
+            {
+                LVarDeclP liste = heritage->lchamps;
+                while(liste != NIL(LVarDecl))
+                {
+                    if(strcmp(liste->var->nom, nom) == 0)
+                    {
+                        return liste->var;
+                    }
+
+                    liste = liste->next;
+                }
+
+                heritage = heritage->superClasse;
             }
         }
     }
@@ -1115,7 +1153,6 @@ VarDeclP getVarSelection(TreeP selection, ClasseP classe, MethodeP methode)
 bool verifLParam(LVarDeclP lparam)
 {
     bool check = FALSE;
-
     LVarDeclP liste = lparam;
 
     while(liste != NIL(LVarDecl))
@@ -1125,7 +1162,7 @@ bool verifLParam(LVarDeclP lparam)
             check = TRUE;
         }
 
-        if(check && !(liste->var->exprOpt != NIL(Tree)))
+        if(check && liste->var->exprOpt == NIL(Tree))
         {
             fprintf(stderr, "Erreur de declaration de parametres\n");
             fprintf(stderr, "\t> les parametres avec une expressions par defaut ne sont pas tous declare a la fin\n\n");
@@ -1191,6 +1228,7 @@ bool verifVarDeclDefinition(TreeP expr, ClasseP classe, MethodeP methode)
             case Cste : 
             case ECAST :
             case EINST :
+            case EENVOI :
                 check = TRUE;
                 break;    
 
@@ -1433,34 +1471,39 @@ bool checkBoucleHeritage(LClasseP lclasse)
     return TRUE;
 }
 
-/*devrait marche, à tester avec les blocs*/
-bool checkCast(ClasseP classeCast, char* nom, ClasseP classe)
+
+/* verifie un cast */
+bool checkCast(ClasseP classeCast, ClasseP typeId, ClasseP classe)
 {
     if(classeCast != NIL(Classe))
     {
-        if(strcmp(nom, "this") == 0 && classe != NIL(Classe))
+        if(typeId != NIL(Classe))
         {
-            nom = classe->nom;
-        }
-
-        if(strcmp(classeCast->nom, nom) == 0)
-        {
-            return TRUE;
-        }
-        else
-        {
-            if(classeCast->superClasse != NULL)
+            if(strcmp(classeCast->nom, typeId->nom) == 0)
             {
-                return checkCast(classeCast->superClasse, nom, classe);
+                return TRUE;
             }
             else
             {
-                fprintf(stderr, "Erreur verification d'un cast :\n");
-                fprintf(stderr, "\t> %s ne peut pas etre cast en %s\n\n", classeCast->nom, nom);
-                nbErreur++;
-                /* fprintf(stderr, "erreur ligne : %d\n", yylineno); */
-                return FALSE;
+                if(typeId->superClasse != NIL(Classe))
+                {
+                    return checkCast(classeCast, typeId->superClasse, classe);
+                }
+                else
+                {
+                    fprintf(stderr, "Erreur verification d'un cast :\n");
+                    fprintf(stderr, "\t> %s ne peut pas etre cast en %s\n\n", typeId->nom, classeCast->nom);
+                    nbErreur++;
+                    return FALSE;
+                }
             }
+        }
+        else
+        {
+            fprintf(stderr, "Erreur verification d'un cast :\n");
+            fprintf(stderr, "\t> typeId incorrect\n\n");
+            nbErreur++;
+            return FALSE;
         }
     }
     else
