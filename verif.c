@@ -401,9 +401,17 @@ bool checkSelection(TreeP selection, ClasseP classe, MethodeP methode)
         if(methode == NIL(Methode) && strcmp(selection->u.str, "result") == 0)
         {
             fprintf(stderr, "Erreur selection\n");
-            fprintf(stderr, "\t> la variable result est interdite dans un constructeur\n\n");
+            fprintf(stderr, "\t> la variable result est interdite\n\n");
             nbErreur++;
             check = FALSE;            
+        }
+        else if(methode != NIL(Methode) && classe != NIL(Classe) 
+            && strcmp(classe->nom, methode->nom) == 0 && strcmp(selection->u.str, "result") == 0)
+        {
+            fprintf(stderr, "Erreur selection\n");
+            fprintf(stderr, "\t> la variable result est interdite dans un constructeur\n\n");
+            nbErreur++;
+            check = FALSE;
         }
     }
     else                            /* cas : Expr '.' Id */
@@ -514,6 +522,7 @@ ClasseP getType(TreeP expr, ClasseP classe, MethodeP methode)
                 }
                 else if(strcmp(expr->u.str, "super") == 0)
                 {
+                    /* TODO super me semble faux, pourquoi superClasse et pas le type de retour de la methode override ? */
                 	if(classe != NIL(Classe) && classe->superClasse != NIL(Classe))
                 	{
                 		type = classe->superClasse;
@@ -844,8 +853,8 @@ bool checkBlocClasse(TreeP tree, ClasseP classe, MethodeP methode)
                 /* met a jour la variable methode */
                 methode = getMethodePointer(classe, getChild(tree, 1)->u.str);
 
-                /* ajoute dans l'env les parametres de la methode */
                 *i = 0;
+                /* ajoute dans l'env les parametres de la methode */
                 tmp = makeLParam(getChild(tree, 2));
                 /* TODO : verifier une liste de parametres d'une methode override */
                 if(getChild(tree, 0) == NIL(Tree))
@@ -876,8 +885,8 @@ bool checkBlocClasse(TreeP tree, ClasseP classe, MethodeP methode)
                 /* met a jour la variable methode */
                 methode = getMethodePointer(classe, getChild(tree, 1)->u.str);
 
-                /* ajoute dans l'env les parametres de la methode */
                 *i = 0;
+                /* ajoute dans l'env les parametres de la methode */
                 tmp = makeLParam(getChild(tree, 2));
                 /* TODO : verifier une liste de parametres d'une methode override */
                 if(getChild(tree, 0) == NIL(Tree))
@@ -1026,7 +1035,7 @@ bool checkAff(VarDeclP var, TreeP expr, ClasseP classe, MethodeP methode)
             {
                 check = FALSE;
                 fprintf(stderr, "Erreur verification affectation\n");
-                fprintf(stderr, "\t> impossible d'affecter un %s a un %s\n\n", var->type->nom, tmp->nom);
+                fprintf(stderr, "\t> impossible d'affecter un %s a un %s\n\n", tmp->nom, var->type->nom);
                 nbErreur++;
             }
             else
@@ -1076,11 +1085,18 @@ VarDeclP getVarSelection(TreeP selection, ClasseP classe, MethodeP methode)
 
         if(strcmp(nom, "result") == 0)
         {
-            if(methode != NIL(Methode) && methode->typeDeRetour != NIL(Classe) && strcmp(methode->typeDeRetour->nom, "Void") != 0)
+            if(methode != NIL(Methode) && methode->typeDeRetour != NIL(Classe))
             {
                 VarDeclP result = makeVarDecl("result", methode->typeDeRetour->nom, NIL(Tree));
                 *result->isDefini = TRUE;
                 return result;
+            }
+            else
+            {
+                fprintf(stderr, "Erreur selection :\n");
+                fprintf(stderr, "\t> usage incorrect de result\n\n");
+                nbErreur++;
+                return NIL(VarDecl);    
             }
         }
         else if(strcmp(nom, "this") == 0)
@@ -1091,6 +1107,20 @@ VarDeclP getVarSelection(TreeP selection, ClasseP classe, MethodeP methode)
                 *this->isDefini = TRUE;
                 return this;
             }
+            else
+            {
+                fprintf(stderr, "Erreur selection :\n");
+                fprintf(stderr, "\t> usage incorrect de this\n\n");
+                nbErreur++;
+                return NIL(VarDecl);    
+            }
+        }
+        else if(strcmp(nom, "super") == 0)
+        {
+            fprintf(stderr, "Erreur selection :\n");
+            fprintf(stderr, "\t> usage incorrect de super\n\n");
+            nbErreur++;
+            return NIL(VarDecl);    
         }
         else 
         {
@@ -1142,7 +1172,7 @@ VarDeclP getVarSelection(TreeP selection, ClasseP classe, MethodeP methode)
         }
     }
 
-    fprintf(stderr, "Erreur selection\n");
+    fprintf(stderr, "Erreur selection :\n");
     fprintf(stderr, "\t> selection introuvable\n\n");
     nbErreur++;
     return NIL(VarDecl);    
@@ -1483,20 +1513,23 @@ bool checkCast(ClasseP classeCast, ClasseP typeId, ClasseP classe)
             {
                 return TRUE;
             }
-            else
+            else if(typeId->superClasse != NIL(Classe))
             {
-                if(typeId->superClasse != NIL(Classe))
+                ClasseP tmp = typeId->superClasse;
+                while(tmp != NIL(Classe))
                 {
-                    return checkCast(classeCast, typeId->superClasse, classe);
-                }
-                else
-                {
-                    fprintf(stderr, "Erreur verification d'un cast :\n");
-                    fprintf(stderr, "\t> %s ne peut pas etre cast en %s\n\n", typeId->nom, classeCast->nom);
-                    nbErreur++;
-                    return FALSE;
+                    if(strcmp(classeCast->nom, tmp->nom) == 0)
+                    {
+                        return TRUE;
+                    }
+                    tmp = tmp->superClasse;
                 }
             }
+
+            fprintf(stderr, "Erreur verification d'un cast :\n");
+            fprintf(stderr, "\t> %s ne peut pas etre cast en %s\n\n", typeId->nom, classeCast->nom);
+            nbErreur++;
+            return FALSE;
         }
         else
         {

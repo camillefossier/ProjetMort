@@ -639,8 +639,8 @@ void makeClassesPrimitives()
   paramListeInt->next = NIL(LParam);
   integer->lparametres = paramListeInt;
 
-  /*Constructeur du type Integer*/
-  addConstructeur(exprOpt, integer);
+  /*Constructeur du type Integer (interdit) */
+  /* addConstructeur(exprOpt, integer); */
 
   /*methode toString*/
   MethodeP toString = NEW(1, Methode);
@@ -664,8 +664,8 @@ void makeClassesPrimitives()
   paramListeStr->next = NIL(LParam);
   string->lparametres = paramListeStr;
 
-  /*Constructeur du type String*/
-  addConstructeur(exprOpt, string);
+  /*Constructeur du type String (interdit) */
+  /* addConstructeur(exprOpt, string); */
 
   /*methode print*/
   MethodeP print = NEW(1, Methode);
@@ -844,6 +844,7 @@ bool verifContextProg(TreeP arbreLClasse, TreeP main)
     bool check = TRUE;
     check = checkBoucleHeritage(lclasse);
     check = verifContextLClasse(arbreLClasse) && check;
+    *i = 0;
     check = verifContextMain(main) && check;
 
     if(nbErreur > 0)
